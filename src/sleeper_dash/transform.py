@@ -14,6 +14,7 @@ import pandas as pd
 
 from sleeper_dash.api import PLAYERS_CACHE_PATH
 from sleeper_dash.config import PROJECT_ROOT, load_config
+from sleeper_dash.validate import ValidationError, format_results, validate
 
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
@@ -385,8 +386,17 @@ def main():
     player_weeks = build_player_weeks(league, matchups, players)
     start_date = _season_start_date(read_raw(season, "state.json"), league)
     transactions = build_transactions(league, read_weekly(season, "transactions"), players, start_date)
-    tables = [("teams", teams), ("team_weeks", team_weeks), ("player_weeks", player_weeks), ("transactions", transactions)]
-    for name, table in tables:
+    tables = {"teams": teams, "team_weeks": team_weeks, "player_weeks": player_weeks, "transactions": transactions}
+
+    # Check before saving, so tables that fail never overwrite the last good ones.
+    try:
+        results = validate(tables, league, rosters)
+    except ValidationError as error:
+        raise SystemExit(str(error))
+    print(format_results(results))
+    print()
+
+    for name, table in tables.items():
         path = save_table(table, name)
         print(f"Saved {len(table)} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
 
