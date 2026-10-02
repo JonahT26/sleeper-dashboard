@@ -73,7 +73,10 @@ Roadmap:
 - Phase 4: Automation (weekly GitHub Action, GitHub Pages)
 - Phase 5: Extras (playoff odds simulation, past seasons, posting to league chat)
 
+## Decisions made
+
+- **Public GitHub repo** (`sleeper-dashboard`), decided 2026-10-02 in Phase 0, so the dashboard can use free GitHub Pages hosting. Everything committed is visible to anyone, so never commit anything that isn't safe to share.
+
 ## Open decisions
 
-- Public vs private GitHub repo. Free GitHub Pages hosting requires a public repo on a free account. Decide in Phase 0.
 - Where league members see updates: bookmark only, or also an automatic post to a group chat (Phase 5).
