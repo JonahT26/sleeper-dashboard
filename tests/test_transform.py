@@ -6,7 +6,15 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from sleeper_dash.transform import TEAM_WEEKS_COLUMNS, TEAMS_COLUMNS, build_team_weeks, build_teams, save_table
+from sleeper_dash.transform import (
+    PLAYER_WEEKS_COLUMNS,
+    TEAM_WEEKS_COLUMNS,
+    TEAMS_COLUMNS,
+    build_player_weeks,
+    build_team_weeks,
+    build_teams,
+    save_table,
+)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 LEAGUE = {"season": "2026"}
@@ -124,6 +132,67 @@ def test_median_tie_stops_the_run():
 def test_unpaired_matchup_stops_the_run():
     with pytest.raises(ValueError, match="matchup_id 2 has 1 team"):
         build_team_weeks(NO_MEDIAN_LEAGUE, {1: [game(1, 1, 100.0), game(2, 1, 90.0), game(3, 2, 80.0)]})
+
+
+# --- player_weeks ---
+
+ROSTER_POSITIONS = ["QB", "RB", "RB", "WR", "WR", "FLEX", "REC_FLEX", "SUPER_FLEX", "K", "DEF"] + ["BN"] * 6
+LINEUP_LEAGUE = {"season": "2026", "roster_positions": ROSTER_POSITIONS}
+
+
+def make_players(matchups):
+    """A stand-in players cache: every numeric ID is a WR, every team abbreviation a defense."""
+    ids = {pid for m in matchups for pid in m["players"]}
+    return {
+        pid: {"position": "WR", "full_name": f"Player {pid}", "team": "XX"} if pid.isdigit()
+        else {"position": "DEF", "full_name": None, "first_name": "City", "last_name": pid, "team": pid}
+        for pid in ids
+    }
+
+
+def test_week_1_fixture_rows_slots_and_points(week_1):
+    pw = build_player_weeks(LINEUP_LEAGUE, {1: week_1}, make_players(week_1))
+    assert list(pw.columns) == PLAYER_WEEKS_COLUMNS
+    assert len(pw) == sum(len(m["players"]) for m in week_1)  # no empty slots in the fixture
+    for m in week_1:
+        team = pw[pw["roster_id"] == m["roster_id"]]
+        starters = team[team["is_starter"]]
+        assert starters["lineup_slot"].tolist() == ROSTER_POSITIONS[:10]
+        assert starters["player_id"].tolist() == m["starters"]
+        assert starters["points"].sum() == pytest.approx(m["points"])
+        assert team["slot_order"].tolist() == list(range(len(m["players"])))
+        assert (team.loc[~team["is_starter"], "lineup_slot"] == "BN").all()
+    assert pw.loc[pw["lineup_slot"] == "DEF", "full_name"].str.startswith("City ").all()
+
+
+def test_empty_starting_slot_is_kept_with_zero_points():
+    m = {
+        "roster_id": 1, "points": 20.0, "players": ["101", "102"], "players_points": {"101": 20.0, "102": 5.0},
+        "starters": ["101", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
+        "starters_points": [20.0] + [0.0] * 9,
+    }
+    pw = build_player_weeks(LINEUP_LEAGUE, {4: [m]}, make_players([m]))
+    empty = pw[pw["is_empty_slot"]]
+    assert len(empty) == 9 and (empty["points"] == 0).all() and empty["is_starter"].all()
+    assert empty["position"].isna().all() and empty["full_name"].isna().all()
+    assert empty["lineup_slot"].tolist() == ROSTER_POSITIONS[1:10]
+    bench = pw[~pw["is_starter"]]
+    assert bench["player_id"].tolist() == ["102"] and bench["slot_order"].tolist() == [10]
+
+
+def test_player_missing_from_cache_keeps_its_row(week_1):
+    players = make_players(week_1)
+    missing = week_1[0]["starters"][0]
+    del players[missing]
+    pw = build_player_weeks(LINEUP_LEAGUE, {1: week_1}, players)
+    row = pw[pw["player_id"] == missing].iloc[0]
+    assert pd.isna(row["position"]) and row["points"] == week_1[0]["starters_points"][0]
+
+
+def test_starter_count_mismatch_stops_the_run(week_1):
+    week_1[0]["starters"] = week_1[0]["starters"][:9]
+    with pytest.raises(ValueError, match="starting slots"):
+        build_player_weeks(LINEUP_LEAGUE, {1: week_1}, make_players(week_1))
 
 
 def test_save_table_writes_lists_as_json(rosters, tmp_path):

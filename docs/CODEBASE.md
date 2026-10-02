@@ -80,8 +80,8 @@ sleeper-dashboard/
 |---|---|---|---|
 | `config.py` | Load and validate `config.yaml` | 0 | built |
 | `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
-| `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`. Writes to a `.partial` staging folder and swaps it in only when every call succeeds | 1 | built |
-| `transform.py` | Build the tidy tables below from raw JSON only. Built so far: `teams`, `team_weeks` | 1 | in progress |
+| `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`. Writes to a `.partial` staging folder and swaps it in only when every call succeeds. Also refreshes the players cache via `api.get_players()` (at most once a day) | 1 | built |
+| `transform.py` | Build the tidy tables below from saved files only (raw JSON plus the players cache). Built so far: `teams`, `team_weeks`, `player_weeks` | 1 | in progress |
 | `validate.py` | Integrity and reconciliation checks; raises on failure | 1 | planned |
 | `pipeline.py` | Orchestrates extract → transform → validate → metrics; prints a run summary | 1–2 | planned |
 | `lineup.py` | Optimal lineup per team-week, solved as an assignment problem | 2 | planned |
@@ -135,19 +135,21 @@ Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`)
 
 Reconciliation (printed by `python -m sleeper_dash.transform`): head-to-head + median wins/losses and summed points equal each roster's Sleeper `wins`, `losses`, `ties`, `fpts`, `fpts_against`. Verified for all 12 teams through week 3.
 
-### `player_weeks`
-Grain: one row per lineup slot or bench spot per team per week. Key: (`season`, `week`, `roster_id`, `slot_order`).
+### `player_weeks` (built)
+Grain: one row per lineup slot or bench spot per team per week. Key: (`season`, `week`, `roster_id`, `slot_order`). Source: matchups, `league.json` `roster_positions`, and the players cache (`data/cache/players_nfl.json`, refreshed by extract).
 
 | Column | Type | Notes |
 |---|---|---|
-| season, week, roster_id | | |
-| slot_order | int | Index in the starters list; bench rows numbered after starters |
-| lineup_slot | str | Roster slot, e.g. `QB`, `FLEX`, `SUPER_FLEX`, or `BN` for bench |
-| player_id | str | `"0"` means an empty starting slot |
+| season, week, roster_id | int | |
+| slot_order | int | 0-based index in the starters list (0–9 here); bench rows numbered after starters in the matchup's `players` order |
+| lineup_slot | str | The i-th starter fills the i-th non-`BN` entry of `roster_positions`, e.g. `QB`, `FLEX`, `SUPER_FLEX`; `BN` for bench. Injured-reserve players are bench (owner decision), so a team-week has 6 or 7 bench rows |
+| player_id | str | `"0"` means an empty starting slot; team defenses are abbreviations like `"KC"` |
 | is_starter | bool | |
-| is_empty_slot | bool | True when a starting slot was left empty |
-| points | float | From `players_points` / `starters_points` |
-| position, full_name, nfl_team | str | Joined from `players` |
+| is_empty_slot | bool | True when a starting slot was left empty. The row is kept with 0 points, because an empty slot is a manager decision worth measuring |
+| points | float | `starters_points` for starters, `players_points` for bench; 2 dp |
+| position, full_name, nfl_team | str | From the players cache. Defenses have no `full_name`, so it is built from first + last name ("Jacksonville Jaguars"). Describes the player **today**, not in that week. Null for empty slots or IDs missing from the cache |
+
+Checks (printed by `python -m sleeper_dash.transform`): starter points sum to `team_weeks.points` for every team-week; counts of empty slots and players missing from the cache; starters by slot × position.
 
 ### `transactions`
 Grain: one row per player move. Key: (`transaction_id`, `player_id`, `action`).
@@ -247,3 +249,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 1: `data/raw/` moved out of git (owner decision); fixtures anonymised; IR, median-tie, and preseason rules recorded.
 - Phase 1: `transform.py` with `teams` table and `save_table` CSV writer; tests in `tests/test_transform.py`.
 - Phase 1: `team_weeks` table (head-to-head and separate median results); standings reconcile with Sleeper for all 12 teams.
+- Phase 1: `player_weeks` table (603 rows for weeks 1–3); extract now refreshes the players cache.

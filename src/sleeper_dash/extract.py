@@ -87,6 +87,13 @@ def extract(config):
         draft_id = draft["draft_id"]
         fetch(f"/draft/{draft_id}/picks", f"picks/draft_{draft_id}.json")
 
+    # The players list is cached separately (data/cache/) and re-downloaded at most once a day.
+    cache_path = api.PLAYERS_CACHE_PATH
+    mtime_before = cache_path.stat().st_mtime if cache_path.exists() else None
+    players = api.get_players()
+    players_refreshed = cache_path.stat().st_mtime != mtime_before
+    calls += players_refreshed
+
     last_week = latest_completed_week(state, league)
     for week in range(1, last_week + 1):
         fetch(f"{league_path}/matchups/{week}", f"matchups/week_{week:02d}.json")
@@ -104,6 +111,8 @@ def extract(config):
         "nfl_week": state["week"],
         "nfl_season_type": state["season_type"],
         "last_scored_leg": league["settings"]["last_scored_leg"],
+        "players_cached": len(players),
+        "players_refreshed": players_refreshed,
     }
 
 
@@ -121,6 +130,8 @@ def main():
     for f in summary["files"]:
         print(f"  {f['file']:<{width}}  {f['records']:>7}")
     print()
+    status = "downloaded fresh" if summary["players_refreshed"] else "reused (less than 24 hours old)"
+    print(f"  Players cache: {summary['players_cached']} players, {status}")
     print(f"  {len(summary['files'])} files, {summary['calls']} API calls")
 
 

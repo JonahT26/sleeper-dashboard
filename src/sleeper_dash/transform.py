@@ -2,7 +2,8 @@
 
 Run with:  python -m sleeper_dash.transform
 
-Reads raw files only; never calls the Sleeper API.
+Reads saved files only (data/raw/ plus the players cache in data/cache/); never
+calls the Sleeper API.
 """
 
 import json
@@ -11,6 +12,7 @@ from collections import defaultdict
 
 import pandas as pd
 
+from sleeper_dash.api import PLAYERS_CACHE_PATH
 from sleeper_dash.config import PROJECT_ROOT, load_config
 
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
@@ -21,6 +23,11 @@ TEAM_WEEKS_COLUMNS = [
     "season", "week", "roster_id", "matchup_id", "points", "opponent_roster_id",
     "opponent_points", "margin", "result", "median_result", "is_playoff",
 ]
+PLAYER_WEEKS_COLUMNS = [
+    "season", "week", "roster_id", "slot_order", "lineup_slot", "player_id", "is_starter",
+    "is_empty_slot", "points", "position", "full_name", "nfl_team",
+]
+EMPTY_SLOT = "0"
 
 
 def read_raw(season, filename, raw_dir=RAW_DIR):
@@ -41,6 +48,14 @@ def read_matchups(season, raw_dir=RAW_DIR):
         with open(path, encoding="utf-8") as f:
             weeks[int(path.stem.removeprefix("week_"))] = json.load(f)
     return weeks
+
+
+def read_players(path=PLAYERS_CACHE_PATH):
+    """Load the cached /players/nfl file that extract keeps up to date."""
+    if not path.exists():
+        raise FileNotFoundError(f"{path} is missing. Run `python -m sleeper_dash.extract` first.")
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def _clean_text(value):
@@ -177,6 +192,72 @@ def build_team_weeks(league, matchups_by_week):
     return team_weeks.sort_values(["week", "roster_id"]).reset_index(drop=True)
 
 
+def _player_name(info):
+    """full_name, or first + last name for entries without one (team defenses)."""
+    full = _clean_text(info.get("full_name"))
+    if full:
+        return full
+    parts = [_clean_text(info.get("first_name")), _clean_text(info.get("last_name"))]
+    return " ".join(p for p in parts if p) or None
+
+
+def build_player_weeks(league, matchups_by_week, players):
+    """One row per lineup slot or bench spot per team per week. Key: (season, week, roster_id, slot_order).
+
+    Starters are aligned to the non-bench entries of roster_positions, so the
+    i-th starter fills the i-th starting slot (slot_order = i, from 0). Bench
+    rows follow in the order of the matchup's players list, with lineup_slot
+    "BN"; injured-reserve players are included as bench (owner decision). An
+    empty starting slot ("0") is kept as a row with is_empty_slot and 0 points.
+    Position, name, and NFL team come from the players cache and describe the
+    player today, not in that week.
+    """
+    season = int(league["season"])
+    starter_slots = [slot for slot in league["roster_positions"] if slot != "BN"]
+
+    rows = []
+    for week, matchups in sorted(matchups_by_week.items()):
+        for m in matchups:
+            roster_id = m["roster_id"]
+            starters, starter_points = m["starters"], m["starters_points"]
+            if not len(starters) == len(starter_points) == len(starter_slots):
+                raise ValueError(
+                    f"Week {week}, roster {roster_id}: {len(starters)} starters and "
+                    f"{len(starter_points)} starter points, but the league has {len(starter_slots)} starting slots."
+                )
+            base = {"season": season, "week": week, "roster_id": roster_id}
+            for order, (slot, player_id, points) in enumerate(zip(starter_slots, starters, starter_points)):
+                empty = player_id == EMPTY_SLOT
+                rows.append({**base, "slot_order": order, "lineup_slot": slot, "player_id": player_id,
+                             "is_starter": True, "is_empty_slot": empty, "points": 0.0 if empty else points})
+
+            starter_ids = set(starters)
+            bench = [pid for pid in m["players"] if pid not in starter_ids]
+            for order, player_id in enumerate(bench, start=len(starter_slots)):
+                if player_id not in m["players_points"]:
+                    raise ValueError(f"Week {week}, roster {roster_id}: no points for bench player {player_id}.")
+                rows.append({**base, "slot_order": order, "lineup_slot": "BN", "player_id": player_id,
+                             "is_starter": False, "is_empty_slot": False, "points": m["players_points"][player_id]})
+
+    player_weeks = pd.DataFrame(rows, columns=PLAYER_WEEKS_COLUMNS)
+    info = player_weeks["player_id"].map(lambda pid: players.get(pid) or {})
+    player_weeks["position"] = info.map(lambda i: i.get("position"))
+    player_weeks["full_name"] = info.map(_player_name)
+    player_weeks["nfl_team"] = info.map(lambda i: i.get("team"))
+    player_weeks["points"] = player_weeks["points"].round(2)
+
+    player_weeks = player_weeks.astype(
+        {
+            "season": "int64", "week": "int64", "roster_id": "int64", "slot_order": "int64",
+            "lineup_slot": "string", "player_id": "string", "is_starter": "bool", "is_empty_slot": "bool",
+            "points": "float64", "position": "string", "full_name": "string", "nfl_team": "string",
+        }
+    )
+    if player_weeks.duplicated(["season", "week", "roster_id", "slot_order"]).any():
+        raise ValueError("player_weeks has duplicate (season, week, roster_id, slot_order) rows.")
+    return player_weeks.sort_values(["week", "roster_id", "slot_order"]).reset_index(drop=True)
+
+
 def _standings(team_weeks, teams):
     """Season-to-date records and points from team_weeks, for display and reconciliation."""
     by_team = team_weeks.groupby("roster_id")
@@ -219,19 +300,43 @@ def main():
     rosters = read_raw(season, "rosters.json")
     users = read_raw(season, "users.json")
 
+    matchups = read_matchups(season)
+
     teams = build_teams(league, rosters, users)
-    team_weeks = build_team_weeks(league, read_matchups(season))
-    for name, table in [("teams", teams), ("team_weeks", team_weeks)]:
+    team_weeks = build_team_weeks(league, matchups)
+    player_weeks = build_player_weeks(league, matchups, read_players())
+    for name, table in [("teams", teams), ("team_weeks", team_weeks), ("player_weeks", player_weeks)]:
         path = save_table(table, name)
         print(f"Saved {len(table)} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
 
     pd.set_option("display.width", 200)
     pd.set_option("display.max_columns", None)
     weeks = sorted(int(w) for w in team_weeks["week"].unique())
-    print(f"\nteam_weeks covers weeks {weeks}; playoff rows: {int(team_weeks['is_playoff'].sum())}")
-    print("\nWEEK 1")
-    print(team_weeks[team_weeks["week"] == 1].to_string(index=False))
+    print(f"\nWeeks covered: {weeks}; playoff rows: {int(team_weeks['is_playoff'].sum())}")
+    _report_standings(team_weeks, teams, rosters)
+    _report_player_weeks(player_weeks, team_weeks)
 
+
+def _report_player_weeks(player_weeks, team_weeks):
+    starters = player_weeks[player_weeks["is_starter"]]
+    starter_totals = starters.groupby(["week", "roster_id"])["points"].sum().round(2)
+    team_points = team_weeks.set_index(["week", "roster_id"])["points"]
+    mismatches = int(((starter_totals - team_points.reindex(starter_totals.index)).abs() > 0.005).sum())
+    bench = player_weeks[~player_weeks["is_starter"]]
+
+    print("\nPLAYER_WEEKS")
+    print(f"  Rows: {len(player_weeks)} ({len(starters)} starter slots, {len(bench)} bench spots)")
+    print(f"  Bench spots per team-week: {bench.groupby(['week', 'roster_id']).size().value_counts().sort_index().to_dict()}")
+    print(f"  Empty starting slots: {int(player_weeks['is_empty_slot'].sum())}")
+    print(f"  Players not found in cache: {int((player_weeks['position'].isna() & ~player_weeks['is_empty_slot']).sum())}")
+    print(f"  Team-weeks where starter points != team score: {mismatches} of {len(starter_totals)}")
+    print("\n  Starters by slot (rows) and player position (columns):")
+    crosstab = pd.crosstab(starters["lineup_slot"], starters["position"])
+    order = list(dict.fromkeys(starters["lineup_slot"]))
+    print("  " + crosstab.reindex(order).to_string().replace("\n", "\n  "))
+
+
+def _report_standings(team_weeks, teams, rosters):
     table = _standings(team_weeks, teams)
     sleeper = pd.DataFrame(
         {
