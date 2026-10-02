@@ -81,7 +81,7 @@ sleeper-dashboard/
 | `config.py` | Load and validate `config.yaml` | 0 | built |
 | `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
 | `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`. Writes to a `.partial` staging folder and swaps it in only when every call succeeds. Also refreshes the players cache via `api.get_players()` (at most once a day) | 1 | built |
-| `transform.py` | Build the tidy tables below from saved files only (raw JSON plus the players cache). Built so far: `teams`, `team_weeks`, `player_weeks` | 1 | in progress |
+| `transform.py` | Build the tidy tables below from saved files only (raw JSON plus the players cache): `teams`, `team_weeks`, `player_weeks`, `transactions` | 1 | built |
 | `validate.py` | Integrity and reconciliation checks; raises on failure | 1 | planned |
 | `pipeline.py` | Orchestrates extract → transform → validate → metrics; prints a run summary | 1–2 | planned |
 | `lineup.py` | Optimal lineup per team-week, solved as an assignment problem | 2 | planned |
@@ -151,20 +151,26 @@ Grain: one row per lineup slot or bench spot per team per week. Key: (`season`, 
 
 Checks (printed by `python -m sleeper_dash.transform`): starter points sum to `team_weeks.points` for every team-week; counts of empty slots and players missing from the cache; starters by slot × position.
 
-### `transactions`
-Grain: one row per player move. Key: (`transaction_id`, `player_id`, `action`).
+### `transactions` (built)
+Grain: one row per player move in a completed transaction. Key: (`transaction_id`, `player_id`, `action`). Source: `transactions/week_XX.json`, the players cache, and `state.json` `season_start_date`.
 
 | Column | Type | Notes |
 |---|---|---|
 | transaction_id | str | |
-| season, week | int | |
+| season, week | int | `week` is Sleeper's `leg`, which must equal the file's week or the run stops |
+| is_preseason | bool | Week 1 move created before `season_start_date` (midnight ET). Preseason moves are kept separate from week 1 (owner decision); `week` stays 1 |
 | type | str | `waiver`, `free_agent`, `trade` |
-| status | str | Keep `complete` only |
-| roster_id | int | Team making this move |
-| player_id | str | |
-| action | str | `add` or `drop` |
-| waiver_bid | int | FAAB bid if applicable |
-| created_at | datetime | Converted from epoch ms to US/Eastern |
+| status | str | Always `complete`; failed claims are dropped |
+| roster_id | int | Team receiving (`add`) or releasing (`drop`) the player |
+| player_id | str | Team defenses are abbreviations |
+| player_name | str | From the players cache (defenses: first + last name) |
+| action | str | `add` or `drop`. A 1-for-1 trade is 4 rows: each player is dropped by one team and added by the other |
+| waiver_bid | Int64 | FAAB bid, on the **add** rows of waiver claims only (null on drops, free agents, trades), so summing never double-counts |
+| created_at | datetime | Epoch ms converted to US Eastern (`America/New_York`) |
+
+Not represented: draft picks and FAAB traded inside trades (`draft_picks`, `waiver_budget`). Roster `waiver_budget_used` therefore won't match summed bids when FAAB is traded or when the in-progress week has claims (seen 2026-10-02: 4 teams differ by $8, all explained by week 4).
+
+`season_start_date` comes from `/state/nfl`, which only describes the current NFL season; transform stops with a clear error if the league's season is no longer current. Revisit before re-running past seasons (Phase 5).
 
 ### Metric tables (Phase 2)
 
@@ -250,3 +256,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 1: `transform.py` with `teams` table and `save_table` CSV writer; tests in `tests/test_transform.py`.
 - Phase 1: `team_weeks` table (head-to-head and separate median results); standings reconcile with Sleeper for all 12 teams.
 - Phase 1: `player_weeks` table (603 rows for weeks 1–3); extract now refreshes the players cache.
+- Phase 1: `transactions` table (189 moves in 114 completed transactions; 19 preseason); all four Phase 1 tidy tables built.

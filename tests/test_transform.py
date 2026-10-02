@@ -10,9 +10,11 @@ from sleeper_dash.transform import (
     PLAYER_WEEKS_COLUMNS,
     TEAM_WEEKS_COLUMNS,
     TEAMS_COLUMNS,
+    TRANSACTIONS_COLUMNS,
     build_player_weeks,
     build_team_weeks,
     build_teams,
+    build_transactions,
     save_table,
 )
 
@@ -193,6 +195,67 @@ def test_starter_count_mismatch_stops_the_run(week_1):
     week_1[0]["starters"] = week_1[0]["starters"][:9]
     with pytest.raises(ValueError, match="starting slots"):
         build_player_weeks(LINEUP_LEAGUE, {1: week_1}, make_players(week_1))
+
+
+# --- transactions ---
+
+PLAYERS = {"101": {"full_name": "Player One"}, "102": {"full_name": "Player Two"},
+           "103": {"full_name": "Player Three"}, "KC": {"first_name": "Kansas City", "last_name": "Chiefs"}}
+SEP_15_8PM_ET = 1789516800000  # 2026-09-16 00:00 UTC
+AUG_30_NOON_ET = 1788105600000  # 2026-08-30 16:00 UTC
+
+
+def txn(tid, type_, adds, drops, week=2, status="complete", created=SEP_15_8PM_ET, bid=None):
+    settings = {"waiver_bid": bid} if type_ == "waiver" else None
+    return {"transaction_id": tid, "type": type_, "status": status, "leg": week, "created": created,
+            "adds": adds, "drops": drops, "settings": settings}
+
+
+def build(transactions_by_week):
+    return build_transactions({"season": "2026"}, transactions_by_week, PLAYERS, "2026-09-09")
+
+
+def test_waiver_claim_is_an_add_and_a_drop_with_the_bid_on_the_add():
+    moves = build({2: [txn("t1", "waiver", {"101": 3}, {"KC": 3}, bid=17)]})
+    assert list(moves.columns) == TRANSACTIONS_COLUMNS
+    assert moves["action"].tolist() == ["drop", "add"]
+    add, drop = moves.set_index("action").loc["add"], moves.set_index("action").loc["drop"]
+    assert add["player_name"] == "Player One" and add["waiver_bid"] == 17 and add["roster_id"] == 3
+    assert drop["player_name"] == "Kansas City Chiefs" and pd.isna(drop["waiver_bid"])
+
+
+def test_trade_of_three_players_is_six_rows():
+    trade = txn("t2", "trade", adds={"101": 1, "102": 1, "103": 2}, drops={"101": 2, "102": 2, "103": 1})
+    moves = build({2: [trade]})
+    assert len(moves) == 6
+    assert sorted(moves.loc[moves["action"] == "add", "roster_id"]) == [1, 1, 2]
+    assert moves["waiver_bid"].isna().all()
+
+
+def test_failed_transactions_are_dropped_and_null_adds_or_drops_are_fine():
+    moves = build({2: [txn("t3", "waiver", {"101": 4}, None, status="failed", bid=50),
+                       txn("t4", "free_agent", {"102": 4}, None),
+                       txn("t5", "free_agent", None, {"103": 4})]})
+    assert sorted(moves["transaction_id"]) == ["t4", "t5"]
+    assert moves["waiver_bid"].isna().all()
+
+
+def test_created_at_is_us_eastern_and_preseason_is_flagged():
+    moves = build({1: [txn("t6", "free_agent", {"101": 5}, None, week=1, created=AUG_30_NOON_ET),
+                       txn("t7", "free_agent", {"102": 5}, None, week=1, created=SEP_15_8PM_ET)]})
+    rows = moves.set_index("transaction_id")
+    assert str(rows.loc["t6", "created_at"]) == "2026-08-30 12:00:00-04:00"  # daylight time: UTC-4
+    assert rows.loc["t6", "is_preseason"] and not rows.loc["t7", "is_preseason"]
+
+
+def test_week_2_moves_are_never_preseason():
+    moves = build({2: [txn("t8", "free_agent", {"101": 5}, None, week=2, created=AUG_30_NOON_ET)]})
+    assert not moves["is_preseason"].any()
+
+
+def test_leg_that_disagrees_with_file_week_stops_the_run():
+    with pytest.raises(ValueError, match="leg 3"):
+        build({2: [txn("t9", "free_agent", {"101": 5}, None, week=3)]})
 
 
 def test_save_table_writes_lists_as_json(rosters, tmp_path):

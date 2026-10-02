@@ -358,7 +358,9 @@ Trade:
 | settings.seq | int | `38` | 36 | Processing sequence *(likely)* |
 | metadata.notes | str | `"Your waiver claim was processed successfully!"` | 36 | Sleeper's system message: success, "claimed by another owner", or "too many players" |
 | draft_picks | list | `[]` | 0 | Picks traded; empty in all 3 trades (all were 1-for-1 player swaps) |
-| waiver_budget | list | `[]` | 0 | FAAB traded; empty in all 3 trades |
+| waiver_budget | list | `[]` | 0 | FAAB traded, as `[{"amount": 8, "sender": 5, "receiver": 11}]` (roster IDs). Empty in weeks 1–3; first seen in a week 4 trade |
+
+Roster `settings.waiver_budget_used` is a **current** figure: it includes claims from the in-progress week and FAAB traded (the receiving team's figure goes down, even below zero). Checked 2026-10-02: summed week 1–3 winning bids match it for 8 teams, and the other 4 differ by exactly the week 4 claims ($8 each for teams 4 and 6) and one week 4 trade of $8 FAAB from team 5 to team 11 (team 11 shows −8).
 
 Week boundaries in Eastern time: week 1 runs from Aug 25 (after the draft) to Sep 15; week 2 from Wed Sep 16 03:23 to Wed Sep 23; week 3 from Wed Sep 23 04:00 to Wed Sep 30.
 

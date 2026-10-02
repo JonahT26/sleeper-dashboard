@@ -27,7 +27,12 @@ PLAYER_WEEKS_COLUMNS = [
     "season", "week", "roster_id", "slot_order", "lineup_slot", "player_id", "is_starter",
     "is_empty_slot", "points", "position", "full_name", "nfl_team",
 ]
+TRANSACTIONS_COLUMNS = [
+    "transaction_id", "season", "week", "is_preseason", "type", "status", "roster_id",
+    "player_id", "player_name", "action", "waiver_bid", "created_at",
+]
 EMPTY_SLOT = "0"
+EASTERN = "America/New_York"
 
 
 def read_raw(season, filename, raw_dir=RAW_DIR):
@@ -38,9 +43,12 @@ def read_raw(season, filename, raw_dir=RAW_DIR):
         return json.load(f)
 
 
-def read_matchups(season, raw_dir=RAW_DIR):
-    """Return {week: matchups} for every week extract saved, which is completed weeks only."""
-    folder = raw_dir / str(season) / "matchups"
+def read_weekly(season, kind, raw_dir=RAW_DIR):
+    """Return {week: records} from data/raw/{season}/{kind}/week_XX.json.
+
+    kind is "matchups" or "transactions". Extract only saves completed weeks.
+    """
+    folder = raw_dir / str(season) / kind
     if not folder.exists():
         raise FileNotFoundError(f"{folder} is missing. Run `python -m sleeper_dash.extract` first.")
     weeks = {}
@@ -48,6 +56,10 @@ def read_matchups(season, raw_dir=RAW_DIR):
         with open(path, encoding="utf-8") as f:
             weeks[int(path.stem.removeprefix("week_"))] = json.load(f)
     return weeks
+
+
+def read_matchups(season, raw_dir=RAW_DIR):
+    return read_weekly(season, "matchups", raw_dir)
 
 
 def read_players(path=PLAYERS_CACHE_PATH):
@@ -258,6 +270,71 @@ def build_player_weeks(league, matchups_by_week, players):
     return player_weeks.sort_values(["week", "roster_id", "slot_order"]).reset_index(drop=True)
 
 
+def build_transactions(league, transactions_by_week, players, season_start_date):
+    """One row per player move in completed transactions. Key: (transaction_id, player_id, action).
+
+    Each player in `drops` becomes a "drop" row for the team releasing them and
+    each player in `adds` an "add" row for the team receiving them, so a 1-for-1
+    trade is 4 rows. waiver_bid is set on the add rows of waiver claims only, so
+    summing it never double-counts FAAB. Week 1 moves created before
+    season_start_date (midnight US Eastern) are flagged is_preseason. Draft picks
+    and FAAB traded in trades are not player moves and are not represented.
+    """
+    season = int(league["season"])
+    preseason_cutoff = pd.Timestamp(season_start_date, tz=EASTERN)
+
+    rows = []
+    for week, transactions in sorted(transactions_by_week.items()):
+        for t in transactions:
+            if t["leg"] != week:
+                raise ValueError(f"Transaction {t['transaction_id']} has leg {t['leg']} but is in the week {week} file.")
+            if t["status"] != "complete":
+                continue
+            created_at = pd.Timestamp(t["created"], unit="ms", tz="UTC").tz_convert(EASTERN)
+            bid = (t.get("settings") or {}).get("waiver_bid") if t["type"] == "waiver" else None
+            for action, moves in (("drop", t.get("drops")), ("add", t.get("adds"))):
+                for player_id, roster_id in (moves or {}).items():
+                    rows.append(
+                        {
+                            "transaction_id": t["transaction_id"],
+                            "season": season,
+                            "week": week,
+                            "is_preseason": week == 1 and created_at < preseason_cutoff,
+                            "type": t["type"],
+                            "status": t["status"],
+                            "roster_id": roster_id,
+                            "player_id": player_id,
+                            "player_name": _player_name(players.get(player_id) or {}),
+                            "action": action,
+                            "waiver_bid": bid if action == "add" else None,
+                            "created_at": created_at,
+                        }
+                    )
+
+    moves = pd.DataFrame(rows, columns=TRANSACTIONS_COLUMNS)
+    moves = moves.astype(
+        {
+            "transaction_id": "string", "season": "int64", "week": "int64", "is_preseason": "bool",
+            "type": "string", "status": "string", "roster_id": "int64", "player_id": "string",
+            "player_name": "string", "action": "string", "waiver_bid": "Int64",
+            "created_at": f"datetime64[ns, {EASTERN}]",
+        }
+    )
+    if moves.duplicated(["transaction_id", "player_id", "action"]).any():
+        raise ValueError("transactions has duplicate (transaction_id, player_id, action) rows.")
+    return moves.sort_values(["created_at", "transaction_id", "action"], ascending=[True, True, False]).reset_index(drop=True)
+
+
+def _season_start_date(state, league):
+    """The season's start date from /state/nfl, which only describes the current NFL season."""
+    if str(state["season"]) != str(league["season"]):
+        raise ValueError(
+            f"state.json describes season {state['season']}, not the league's season {league['season']}, "
+            "so its season_start_date can't be used to split out preseason transactions."
+        )
+    return state["season_start_date"]
+
+
 def _standings(team_weeks, teams):
     """Season-to-date records and points from team_weeks, for display and reconciliation."""
     by_team = team_weeks.groupby("roster_id")
@@ -304,8 +381,12 @@ def main():
 
     teams = build_teams(league, rosters, users)
     team_weeks = build_team_weeks(league, matchups)
-    player_weeks = build_player_weeks(league, matchups, read_players())
-    for name, table in [("teams", teams), ("team_weeks", team_weeks), ("player_weeks", player_weeks)]:
+    players = read_players()
+    player_weeks = build_player_weeks(league, matchups, players)
+    start_date = _season_start_date(read_raw(season, "state.json"), league)
+    transactions = build_transactions(league, read_weekly(season, "transactions"), players, start_date)
+    tables = [("teams", teams), ("team_weeks", team_weeks), ("player_weeks", player_weeks), ("transactions", transactions)]
+    for name, table in tables:
         path = save_table(table, name)
         print(f"Saved {len(table)} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
 
@@ -315,6 +396,51 @@ def main():
     print(f"\nWeeks covered: {weeks}; playoff rows: {int(team_weeks['is_playoff'].sum())}")
     _report_standings(team_weeks, teams, rosters)
     _report_player_weeks(player_weeks, team_weeks)
+    _report_transactions(transactions, teams, rosters, start_date)
+
+
+def _report_transactions(moves, teams, rosters, start_date):
+    print("\nTRANSACTIONS (completed only)")
+    print(f"  Rows: {len(moves)} player moves in {moves['transaction_id'].nunique()} transactions; "
+          f"preseason (before {start_date}): {moves.loc[moves['is_preseason'], 'transaction_id'].nunique()} transactions")
+
+    by_type = moves.groupby("type").agg(
+        transactions=("transaction_id", "nunique"),
+        adds=("action", lambda s: int((s == "add").sum())),
+        drops=("action", lambda s: int((s == "drop").sum())),
+    )
+    print("\n  By type:")
+    print("  " + by_type.to_string().replace("\n", "\n  "))
+
+    adds = moves[moves["action"] == "add"]
+    by_team = pd.DataFrame(
+        {
+            "adds": adds.groupby("roster_id").size(),
+            "drops": moves[moves["action"] == "drop"].groupby("roster_id").size(),
+            "waiver_wins": adds[adds["type"] == "waiver"].groupby("roster_id")["transaction_id"].nunique(),
+            "trades": moves[moves["type"] == "trade"].groupby("roster_id")["transaction_id"].nunique(),
+            "faab_spent": adds.groupby("roster_id")["waiver_bid"].sum(),
+        }
+    ).reindex(teams["roster_id"]).fillna(0).astype(int)
+    by_team["sleeper_faab_now"] = by_team.index.map({r["roster_id"]: r["settings"]["waiver_budget_used"] for r in rosters})
+    by_team["faab_diff"] = by_team["sleeper_faab_now"] - by_team["faab_spent"]
+    by_team.insert(0, "team_name", teams.set_index("roster_id")["team_name"])
+    by_team = by_team.sort_values(["adds", "faab_spent"], ascending=False)
+    print("\n  By team (sorted by adds):")
+    print("  " + by_team.to_string().replace("\n", "\n  "))
+    print(f"\n  Teams where FAAB spent through completed weeks differs from Sleeper's current figure: "
+          f"{int((by_team['faab_diff'] != 0).sum())}")
+    print("  (Sleeper's waiver_budget_used also counts the in-progress week and FAAB traded between teams;")
+    print("   this table covers completed weeks and player moves only.)")
+
+    recent = moves.merge(teams[["roster_id", "team_name"]], on="roster_id")
+    recent = recent.sort_values(["created_at", "transaction_id", "action"], ascending=[False, True, True])
+    latest_ids = recent["transaction_id"].drop_duplicates().head(5)
+    recent = recent[recent["transaction_id"].isin(latest_ids)].copy()
+    recent["created_at"] = recent["created_at"].dt.strftime("%a %b %d %I:%M %p ET")
+    print("\n  Five most recent transactions (all their moves):")
+    columns = ["created_at", "week", "type", "team_name", "action", "player_name", "waiver_bid"]
+    print("  " + recent[columns].to_string(index=False).replace("\n", "\n  "))
 
 
 def _report_player_weeks(player_weeks, team_weeks):
