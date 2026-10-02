@@ -79,7 +79,7 @@ sleeper-dashboard/
 | Module | Responsibility | Phase | Status |
 |---|---|---|---|
 | `config.py` | Load and validate `config.yaml` | 0 | built |
-| `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | planned |
+| `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
 | `extract.py` | Pull league, users, rosters, state, drafts, picks, and per-week matchups and transactions into `data/raw/` | 1 | planned |
 | `transform.py` | Build the tidy tables below from raw JSON only | 1 | planned |
 | `validate.py` | Integrity and reconciliation checks; raises on failure | 1 | planned |
@@ -232,3 +232,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Project planned; docs created.
 - Phase 0: repo skeleton, `pyproject.toml`, `config.yaml`, `config.py`, `.venv` with editable install.
 - Phase 0: `scripts/smoke_test.py` API check; league settings snapshot filled in.
+- Phase 1: `api.py` (`get` with 10s timeout, 3 retries with 1/2/4s backoff, 0.25s pacing; `get_players` with 24h cache). `tests/conftest.py` blocks real network access in every test.
