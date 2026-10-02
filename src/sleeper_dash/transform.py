@@ -372,21 +372,31 @@ def save_table(df, name, processed_dir=PROCESSED_DIR):
     return path
 
 
-def main():
-    season = load_config().season
+def build_tables(season):
+    """Build every tidy table from saved files. Returns (tables, league, rosters, season_start_date)."""
     league = read_raw(season, "league.json")
     rosters = read_raw(season, "rosters.json")
     users = read_raw(season, "users.json")
-
     matchups = read_matchups(season)
-
-    teams = build_teams(league, rosters, users)
-    team_weeks = build_team_weeks(league, matchups)
     players = read_players()
-    player_weeks = build_player_weeks(league, matchups, players)
     start_date = _season_start_date(read_raw(season, "state.json"), league)
-    transactions = build_transactions(league, read_weekly(season, "transactions"), players, start_date)
-    tables = {"teams": teams, "team_weeks": team_weeks, "player_weeks": player_weeks, "transactions": transactions}
+
+    tables = {
+        "teams": build_teams(league, rosters, users),
+        "team_weeks": build_team_weeks(league, matchups),
+        "player_weeks": build_player_weeks(league, matchups, players),
+        "transactions": build_transactions(league, read_weekly(season, "transactions"), players, start_date),
+    }
+    return tables, league, rosters, start_date
+
+
+def save_tables(tables, processed_dir=PROCESSED_DIR):
+    """Save every table to data/processed/; returns {name: path}."""
+    return {name: save_table(table, name, processed_dir) for name, table in tables.items()}
+
+
+def main():
+    tables, league, rosters, start_date = build_tables(load_config().season)
 
     # Check before saving, so tables that fail never overwrite the last good ones.
     try:
@@ -396,10 +406,11 @@ def main():
     print(format_results(results))
     print()
 
-    for name, table in tables.items():
-        path = save_table(table, name)
-        print(f"Saved {len(table)} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
+    for name, path in save_tables(tables).items():
+        print(f"Saved {len(tables[name])} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
 
+    teams, team_weeks = tables["teams"], tables["team_weeks"]
+    player_weeks, transactions = tables["player_weeks"], tables["transactions"]
     pd.set_option("display.width", 200)
     pd.set_option("display.max_columns", None)
     weeks = sorted(int(w) for w in team_weeks["week"].unique())

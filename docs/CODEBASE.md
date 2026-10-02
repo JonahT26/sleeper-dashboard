@@ -10,16 +10,19 @@ What lives where, how data moves, and the shape of every table. This file descri
 Sleeper API
     │
     ▼
-extract.py ─────────► data/raw/{season}/*.json        untouched API responses
+extract.py ─────────► data/raw/{season}/*.json        untouched API responses (gitignored)
+    │      └────────► data/cache/players_nfl.json     player list, refreshed at most once a day (gitignored)
+    ▼
+transform.py                                          builds tidy tables in memory (see Data model)
     │
     ▼
-transform.py ───────► data/processed/*.csv            tidy tables (see Data model)
+validate.py                                           6 checks on the in-memory tables; any failure stops the run
+    │                                                 before anything is saved
+    ▼
+data/processed/*.csv                                  saved, then re-read and checked again
     │
     ▼
-validate.py                                           reconciliation checks; stops the run on failure
-    │
-    ▼
-lineup.py + metrics/ ► data/processed/metrics_*.csv   optimal lineups, luck, power score, awards
+lineup.py + metrics/ ► data/processed/metrics_*.csv   Phase 2: optimal lineups, luck, power score, awards
     │
     ▼
 dashboard/  (Phase 3) ► site/index.html               static page
@@ -28,7 +31,7 @@ dashboard/  (Phase 3) ► site/index.html               static page
 GitHub Pages (Phase 4)                                rebuilt every Tuesday by GitHub Actions
 ```
 
-`pipeline.py` runs every step in order as a full refresh. Nothing is appended incrementally.
+`python -m sleeper_dash.pipeline` runs every built step in order as a full refresh (currently extract → transform → validate → save → re-validate). Nothing is appended incrementally. Two back-to-back runs produce byte-identical raw and processed files (verified 2026-10-02: 16 of 16 files). It prints weeks processed, API calls, rows per table, checks passed, and run time (~3 seconds), and exits with code 1 on any failure, leaving the last good tables in place.
 
 ## Repository layout
 
@@ -83,7 +86,7 @@ sleeper-dashboard/
 | `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`. Writes to a `.partial` staging folder and swaps it in only when every call succeeds. Also refreshes the players cache via `api.get_players()` (at most once a day) | 1 | built |
 | `transform.py` | Build the tidy tables below from saved files only (raw JSON plus the players cache): `teams`, `team_weeks`, `player_weeks`, `transactions` | 1 | built |
 | `validate.py` | Six checks: one row per team per completed week (and no missing weeks); each `matchup_id` has exactly 2 teams; starter points equal team points (±0.01); regular-season W–L–T matches Sleeper's roster settings, counting median games when the league has them; regular-season points for/against match `fpts`/`fpts_against` (±0.01); no duplicate keys in any table. `transform` runs them **before saving** and stops with a pass/fail table if any fail; `python -m sleeper_dash.validate` re-checks the saved CSVs | 1 | built |
-| `pipeline.py` | Orchestrates extract → transform → validate → metrics; prints a run summary | 1–2 | planned |
+| `pipeline.py` | Orchestrates extract → transform → validate → save → re-validate the saved CSVs; prints a run summary; exit code 1 on failure. Metrics are added in Phase 2 | 1–2 | built (Phase 1 steps) |
 | `lineup.py` | Optimal lineup per team-week, solved as an assignment problem | 2 | planned |
 | `metrics/*` | Pure functions implementing `docs/METRICS_SPEC.md` | 2 | planned |
 | `dashboard/*` | Render `site/index.html` per `docs/UI_GUIDE.md` | 3 | planned |
@@ -258,3 +261,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 1: `player_weeks` table (603 rows for weeks 1–3); extract now refreshes the players cache.
 - Phase 1: `transactions` table (189 moves in 114 completed transactions; 19 preseason); all four Phase 1 tidy tables built.
 - Phase 1: `validate.py` with six checks, run by transform before saving; all pass on weeks 1–3. Assumption to verify at week 15: Sleeper's roster `wins`/`fpts` exclude playoff games.
+- Phase 1: `pipeline.py` runs the full refresh end to end; two consecutive runs gave identical outputs. `transform.build_tables` / `save_tables` shared by transform and pipeline.

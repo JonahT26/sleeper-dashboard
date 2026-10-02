@@ -41,10 +41,10 @@ Scoring settings, roster slots, playoff start week, and whether the league plays
 ```powershell
 .venv\Scripts\Activate.ps1         # start of every session, from the project folder (Mac/Linux: source .venv/bin/activate)
 pip install -e .                   # one-time setup, or after adding a dependency to pyproject.toml
-python -m sleeper_dash.extract     # re-download the season's raw JSON into data/raw/{season}/
-python -m sleeper_dash.transform   # rebuild tidy tables from data/raw/; validates before saving
+python -m sleeper_dash.pipeline    # full refresh: extract → transform → validate → save; short summary; exit 1 on failure
+python -m sleeper_dash.extract     # step 1 only: re-download raw JSON into data/raw/{season}/ and refresh the players cache
+python -m sleeper_dash.transform   # step 2 only: rebuild tables from saved files, validate, save, print detailed reports
 python -m sleeper_dash.validate    # re-run the checks on the saved tables and print pass/fail
-python -m sleeper_dash.pipeline    # full refresh: extract → transform → validate → metrics
 pytest                             # run all tests
 jupyter lab                        # open the notebooks
 ```
