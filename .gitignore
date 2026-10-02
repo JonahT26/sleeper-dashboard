@@ -4,6 +4,10 @@
 # Cached Sleeper data (re-downloaded at most once a day)
 data/cache/
 
+# Raw Sleeper JSON stays off GitHub (it holds managers' personal settings); re-downloaded every run
+data/raw/*
+!data/raw/.gitkeep
+
 # Python build and bytecode files
 __pycache__/
 *.py[cod]

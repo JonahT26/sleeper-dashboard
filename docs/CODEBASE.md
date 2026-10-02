@@ -63,7 +63,7 @@ sleeper-dashboard/
 ├── scripts/
 │   └── smoke_test.py            one-off API check from Phase 0
 ├── data/
-│   ├── raw/{season}/            committed: the season's raw JSON (small, useful history)
+│   ├── raw/{season}/            gitignored: the season's raw JSON (personal settings; re-downloaded every run)
 │   ├── cache/                   gitignored: players_nfl.json
 │   └── processed/               committed: tidy CSVs
 ├── notebooks/                   validation and model-exploration notebooks
@@ -80,7 +80,7 @@ sleeper-dashboard/
 |---|---|---|---|
 | `config.py` | Load and validate `config.yaml` | 0 | built |
 | `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
-| `extract.py` | Pull league, users, rosters, state, drafts, picks, and per-week matchups and transactions into `data/raw/` | 1 | planned |
+| `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`. Writes to a `.partial` staging folder and swaps it in only when every call succeeds | 1 | built |
 | `transform.py` | Build the tidy tables below from raw JSON only | 1 | planned |
 | `validate.py` | Integrity and reconciliation checks; raises on failure | 1 | planned |
 | `pipeline.py` | Orchestrates extract → transform → validate → metrics; prints a run summary | 1–2 | planned |
@@ -188,22 +188,27 @@ Base URL `https://api.sleeper.app/v1`. Read-only, no authentication.
 
 ### Known quirks
 
-Verify each against real responses during Phase 1 and record findings in `docs/DATA_DICTIONARY.md`.
+Field-by-field detail, example records, and the evidence behind each point are in **[DATA_DICTIONARY.md](DATA_DICTIONARY.md)** (profiled 2026-10-02 on weeks 1–3).
 
-- **Joins:** matchups only reference `roster_id`. Rosters map `roster_id` → `owner_id`, and users map `user_id` (= `owner_id`) → names.
-- **Opponents:** two rows sharing a `matchup_id` in the same week played each other.
-- **Empty slots:** `starters` uses `"0"` for an empty starting slot. `starters_points` is aligned to `starters` by position.
-- **Bench points:** `players_points` covers every rostered player, starters and bench.
-- **Reconciliation:** roster `settings` holds `wins`, `losses`, `ties`, `fpts` + `fpts_decimal`, and `fpts_against` + `fpts_against_decimal`. Totals = whole part + decimal part / 100.
-- **Median game:** if the league plays a weekly median game, Sleeper's own win totals may include those wins. Check the league settings (look for `league_average_match`) and confirm.
-- **Defenses:** player IDs are team abbreviations.
+- **Joins:** matchups only reference `roster_id`. Rosters map `roster_id` → `owner_id`, and users map `user_id` (= `owner_id`) → names. Confirmed: no missing owners.
+- **Opponents:** two rows sharing a `matchup_id` in the same week played each other. Confirmed: each ID appears exactly twice per week; no nulls yet (expect them in playoff weeks).
+- **Empty slots:** `starters` uses `"0"` for an empty starting slot (none seen yet). `starters_points` is aligned to `starters` by position (confirmed).
+- **Bench points:** `players_points` covers every player in `players`: starters, bench, **and injured reserve**. Matchups don't say which player was on IR.
+- **Reconciliation:** roster `settings` totals = whole part + decimal part / 100. Confirmed to the cent against summed matchup points. `ppts` is *(likely)* Sleeper's max possible points; use it only as a soft check (our optimal lineups run 0–4 points above it).
+- **Median game:** on in this league. Sleeper's `wins`/`losses` **include** median games; `metadata.record` lists head-to-head then median result for each week. The comparison is against the median, not the mean.
+- **Defenses:** player IDs are team abbreviations (always in the `DEF` slot).
+- **Snapshots:** roster `starters`, `players`, `reserve`, and `metadata.record` describe today, not past weeks. `settings.total_moves` is always 0; don't use it.
 - **Past seasons:** follow `previous_league_id` back through earlier leagues.
 - **Time:** transaction `created` is epoch milliseconds.
+- **Completed weeks:** the latest completed week is the smaller of league `settings.last_scored_leg` (last week Sleeper finished scoring) and, while the league's NFL regular season is under way, `/state/nfl` `week` − 1. Verified 2026-10-02: state week 4 (TNF played), `last_scored_leg` 3.
+- **Null instead of 404:** some bad IDs return 200 with a `null` body; extract treats `null` as an error.
+- **Transaction status:** includes `failed` (lost waiver claims) as well as `complete`. `adds`/`drops` are `null`, not `{}`, when empty. Week 1 includes all preseason moves.
+- **Public data:** `league.json` carries the last league-chat author and time (so far Sleeper's system bot; text null), and `users.json` carries notification preferences and custom mascot messages.
 
 ## Testing
 
 - `pytest` runs everything; tests never call the network.
-- Fixtures in `tests/fixtures/` are real responses saved during Phase 1.
+- Fixtures in `tests/fixtures/` are real responses saved during Phase 1, anonymised before committing (`rosters.json`: fake `owner_id`s `1000000000000000NN` where NN is the roster ID, player nicknames replaced with `"nickname"`).
 - Every metric has invariant tests (e.g. all-play wins + losses + ties = 11 per team-week in a 12-team league).
 
 ## Adding a new metric
@@ -233,3 +238,6 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 0: repo skeleton, `pyproject.toml`, `config.yaml`, `config.py`, `.venv` with editable install.
 - Phase 0: `scripts/smoke_test.py` API check; league settings snapshot filled in.
 - Phase 1: `api.py` (`get` with 10s timeout, 3 retries with 1/2/4s backoff, 0.25s pacing; `get_players` with 24h cache). `tests/conftest.py` blocks real network access in every test.
+- Phase 1: `extract.py` with completed-week logic and tests; first raw pull (weeks 1–3, 12 API calls); fixtures `tests/fixtures/matchups_week_01.json` and `rosters.json`.
+- Phase 1: `docs/DATA_DICTIONARY.md` written from the first pull; known quirks updated with confirmed findings.
+- Phase 1: `data/raw/` moved out of git (owner decision); fixtures anonymised; IR, median-tie, and preseason rules recorded.

@@ -41,6 +41,7 @@ Scoring settings, roster slots, playoff start week, and whether the league plays
 ```powershell
 .venv\Scripts\Activate.ps1         # start of every session, from the project folder (Mac/Linux: source .venv/bin/activate)
 pip install -e .                   # one-time setup, or after adding a dependency to pyproject.toml
+python -m sleeper_dash.extract     # re-download the season's raw JSON into data/raw/{season}/
 python -m sleeper_dash.pipeline    # full refresh: extract → transform → validate → metrics
 pytest                             # run all tests
 jupyter lab                        # open the notebooks
@@ -76,6 +77,11 @@ Roadmap:
 ## Decisions made
 
 - **Public GitHub repo** (`sleeper-dashboard`), decided 2026-10-02 in Phase 0, so the dashboard can use free GitHub Pages hosting. Everything committed is visible to anyone, so never commit anything that isn't safe to share.
+- **Raw data stays off GitHub** (2026-10-02). `data/raw/` is gitignored because it holds managers' personal settings; the pipeline re-downloads it every run. Test fixtures are anonymised (fake `owner_id`s, nicknames replaced).
+- **Metric data rules** (2026-10-02; details and evidence in `docs/DATA_DICTIONARY.md`, to be carried into `docs/METRICS_SPEC.md`):
+  - Injured-reserve players count as bench in past weeks (Claude's call, delegated by the owner).
+  - Median ties are not handled; validation stops the run if one ever happens.
+  - Preseason transactions (week 1, created before `season_start_date`) are kept separate from week 1.
 
 ## Open decisions
 
