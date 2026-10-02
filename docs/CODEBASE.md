@@ -262,3 +262,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 1: `transactions` table (189 moves in 114 completed transactions; 19 preseason); all four Phase 1 tidy tables built.
 - Phase 1: `validate.py` with six checks, run by transform before saving; all pass on weeks 1–3. Assumption to verify at week 15: Sleeper's roster `wins`/`fpts` exclude playoff games.
 - Phase 1: `pipeline.py` runs the full refresh end to end; two consecutive runs gave identical outputs. `transform.build_tables` / `save_tables` shared by transform and pipeline.
+- Phase 1 complete: `notebooks/01_data_check.ipynb` (standings, weekly box plot, score histogram, team-by-week heatmap; committed without outputs).

@@ -66,11 +66,17 @@ Keep this list current as commands are added.
 
 ## Current status
 
-**Phase 0 — Setup.** Update this section at the end of every phase.
+**Phase 1 — Data pull: complete (2026-10-02). Next: Phase 2 — Metrics**, starting with drafting `docs/METRICS_SPEC.md` with the owner (owner approves each definition before it is built). Update this section at the end of every phase.
+
+Where things stand:
+- `python -m sleeper_dash.pipeline` runs extract → transform → validate as a full refresh; all 6 checks pass on weeks 1–3, and two consecutive runs give identical outputs.
+- Tables in `data/processed/`: `teams`, `team_weeks`, `player_weeks`, `transactions` (see `docs/CODEBASE.md`). Raw field notes and the IR, median-tie, and preseason decisions are in `docs/DATA_DICTIONARY.md`.
+- `notebooks/01_data_check.ipynb`: standings and score distributions for eyeballing the data.
+- To verify at week 15: whether Sleeper plays the median game in the playoffs, and whether roster `wins`/`fpts` include playoff games.
 
 Roadmap:
-- Phase 0: Setup (environment, repo, API smoke test)
-- Phase 1: Data pull (raw extract, tidy tables, validation)
+- Phase 0: Setup (environment, repo, API smoke test) — complete
+- Phase 1: Data pull (raw extract, tidy tables, validation) — complete
 - Phase 2: Metrics (spec, optimal lineups, luck, consistency, schedule, power score, awards)
 - Phase 3: Dashboard (static HTML per `docs/UI_GUIDE.md`)
 - Phase 4: Automation (weekly GitHub Action, GitHub Pages)
