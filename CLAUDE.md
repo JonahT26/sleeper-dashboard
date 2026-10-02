@@ -68,6 +68,8 @@ Keep this list current as commands are added.
 
 **Phase 1 — Data pull: complete (2026-10-02). Next: Phase 2 — Metrics**, starting with drafting `docs/METRICS_SPEC.md` with the owner (owner approves each definition before it is built). Update this section at the end of every phase.
 
+**Starting a new session? Read `docs/HANDOFF.md` first.** It covers working style, environment quirks, the decisions log, open questions, and the Phase 2 plan.
+
 Where things stand:
 - `python -m sleeper_dash.pipeline` runs extract → transform → validate as a full refresh; all 6 checks pass on weeks 1–3, and two consecutive runs give identical outputs.
 - Tables in `data/processed/`: `teams`, `team_weeks`, `player_weeks`, `transactions` (see `docs/CODEBASE.md`). Raw field notes and the IR, median-tie, and preseason decisions are in `docs/DATA_DICTIONARY.md`.

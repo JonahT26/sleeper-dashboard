@@ -44,7 +44,8 @@ sleeper-dashboard/
 │   ├── CODEBASE.md              this file
 │   ├── UI_GUIDE.md              design system and dashboard layout
 │   ├── METRICS_SPEC.md          metric definitions (Phase 2, owner-approved)
-│   └── DATA_DICTIONARY.md       raw Sleeper field notes (Phase 1)
+│   ├── DATA_DICTIONARY.md       raw Sleeper field notes (Phase 1)
+│   └── HANDOFF.md               session handoff: working style, environment, decisions, open questions
 ├── src/sleeper_dash/
 │   ├── __init__.py
 │   ├── config.py                loads config.yaml
