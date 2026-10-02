@@ -216,16 +216,19 @@ Verify each against real responses during Phase 1 and record findings in `docs/D
 
 ## League settings snapshot
 
-Filled in by the Phase 0 API smoke test. For reference only; code reads live settings.
+Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02, during NFL week 4. For reference only; code reads live settings.
 
-- League name:
+- League name: 12 Supersexy Superflexy Hoekies
 - Teams: 12
-- Roster slots:
-- Scoring (PPR value etc.):
-- Playoff start week:
-- Weekly median game:
+- Status: `in_season`
+- Roster slots: QB, RB, RB, WR, WR, FLEX, REC_FLEX, SUPER_FLEX, K, DEF + 6 BN (10 starters, 16 total). No dedicated TE slot: TEs only start via FLEX, REC_FLEX, or SUPER_FLEX.
+- Scoring: half PPR (`rec` 0.5) with a TE premium (`bonus_rec_te` 0.5, so TEs get 1.0 per catch); pass 0.04/yd, 4/TD, −2/INT; rush and rec 0.1/yd, 6/TD; fumble lost −2. 47 scoring keys in total.
+- Playoff start week: 15
+- Weekly median game: yes (`league_average_match` = 1)
+- Previous league ID: `1243747994637963265` (a prior season exists for Phase 5)
 
 ## Changelog
 
 - Project planned; docs created.
 - Phase 0: repo skeleton, `pyproject.toml`, `config.yaml`, `config.py`, `.venv` with editable install.
+- Phase 0: `scripts/smoke_test.py` API check; league settings snapshot filled in.
