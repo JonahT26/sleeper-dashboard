@@ -7,8 +7,8 @@ The source of truth for every metric. Code follows this file, not the other way 
 | # | Metric | Status |
 |---|---|---|
 | 1 | All-play record | **Confirmed** 2026-10-02 |
-| 2 | Expected wins and luck | In interview |
-| 3 | Lineup efficiency | Not started |
+| 2 | Expected wins and luck | **Confirmed** 2026-10-02 |
+| 3 | Lineup efficiency | In interview |
 | 4 | Consistency | Not started |
 | 5 | Strength of schedule | Not started |
 | 6 | Power score | Not started |
@@ -75,3 +75,58 @@ Display: "all-play 41–14", with a third number only when ties exist ("41–13�
 3. The week's highest scorer has *L* = 0, and the lowest scorer has *W* = 0.
 4. Ordering: if *p₍ᵢ,w₎* > *p₍ⱼ,w₎*, then *W₍ᵢ,w₎* > *W₍ⱼ,w₎*.
 5. **Median cross-check (regular-season weeks with a median game):** `median_result` = W exactly when *W₍ᵢ,w₎* ≥ *N*/2. This checks the all-play table and `team_weeks` against each other.
+
+---
+
+## 2. Expected wins and luck
+
+**Status:** confirmed by the owner, 2026-10-02.
+
+**Meaning.** *Expected wins* is how many games your scores deserved to win against an average opponent. *Luck* is actual wins minus expected wins. Positive luck means your schedule handed you wins your scores didn't earn; negative means it took wins away.
+
+**Formula.** For team *i* in regular-season week *w*:
+
+| Quantity | Definition |
+|---|---|
+| Expected wins *xW₍ᵢ,w₎* | that week's all-play win % (metric 1) = (*W* + ½*T*) ÷ (*n₍w₎* − 1). This is the probability of beating an opponent drawn at random from that week's other teams |
+| Actual wins *A₍ᵢ,w₎* | head-to-head result: 1 for a win, ½ for a tie, 0 for a loss |
+| Luck *λ₍ᵢ,w₎* | *A₍ᵢ,w₎* − *xW₍ᵢ,w₎* |
+| Season to date, through week *t* | Σ*xW*, Σ*A*, and Σ*λ* over regular-season weeks 1…*t* |
+
+Example: the 4th-highest score of 12 beats 8 of the other 11 teams, so *xW* = 8/11 = 0.73. A loss that week gives luck −0.73; a win gives +0.27.
+
+Display: expected wins to 1 decimal place (`UI_GUIDE.md`); luck as a signed number of wins, e.g. "+1.4".
+
+**Record scale (owner decision).** Head-to-head only. The ladder shows the head-to-head record next to the all-play record ("4–1, all-play 41–14"), and actual wins, expected wins, and luck are all on the same scale of one game per week. This settles the Phase 1 open question about the ladder record. Sleeper's official record, which includes median games, is not shown on the ladder.
+
+Why the median game doesn't change luck: a team's median-game result is fully determined by its own score (it wins exactly when all-play wins ≥ *N*/2), so its expected result always equals its actual result and its luck is always zero. Including median games would double the scale but leave luck unchanged.
+
+**Model (owner decision).** All-play based, as above. The alternative, a score-distribution model of the probability of beating the actual opponent from each team's mean and SD, was rejected: it mixes team strength into luck, overlapping with the power score, and is unstable with few weeks of data.
+
+**Inputs.** Metric 1 (weekly all-play *W*, *T*, and *n₍w₎*); `team_weeks`: `result`, `is_playoff`.
+
+**Parameters.** None.
+
+**Edge cases.**
+
+| Case | Rule |
+|---|---|
+| Playoff weeks | **Excluded** (owner decision). Expected wins, actual wins, and luck cover the regular season only, because their job is to explain the regular-season standings. Weekly all-play values still exist for playoff weeks (metric 1). From week 15 on, season-to-date values stay at their end-of-regular-season totals |
+| Head-to-head ties | ½ actual win, consistent with all-play ties |
+| Median game | Not part of actual or expected wins (see Record scale) |
+| Exact score ties with other teams | Handled through all-play ties (½ each) |
+| Empty starting slots | No adjustment. The team's actual score stands |
+| Players added mid-week | No adjustment. The team's actual score stands |
+| Small early-season samples | No shrinkage. Luck describes results already banked rather than estimating talent, so it is valid from week 1 and simply starts close to zero |
+
+**Expected range.**
+- Weekly luck lies strictly between −1 and +1, and at most ±(*n₍w₎* − 2)/(*n₍w₎* − 1) = ±10/11, e.g. losing with the second-highest score.
+- Season expected wins lie between 0 and the number of regular-season games played.
+- The league's total luck is 0 every week, so the league average is 0.
+- Weekly luck has a standard deviation of roughly 0.4 wins, so by the end of a 14-week regular season most teams should be within about ±3 wins.
+
+**Sanity checks.**
+1. In every regular-season week where all teams have a game, the league's luck sums to 0 (±0.000001), because total actual wins = *N*/2 = total expected wins.
+2. 0 ≤ *xW₍ᵢ,w₎* ≤ 1 and −1 < *λ₍ᵢ,w₎* < 1 for every team-week.
+3. A head-to-head win with the week's top score has *λ* = 0; a loss with the week's bottom score has *λ* = 0.
+4. Season Σ*A* reproduces the head-to-head part of Sleeper's record: Sleeper's wins minus median wins (cross-check with `validate.py`).
