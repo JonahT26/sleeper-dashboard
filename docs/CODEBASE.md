@@ -81,7 +81,7 @@ sleeper-dashboard/
 | `config.py` | Load and validate `config.yaml` | 0 | built |
 | `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
 | `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`. Writes to a `.partial` staging folder and swaps it in only when every call succeeds | 1 | built |
-| `transform.py` | Build the tidy tables below from raw JSON only | 1 | planned |
+| `transform.py` | Build the tidy tables below from raw JSON only. Built so far: `teams` | 1 | in progress |
 | `validate.py` | Integrity and reconciliation checks; raises on failure | 1 | planned |
 | `pipeline.py` | Orchestrates extract → transform → validate → metrics; prints a run summary | 1–2 | planned |
 | `lineup.py` | Optimal lineup per team-week, solved as an assignment problem | 2 | planned |
@@ -91,6 +91,8 @@ sleeper-dashboard/
 ## Data model
 
 All tables are long and tidy: one row per observation at the stated grain. `season` is included everywhere so past seasons can be stacked later.
+
+CSV conventions (`transform.save_table`): UTF-8 with a byte-order mark so Excel shows special characters; list columns stored as JSON text (e.g. `[]`). IDs are 18-digit strings, so read them as text (`pd.read_csv(path, dtype={"owner_id": str})`). Excel keeps only 15 significant digits and will corrupt IDs if a CSV is opened directly.
 
 ### `players` (from the cached `/players/nfl`)
 Grain: one row per NFL player. Key: `player_id`.
@@ -103,17 +105,17 @@ Grain: one row per NFL player. Key: `player_id`.
 | fantasy_positions | list[str] | Eligibility for lineup slots |
 | nfl_team | str | Current team; may be null for free agents |
 
-### `teams`
-Grain: one row per fantasy team per season. Key: (`season`, `roster_id`).
+### `teams` (built)
+Grain: one row per fantasy team per season. Key: (`season`, `roster_id`). Source: `rosters.json` left-joined to `users.json` on `owner_id` = `user_id`.
 
 | Column | Type | Notes |
 |---|---|---|
-| season | int | |
+| season | int | From `league.json` (a string in the API) |
 | roster_id | int | Team key used everywhere |
-| owner_id | str | Joins to users; can be null for an orphaned team |
-| co_owners | list[str] | Usually empty |
-| display_name | str | Manager's Sleeper username display |
-| team_name | str | `metadata.team_name` if set, else display_name |
+| owner_id | str | Joins to users; can be null for an orphaned team (row kept, names null) |
+| co_owners | list[str] | Raw `null` becomes `[]`; stored as JSON text in CSV |
+| display_name | str | Manager's Sleeper username; whitespace stripped |
+| team_name | str | User's `metadata.team_name` if set and not blank, else display_name; whitespace stripped |
 
 ### `team_weeks`
 Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`).
@@ -241,3 +243,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 1: `extract.py` with completed-week logic and tests; first raw pull (weeks 1–3, 12 API calls); fixtures `tests/fixtures/matchups_week_01.json` and `rosters.json`.
 - Phase 1: `docs/DATA_DICTIONARY.md` written from the first pull; known quirks updated with confirmed findings.
 - Phase 1: `data/raw/` moved out of git (owner decision); fixtures anonymised; IR, median-tie, and preseason rules recorded.
+- Phase 1: `transform.py` with `teams` table and `save_table` CSV writer; tests in `tests/test_transform.py`.
