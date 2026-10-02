@@ -79,6 +79,7 @@ Roadmap:
 
 - **Public GitHub repo** (`sleeper-dashboard`), decided 2026-10-02 in Phase 0, so the dashboard can use free GitHub Pages hosting. Everything committed is visible to anyone, so never commit anything that isn't safe to share.
 - **Raw data stays off GitHub** (2026-10-02). `data/raw/` is gitignored because it holds managers' personal settings; the pipeline re-downloads it every run. Test fixtures are anonymised (fake `owner_id`s, nicknames replaced).
+- **Processed tables are committed publicly** (2026-10-02, owner's explicit choice). `data/processed/*.csv`, including usernames, team names, and Sleeper owner IDs in `teams.csv`, go to GitHub.
 - **Metric data rules** (2026-10-02; details and evidence in `docs/DATA_DICTIONARY.md`, to be carried into `docs/METRICS_SPEC.md`):
   - Injured-reserve players count as bench in past weeks (Claude's call, delegated by the owner).
   - Median ties are not handled; validation stops the run if one ever happens.
