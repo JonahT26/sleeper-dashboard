@@ -1,0 +1,5 @@
+# Project settings. Code reads these at runtime; never hardcode them.
+
+# Keep the quotes: without them YAML reads the ID as a number.
+league_id: "1369887235935059968"
+season: 2026

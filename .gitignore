@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+
+# Cached Sleeper data (re-downloaded at most once a day)
+data/cache/
+
+# Python build and bytecode files
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tool caches
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
