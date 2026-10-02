@@ -59,7 +59,7 @@ Keep this list current as commands are added.
 7. **No secrets are needed.** If anything seems to need a key, token, or password, stop and ask me.
 8. **Validate before publishing.** Every pipeline run ends with reconciliation checks. A failed check stops the run with a clear message. Never publish numbers that fail.
 9. **Metrics are pure functions:** DataFrames in, DataFrames out, no file or network access inside them.
-10. **Commit after each working step** with a short plain message, e.g. `Add team_weeks table`.
+10. **Commit after each working step** with a short plain message, e.g. `Add team_weeks table`, then push to GitHub right away (owner's standing approval). The repo is public, so check that nothing private is staged before committing.
 
 ## Current status
 
