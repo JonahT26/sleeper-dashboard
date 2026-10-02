@@ -81,7 +81,7 @@ sleeper-dashboard/
 | `config.py` | Load and validate `config.yaml` | 0 | built |
 | `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
 | `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`. Writes to a `.partial` staging folder and swaps it in only when every call succeeds | 1 | built |
-| `transform.py` | Build the tidy tables below from raw JSON only. Built so far: `teams` | 1 | in progress |
+| `transform.py` | Build the tidy tables below from raw JSON only. Built so far: `teams`, `team_weeks` | 1 | in progress |
 | `validate.py` | Integrity and reconciliation checks; raises on failure | 1 | planned |
 | `pipeline.py` | Orchestrates extract → transform → validate → metrics; prints a run summary | 1–2 | planned |
 | `lineup.py` | Optimal lineup per team-week, solved as an assignment problem | 2 | planned |
@@ -117,21 +117,23 @@ Grain: one row per fantasy team per season. Key: (`season`, `roster_id`). Source
 | display_name | str | Manager's Sleeper username; whitespace stripped |
 | team_name | str | User's `metadata.team_name` if set and not blank, else display_name; whitespace stripped |
 
-### `team_weeks`
-Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`).
+### `team_weeks` (built)
+Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`). Source: every `matchups/week_XX.json` that extract saved (completed weeks only) plus `league.json` settings.
 
 | Column | Type | Notes |
 |---|---|---|
 | season, week | int | |
 | roster_id | int | |
-| matchup_id | int | Null when the team has no game (e.g. playoff bye) |
+| matchup_id | Int64 | Null when the team has no game (e.g. playoff bye). Each non-null ID must appear exactly twice per week, or the run stops |
 | points | float | Rounded to 2 dp |
-| opponent_roster_id | int | Paired via matching `matchup_id` within the week |
-| opponent_points | float | |
-| margin | float | points − opponent_points |
-| result | str | `W`, `L`, or `T` (head-to-head only) |
-| median_result | str | Only if the league plays a weekly median game; kept separate from `result` |
-| is_playoff | bool | week ≥ playoff start week |
+| opponent_roster_id | Int64 | Paired via matching `matchup_id` within the week; null with no game |
+| opponent_points | float | Null with no game |
+| margin | float | points − opponent_points, 2 dp; null with no game |
+| result | str | `W`, `L`, or `T` (head-to-head only); null with no game |
+| median_result | str | Column exists only if `league_average_match` = 1. `W` above that week's median of all team scores, `L` below. Null in playoff weeks (assumed regular season only; verify at week 15). A score exactly at the median stops the run (owner decision) |
+| is_playoff | bool | week ≥ `playoff_week_start` |
+
+Reconciliation (printed by `python -m sleeper_dash.transform`): head-to-head + median wins/losses and summed points equal each roster's Sleeper `wins`, `losses`, `ties`, `fpts`, `fpts_against`. Verified for all 12 teams through week 3.
 
 ### `player_weeks`
 Grain: one row per lineup slot or bench spot per team per week. Key: (`season`, `week`, `roster_id`, `slot_order`).
@@ -244,3 +246,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 1: `docs/DATA_DICTIONARY.md` written from the first pull; known quirks updated with confirmed findings.
 - Phase 1: `data/raw/` moved out of git (owner decision); fixtures anonymised; IR, median-tie, and preseason rules recorded.
 - Phase 1: `transform.py` with `teams` table and `save_table` CSV writer; tests in `tests/test_transform.py`.
+- Phase 1: `team_weeks` table (head-to-head and separate median results); standings reconcile with Sleeper for all 12 teams.

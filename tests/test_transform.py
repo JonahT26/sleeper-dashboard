@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from sleeper_dash.transform import TEAMS_COLUMNS, build_teams, save_table
+from sleeper_dash.transform import TEAM_WEEKS_COLUMNS, TEAMS_COLUMNS, build_team_weeks, build_teams, save_table
 
 FIXTURES = Path(__file__).parent / "fixtures"
 LEAGUE = {"season": "2026"}
@@ -61,6 +61,69 @@ def test_team_without_owner_keeps_its_row(rosters):
     orphan = teams.set_index("roster_id").loc[5]
     assert len(teams) == 12
     assert pd.isna(orphan["owner_id"]) and pd.isna(orphan["display_name"]) and pd.isna(orphan["team_name"])
+
+
+# --- team_weeks ---
+
+MEDIAN_LEAGUE = {"season": "2026", "settings": {"playoff_week_start": 15, "league_average_match": 1}}
+NO_MEDIAN_LEAGUE = {"season": "2026", "settings": {"playoff_week_start": 15, "league_average_match": 0}}
+
+
+def game(roster_id, matchup_id, points):
+    return {"roster_id": roster_id, "matchup_id": matchup_id, "points": points}
+
+
+@pytest.fixture
+def week_1():
+    return json.loads((FIXTURES / "matchups_week_01.json").read_text(encoding="utf-8"))
+
+
+def test_week_1_fixture_invariants(week_1):
+    tw = build_team_weeks(MEDIAN_LEAGUE, {1: week_1})
+    assert list(tw.columns) == TEAM_WEEKS_COLUMNS
+    assert len(tw) == 12 and tw["roster_id"].is_unique
+    assert (tw["result"] == "W").sum() == 6 and (tw["result"] == "L").sum() == 6
+    assert (tw["median_result"] == "W").sum() == 6  # 12 teams: 6 above the median, 6 below
+    assert (tw["margin"].sum()) == pytest.approx(0)  # every margin is offset by its opponent's
+    paired = tw.set_index("roster_id")
+    for row in tw.itertuples():
+        opp = paired.loc[row.opponent_roster_id]
+        assert opp.opponent_roster_id == row.roster_id and opp.points == row.opponent_points
+    assert not tw["is_playoff"].any()
+
+
+def test_tie_and_margin():
+    tw = build_team_weeks(NO_MEDIAN_LEAGUE, {3: [game(1, 1, 100.0), game(2, 1, 100.0), game(3, 2, 90.5), game(4, 2, 80.25)]})
+    r = tw.set_index("roster_id")
+    assert r.loc[1, "result"] == "T" and r.loc[2, "result"] == "T"
+    assert r.loc[3, "result"] == "W" and r.loc[3, "margin"] == 10.25
+    assert r.loc[4, "result"] == "L" and r.loc[4, "margin"] == -10.25
+
+
+def test_no_median_column_when_league_has_no_median_game():
+    tw = build_team_weeks(NO_MEDIAN_LEAGUE, {1: [game(1, 1, 100.0), game(2, 1, 90.0)]})
+    assert "median_result" not in tw.columns
+
+
+def test_playoff_week_with_bye():
+    week = [game(1, 1, 120.0), game(2, 1, 110.0), game(3, None, 130.0), game(4, None, 70.0)]
+    tw = build_team_weeks(MEDIAN_LEAGUE, {15: week})
+    r = tw.set_index("roster_id")
+    assert tw["is_playoff"].all()
+    assert pd.isna(r.loc[3, "opponent_roster_id"]) and pd.isna(r.loc[3, "result"]) and pd.isna(r.loc[3, "margin"])
+    assert pd.isna(r.loc[3, "matchup_id"])
+    assert tw["median_result"].isna().all()  # no median game in the playoffs (assumption)
+
+
+def test_median_tie_stops_the_run():
+    week = [game(1, 1, 100.0), game(2, 1, 110.0), game(3, 2, 110.0), game(4, 2, 120.0), game(5, 3, 110.0), game(6, 3, 90.0)]
+    with pytest.raises(ValueError, match="median"):
+        build_team_weeks(MEDIAN_LEAGUE, {2: week})
+
+
+def test_unpaired_matchup_stops_the_run():
+    with pytest.raises(ValueError, match="matchup_id 2 has 1 team"):
+        build_team_weeks(NO_MEDIAN_LEAGUE, {1: [game(1, 1, 100.0), game(2, 1, 90.0), game(3, 2, 80.0)]})
 
 
 def test_save_table_writes_lists_as_json(rosters, tmp_path):
