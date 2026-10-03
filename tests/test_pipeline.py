@@ -45,6 +45,45 @@ def test_summary_says_whether_the_week_and_the_tables_changed(monkeypatch, capsy
     assert f"Tables vs the last run: {table_line}" in out
 
 
+def test_in_github_actions_the_summary_goes_on_the_run_page(monkeypatch, tmp_path):
+    page = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(page))
+    monkeypatch.setattr(pipeline, "run", lambda: {**SUMMARY, "previous_week": 2, "changed_tables": ["team_weeks"]})
+    pipeline.main()
+    text = page.read_text(encoding="utf-8")
+    assert text.startswith("## Pipeline: passed")
+    assert "| Latest completed week | 3 (new: the last run ended at week 2) |" in text
+    assert "| Data checks | 2 of 2 passed |" in text and "| Metric checks | 2 of 2 passed |" in text
+    assert "| Saved files re-checked | 4 of 4 checks passed |" in text
+    assert "| Tables written | 5; vs the last run: 1 of 5 changed: team_weeks |" in text
+    assert "| team_weeks | 36 | yes |" in text and "| player_weeks | 603 | no |" in text
+    assert "| Records match Sleeper | PASS | 12 teams |" in text
+
+
+def test_outside_github_actions_nothing_is_written(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(pipeline, "run", lambda: SUMMARY)
+    pipeline.main()
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("error", [ValidationError("Records match Sleeper: roster 4 has 2 wins, Sleeper says 3"),
+                                   SleeperAPIError("Gave up on /state/nfl")])
+def test_a_failure_says_why_on_the_run_page(monkeypatch, tmp_path, error):
+    page = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(page))
+
+    def fail():
+        raise error
+
+    monkeypatch.setattr(pipeline, "run", fail)
+    with pytest.raises(SystemExit):
+        pipeline.main()
+    text = page.read_text(encoding="utf-8")
+    assert text.startswith("## Pipeline: FAILED")
+    assert "the last good page stays live" in text and str(error) in text
+
+
 @pytest.mark.parametrize("error", [ValidationError("Metric checks: 1 check(s) failed"), SleeperAPIError("Gave up on /state/nfl")])
 def test_failures_exit_with_code_1_and_explain(monkeypatch, capsys, error):
     def fail():

@@ -37,41 +37,81 @@ jobs:
           cache-dependency-path: requirements-ci.txt
 
       - name: Install
+        id: install
         run: |
           pip install -r requirements-ci.txt
           pip install --no-deps -e .
 
       - name: Tests (committed tables)
+        id: tests
         run: pytest -q
 
+      # Also writes the run summary (latest week, checks passed, tables written) to the run's page.
       - name: Pipeline (Sleeper → checks → tables)
+        id: pipeline
         run: python -m sleeper_dash.pipeline
 
       - name: Dashboard
+        id: dashboard
         run: python -m sleeper_dash.dashboard
 
       - name: Page tests (this run's tables)
+        id: page_tests
         run: pytest -q tests/test_page.py
 
       - name: Commit refreshed tables
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/processed/*.csv
           if git diff --cached --quiet; then
             echo "Processed tables unchanged; nothing to commit."
+            echo "**Commit:** processed tables unchanged; nothing committed." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           week=$(python -c "import json; print(max(json.load(open('data/cache/pipeline_run.json'))['weeks']))")
           git commit -m "Weekly refresh: tables through week $week"
           git pull --rebase
           git push
+          echo "**Commit:** \"Weekly refresh: tables through week $week\" pushed to main." >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/configure-pages@v6
 
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
+
+      # Always runs, so a failed run says where it stopped at the top of its page.
+      - name: Run summary
+        if: always()
+        env:
+          INSTALL: ${{ steps.install.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+          PIPELINE: ${{ steps.pipeline.outcome }}
+          DASHBOARD: ${{ steps.dashboard.outcome }}
+          PAGE_TESTS: ${{ steps.page_tests.outcome }}
+          COMMIT: ${{ steps.commit.outcome }}
+          STATUS: ${{ job.status }}
+        run: |
+          {
+            if [ "$STATUS" = "success" ]; then
+              echo "## Build: passed. The page is published next (deploy job)."
+            else
+              echo "## Build: FAILED. Nothing was published; the last good page stays live."
+              echo
+              echo "Open the first failed step's log below for the reason."
+            fi
+            echo
+            echo "| Step | Result |"
+            echo "|---|---|"
+            echo "| Install | ${INSTALL:-not run} |"
+            echo "| Tests (committed tables) | ${TESTS:-not run} |"
+            echo "| Pipeline (Sleeper → checks → tables) | ${PIPELINE:-not run} |"
+            echo "| Dashboard | ${DASHBOARD:-not run} |"
+            echo "| Page tests (this run's tables) | ${PAGE_TESTS:-not run} |"
+            echo "| Commit refreshed tables | ${COMMIT:-not run} |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
     needs: build
@@ -85,3 +125,15 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Run summary
+        if: always()
+        env:
+          OUTCOME: ${{ steps.deployment.outcome }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          if [ "$OUTCOME" = "success" ]; then
+            echo "## Published: $PAGE_URL" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Publish: FAILED. The last good page stays live." >> "$GITHUB_STEP_SUMMARY"
+          fi

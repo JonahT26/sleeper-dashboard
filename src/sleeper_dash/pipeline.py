@@ -23,10 +23,14 @@ When there is no new completed week, the run is the same full refresh and succee
 data hasn't changed either, every saved table comes out byte-identical; only a stat correction
 to a past week changes numbers. The summary says which: whether the latest completed week moved
 since the tables already in data/processed/, and which tables changed.
+
+In GitHub Actions the same summary, or the reason a run failed, is also written to the run's
+summary page (the file named by GITHUB_STEP_SUMMARY), so a run's result shows without opening its log.
 """
 
 import hashlib
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -142,15 +146,66 @@ def _check_lines(checks):
     return [f"    {'PASS' if passed else 'FAIL'}  {name:<{width}}  {detail}" for name, passed, detail in checks]
 
 
+def write_step_summary(markdown):
+    """Add markdown to the GitHub Actions run summary. Outside GitHub Actions there is none, so nothing happens."""
+    path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if path:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(markdown.rstrip() + "\n\n")
+
+
+def summary_markdown(summary):
+    """The run summary as markdown for GitHub's run page: latest week, checks passed, tables written."""
+    weeks, rows, changed = summary["weeks"], summary["rows"], summary["changed_tables"]
+    groups = [(label, summary[key]) for label, key in (("Data checks", "data_checks"), ("Metric checks", "metric_checks"))]
+    passed, total = summary["saved_checks"]
+    warnings = summary.get("warnings", [])
+    lines = [
+        "## Pipeline: passed",
+        "",
+        "| | |",
+        "|---|---|",
+        f"| Latest completed week | {_week_change(weeks[-1] if weeks else None, summary['previous_week'])} |",
+        *(f"| {label} | {sum(ok for _, ok, _ in checks)} of {len(checks)} passed |" for label, checks in groups),
+        f"| Saved files re-checked | {passed} of {total} checks passed |",
+        f"| Tables written | {len(rows)}; vs the last run: {_table_change(changed, len(rows))} |",
+        f"| Warnings | {len(warnings)} (soft checks; they never stop the run) |",
+        f"| Sleeper API calls | {summary['api_calls']} |",
+        "",
+        "| Table | Rows | Changed this run |",
+        "|---|--:|---|",
+        *(f"| {name} | {n:,} | {'first save' if changed is None else 'yes' if name in changed else 'no'} |"
+          for name, n in rows.items()),
+        "",
+        "| Check | Result | Detail |",
+        "|---|---|---|",
+        *(f"| {name} | {'PASS' if ok else 'FAIL'} | {detail} |" for _, checks in groups for name, ok, detail in checks),
+    ]
+    if warnings:
+        lines += ["", *(f"- Warning: {warning}" for warning in warnings)]
+    return "\n".join(lines)
+
+
+def failure_markdown(error):
+    """Why the pipeline stopped, for GitHub's run page."""
+    return ("## Pipeline: FAILED\n\n"
+            "Nothing was saved and nothing will be published; the last good page stays live.\n\n"
+            f"```\n{error}\n```")
+
+
 def main():
     try:
         summary = run()
     except validate.ValidationError as error:
         print(f"PIPELINE FAILED: validation\n\n{error}", file=sys.stderr)
+        write_step_summary(failure_markdown(f"Validation\n\n{error}"))
         sys.exit(1)
     except (extract.ExtractError, SleeperAPIError, FileNotFoundError, ValueError) as error:
         print(f"PIPELINE FAILED: {error}", file=sys.stderr)
+        write_step_summary(failure_markdown(error))
         sys.exit(1)
+
+    write_step_summary(summary_markdown(summary))
 
     weeks = summary["weeks"]
     week_text = f"{weeks[0]}–{weeks[-1]}" if weeks else "none completed yet"

@@ -14,3 +14,9 @@ def block_network(monkeypatch):
 
     monkeypatch.setattr(socket.socket, "connect", refuse)
     monkeypatch.setattr(socket.socket, "connect_ex", refuse)
+
+
+@pytest.fixture(autouse=True)
+def no_github_run_summary(monkeypatch):
+    """In GitHub Actions, keep tests' made-up pipeline summaries off the real run's summary page."""
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
