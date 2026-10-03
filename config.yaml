@@ -3,3 +3,13 @@
 # Keep the quotes: without them YAML reads the ID as a number.
 league_id: "1369887235935059968"
 season: 2026
+
+# Metric parameters. Definitions and the reasoning behind each value are in
+# docs/METRICS_SPEC.md; change a value there first, with the owner's approval.
+metrics:
+  consistency:
+    min_weeks: 3          # volatility, floor, and ceiling are hidden until a team has this many weeks
+    floor_pct: 0.10       # floor = this percentile of a team's weekly points
+    ceiling_pct: 0.90     # ceiling = this percentile of a team's weekly points
+    boom_margin: 20       # boom week: score >= weekly league median + this many points
+    bust_margin: 20       # bust week: score <= weekly league median - this many points

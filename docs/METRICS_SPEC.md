@@ -9,8 +9,8 @@ The source of truth for every metric. Code follows this file, not the other way 
 | 1 | All-play record | **Confirmed** 2026-10-02 |
 | 2 | Expected wins and luck | **Confirmed** 2026-10-02 |
 | 3 | Lineup efficiency | **Confirmed** 2026-10-02 (one parameter pending) |
-| 4 | Consistency | In interview |
-| 5 | Strength of schedule | Not started |
+| 4 | Consistency | **Confirmed** 2026-10-02 |
+| 5 | Strength of schedule | In interview |
 | 6 | Power score | Not started |
 | 7 | Weekly awards | Not started |
 
@@ -200,3 +200,60 @@ The players chosen by the optimal lineup are stored as well (one row per slot pe
 3. Every optimal lineup obeys the eligibility table, uses each player at most once, and fills every slot that has an eligible player available.
 4. Optimal points equal the sum of the stored optimal players' points (±0.01).
 5. **Soft check:** each team's regular-season Σ*O* ≥ Sleeper's `ppts`. A team below `ppts`, or above it by more than `metrics.efficiency.ppts_warn_gap`, gets a printed warning, not a failure. Phase 1 found gaps of 0 to 4.00 points with IR players included.
+
+---
+
+## 4. Consistency
+
+**Status:** confirmed by the owner, 2026-10-02.
+
+**Meaning.** How predictable a team's scoring is: how much it swings from week to week relative to the league, what a bad week and a good week look like, and how often it blows up or collapses.
+
+**Formula.** Let *m₍w₎* be the league median score in week *w* (the median of all teams' points that week), and *d₍ᵢ,w₎* = *p₍ᵢ,w₎* − *m₍w₎*, the team's score relative to the league that week. Removing *m₍w₎* strips out league-wide swings such as bye weeks or a high-scoring weekend (the weekly SD across teams was 33.6 in week 1 but about 17 in weeks 2–3). For team *i*, season to date through week *t*, over its *n* weeks:
+
+| Quantity | Definition |
+|---|---|
+| Volatility | sample standard deviation (divisor *n* − 1) of *d₍ᵢ,1₎ … d₍ᵢ,t₎*, in points |
+| Floor | the `floor_pct` percentile of the team's weekly **points** *p₍ᵢ,w₎*, linear interpolation |
+| Ceiling | the `ceiling_pct` percentile of the team's weekly **points**, linear interpolation |
+| Boom week | *d₍ᵢ,w₎* ≥ `boom_margin` |
+| Bust week | *d₍ᵢ,w₎* ≤ −`bust_margin` |
+| Boom rate, bust rate | boom weeks ÷ *n*, bust weeks ÷ *n* |
+
+Floor and ceiling use raw points so they line up with the dashboard's strip plot of weekly scores. Volatility and boom/bust use *d* because they describe the team, not the week.
+
+Owner decisions: volatility relative to the weekly median, not raw SD or coefficient of variation; floor and ceiling as the 10th and 90th percentiles, not min/max or mean ± SD; boom and bust as a fixed margin around the weekly median, not fixed scores, weekly ranks, or z-scores.
+
+**Inputs.** `team_weeks`: `season`, `week`, `roster_id`, `points`.
+
+**Parameters** (`config.yaml`):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `metrics.consistency.min_weeks` | 3 | Volatility, floor, and ceiling are null until a team has this many weeks |
+| `metrics.consistency.floor_pct` | 0.10 | Percentile used as the floor |
+| `metrics.consistency.ceiling_pct` | 0.90 | Percentile used as the ceiling |
+| `metrics.consistency.boom_margin` | 20 | Points above the weekly league median that make a boom week |
+| `metrics.consistency.bust_margin` | 20 | Points below the weekly league median that make a bust week |
+
+Calibration (weeks 1–3, 36 team-weeks): *d* has SD 23.5 and ranges from −42.8 to +68.6. A margin of ±20 gives 7 booms and 4 busts (31% of team-weeks); ±25 would give 5 and 3.
+
+**Edge cases.**
+
+| Case | Rule |
+|---|---|
+| Playoff weeks | **Included: every week, every team** (owner decision, consistent with metrics 1 and 3). The weekly median *m₍w₎* uses every team that scored that week |
+| Small early-season samples | Values are shown raw, with no shrinkage. Volatility, floor, and ceiling are null until the team has `min_weeks` weeks; boom and bust counts are shown from week 1. If consistency feeds the power score, any shrinkage is decided there |
+| Score exactly on a threshold | Counts: *d* = `boom_margin` is a boom, *d* = −`bust_margin` is a bust |
+| Median game | The median-game result is not used; only the median *score* is used, as the reference point. A team scoring exactly the median already stops the run (Phase 1 rule) |
+| Empty starting slots | No adjustment. The team's actual score stands |
+| Players added mid-week | No adjustment. The team's actual score stands |
+
+**Expected range.** Volatility ≥ 0, typically 15–30 points. Floor ≤ ceiling. Boom and bust rates each between 0 and 1, about 15–20% league-wide at a margin of 20.
+
+**Sanity checks.**
+1. Floor ≤ the team's median weekly score ≤ ceiling.
+2. A team scoring exactly *m₍w₎* every week has volatility 0, no booms, and no busts.
+3. No week is both a boom and a bust (requires both margins > 0; the code must stop with a clear error if either is 0 or less).
+4. Volatility is unchanged if every team's score in a week is shifted by the same amount.
+5. Boom count + bust count ≤ *n* for every team.
