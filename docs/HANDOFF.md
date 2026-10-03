@@ -82,12 +82,14 @@ Dev/
 ├── requirements-ci.txt           lock file: every package GitHub Actions installs, exact versions
 ├── .python-version               3.14.7, read by the workflow
 ├── .github/workflows/weekly.yml  Tue + Thu 12:17 PM Eastern and a manual button: tests → pipeline → dashboard →
-│                                 page tests → commit changed tables → publish to GitHub Pages
+│                                 page tests → commit changed tables → publish to GitHub Pages; run summary
+├── .github/workflows/rollback.yml  manual: republish the page an earlier Weekly refresh run published (input run_id)
 ├── docs/
 │   ├── CODEBASE.md               data flow, modules, table schemas, Sleeper quirks, dependencies, changelog
 │   ├── METRICS_SPEC.md           owner-approved metric definitions (code follows the spec)
 │   ├── UI_GUIDE.md               design system and every dashboard decision (ladder, charts, copy)
 │   ├── DATA_DICTIONARY.md        raw Sleeper fields and findings
+│   ├── RUNBOOK.md                the owner's plain-language guide for a failed or doubtful weekly run
 │   └── HANDOFF.md                this file
 ├── src/sleeper_dash/
 │   ├── config.py, api.py, extract.py, transform.py, validate.py (14 checks), lineup.py, metrics/
@@ -184,6 +186,8 @@ Dev/
 | 2026-10-03 | Run summary on each workflow run's GitHub page: latest week, checks passed, tables written, commit, step results, published URL, or where it failed | Owner (request), Claude (layout) | weekly.yml, pipeline.py |
 | 2026-10-03 | "Updated" always visible (status bar pinned to the top while scrolling); stale-data line after 8 days (`dashboard.stale_after_days`), checked on the viewer's clock, next update time read from the workflow's cron lines | Owner (request, 8 days; approved Claude's wording and pinned bar unchanged) | UI_GUIDE.md "Status bar", config.yaml |
 | 2026-10-03 | After the season (Sleeper `status: complete`) the stale-data line reads "Final rankings for the XXXX season." instead of naming a next update | Owner | UI_GUIDE.md "Status bar" |
+| 2026-10-03 | Stale-data and final-rankings lines appear only after 8 days without an update, in season and after it | Owner | UI_GUIDE.md "Status bar" |
+| 2026-10-03 | Owner's runbook (`docs/RUNBOOK.md`); rollback workflow added and published pages kept 90 days so last week's page can be restored | Owner (request), Claude (rollback design) | RUNBOOK.md, rollback.yml, weekly.yml |
 | 2026-10-03 | Failure email and failed-run summary tested with a throwaway branch (`test-failure-email`, deleted after) whose run failed on purpose; nothing published | Owner (approved), Claude | — |
 
 ## 7. Open questions and assumptions to verify
@@ -203,6 +207,8 @@ Dev/
 ## 7a. Running the weekly job
 
 - **Schedule:** Tuesday and Thursday 12:17 PM Eastern (`timezone: America/New_York`, so it follows daylight saving). GitHub can start scheduled runs late, sometimes by tens of minutes. The Thursday run picks up stat corrections to the week just finished; Wednesday waiver pickups belong to the week in progress, so they appear the following Tuesday.
+- **The owner's guide is `docs/RUNBOOK.md`** (checking a run, failures by step with Claude Code prompts, re-running, rollback, pausing, pins). Update it whenever a workflow or a step name changes.
+- **Rollback:** `.github/workflows/rollback.yml` (manual, input `run_id`) downloads the page an earlier Weekly refresh run published and deploys it; data and code untouched. Weekly refresh keeps each published page 90 days (`retention-days: 90`; the default was 1 day). Tested 2026-10-03 by restoring the then-current page: the live page came back byte-identical. The oldest restorable page is run `37136344876` (week 3).
 - **Manual run:** the "Run workflow" button on the repo's Actions tab, or `gh workflow run weekly.yml --ref main`. Watch with `gh run watch <id>`; read with `gh run view <id> --log`.
 - **What a run does:** installs the lock file on Python 3.14.7 → all tests on the committed tables → pipeline → dashboard → page tests on this run's tables → commits changed `data/processed/*.csv` as `github-actions[bot]` ("Weekly refresh: tables through week N"; nothing when unchanged) → publishes `site/`. Any failure stops before publishing; the last good page stays live and GitHub emails the owner.
 - **Run summary** (2026-10-03): each run's page on GitHub (Actions tab → the run) opens with its summary: the pipeline's latest week, checks passed, and tables written (rows, changed or not), or the reason it failed; whether tables were committed; a step-by-step results table that says "Build: FAILED. Nothing was published" when any step failed; and "Published: <url>" from the deploy job.

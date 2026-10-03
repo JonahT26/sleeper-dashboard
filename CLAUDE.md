@@ -35,6 +35,7 @@ Scoring settings, roster slots, playoff start week, and whether the league plays
 - `docs/UI_GUIDE.md` — design system and dashboard layout. Follow it for anything user-facing.
 - `docs/METRICS_SPEC.md` — source of truth for every metric definition. Written with me in Phase 2. Code follows the spec, not the other way round.
 - `docs/DATA_DICTIONARY.md` — field-level notes on raw Sleeper responses (created in Phase 1).
+- `docs/RUNBOOK.md` — the owner's plain-language guide for a bad Tuesday: checking a run, failures and what they mean, re-running, rolling back the page, pausing the schedule, updating pins. Keep it in step with the workflows.
 
 ## Commands
 
@@ -59,6 +60,7 @@ pytest                             # run all tests
 jupyter lab                        # open the notebooks
 gh workflow run weekly.yml --ref main         # run the weekly refresh on GitHub now (same as the Actions tab's "Run workflow" button)
 gh run list --workflow weekly.yml --limit 5   # recent weekly runs and whether they passed
+gh workflow run rollback.yml --ref main -f run_id=RUN_ID   # put back the page an earlier Weekly refresh run published (docs/RUNBOOK.md section 4)
 ```
 
 Keep this list current as commands are added.
