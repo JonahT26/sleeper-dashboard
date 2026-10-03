@@ -105,3 +105,57 @@ def test_a_new_week_is_reported(run_pipeline):
     # Every weekly table gains week 3; teams and transactions don't change (the fake league has
     # completed moves in week 1 only).
     assert set(summary["changed_tables"]) == set(KEYS) - {"teams", "transactions"}
+
+
+# --- playoff weeks (HANDOFF.md risk 4) ---------------------------------------------------------
+# An 8-team league scored through its first two playoff weeks (8 and 9, like weeks 15 and 16).
+# Sleeper's real 2025 playoffs for this league looked like PlayoffLeague() with no behaviours:
+# standings count the regular season only, every team is listed every week, byes have no
+# matchup_id, and consolation games are paired. The other behaviours are what Sleeper might do
+# instead. Cases that stop the run are recorded as they behave today; how those checks should
+# behave in playoff weeks is waiting on the owner's decision.
+
+from fake_sleeper import PlayoffLeague  # noqa: E402
+from sleeper_dash import validate  # noqa: E402
+from sleeper_dash.dashboard import build  # noqa: E402
+
+
+def read(tmp_path, name, folder="a"):
+    return transform.pd.read_csv(tmp_path / folder / "processed" / f"{name}.csv")
+
+
+@pytest.mark.parametrize("behaviours", [(), ("no_consolation_games",)], ids=["as in 2025", "no consolation games"])
+def test_playoff_weeks_run_cleanly_and_publish(run_pipeline, tmp_path, behaviours):
+    summary = run_pipeline(PlayoffLeague(behaviours))
+    assert all_passed(summary) and summary["weeks"] == list(range(1, 10))
+    team_weeks = read(tmp_path, "team_weeks")
+    week8 = team_weeks[team_weeks["week"] == 8]
+    games = 4 if behaviours else 6  # seeds 1-2 have a bye; 7-8 play a consolation game unless there is none
+    assert len(week8) == 8 and week8["matchup_id"].notna().sum() == games
+    assert week8["is_playoff"].all() and week8["median_result"].isna().all()  # no median game in the playoffs
+    season = read(tmp_path, "metrics_season").set_index(["through_week", "roster_id"])
+    assert season.loc[9, "luck"].equals(season.loc[7, "luck"])  # luck frozen at the end of the regular season
+    assert read(tmp_path, "power_rankings").groupby("week").size().loc[8:9].tolist() == [8, 8]
+    root = tmp_path / "a"
+    build.build_site(out_dir=root / "site", processed_dir=root / "processed", run_path=root / "cache" / "pipeline_run.json")
+    assert 'id="week-8"' in (root / "site" / "index.html").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("behaviours, failed_check", [
+    (("roster_wins_include_playoff_games",), "Records match Sleeper"),
+    (("roster_wins_include_playoff_games", "roster_wins_include_playoff_median"), "Records match Sleeper"),
+    (("roster_points_include_playoffs",), "Points for/against match Sleeper"),
+    (("no_game_teams_missing",), "Every week has one row per team"),
+], ids=["wins count playoff games", "wins count playoff games and median", "points count playoffs", "no-game teams missing"])
+def test_playoff_behaviours_that_stop_the_run_today(run_pipeline, tmp_path, behaviours, failed_check):
+    # Owner decision pending (HANDOFF.md risk 4): stop, as now, or warn and continue in playoff weeks.
+    with pytest.raises(validate.ValidationError, match=failed_check):
+        run_pipeline(PlayoffLeague(behaviours))
+    assert not (tmp_path / "a" / "processed").exists()  # nothing saved, so nothing published
+
+
+def test_unscored_no_game_teams_stop_the_run_today(run_pipeline, tmp_path):
+    # Owner decision pending (HANDOFF.md risk 4). Stops in transform, before any check runs.
+    with pytest.raises(ValueError, match="Week 8, roster 1: 0 starters"):
+        run_pipeline(PlayoffLeague(("no_game_teams_unscored",)))
+    assert not (tmp_path / "a" / "processed").exists()

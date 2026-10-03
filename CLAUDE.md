@@ -89,8 +89,8 @@ Where things stand:
 - 11 tables in `data/processed/` (schemas in `docs/CODEBASE.md`): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule`, `lineups_optimal`, `lineups_optimal_players`, `metrics_team_weeks`, `metrics_season`, `power_rankings`, `awards`.
 - Every metric follows `docs/METRICS_SPEC.md` (owner-approved). Every weight and threshold is in `config.yaml` under `metrics:`.
 - `python -m sleeper_dash.dashboard` builds `site/index.html`: masthead with week selector, power rankings ladder (tap a row for its breakdown), weekly awards, five charts (luck, lineup efficiency, consistency, strength of schedule, rank history), and "How this works". Every completed week is in the page; no network calls except Google Fonts and the Plotly CDN; 27 KB compressed for weeks 1–3. Checked at 360, 390, 1024 and 1280px in light and dark mode.
-- 397 tests pass, locally and in GitHub Actions, including page-level tests (every number on the page equals the CSVs), the UI_GUIDE quality floor, and the whole pipeline run offline against a fake Sleeper league (season rollover, off-season, no new week, stat corrections). Notebooks: `01_data_check.ipynb`, `02_power_score_sensitivity.ipynb`.
-- To verify at week 15: whether Sleeper plays the median game in the playoffs, whether roster `wins`/`fpts`/`ppts` include playoff games, and how non-playoff teams appear in matchups.
+- 404 tests pass, locally and in GitHub Actions, including page-level tests (every number on the page equals the CSVs), the UI_GUIDE quality floor, and the whole pipeline run offline against a fake Sleeper league (season rollover, off-season, no new week, stat corrections). Notebooks: `01_data_check.ipynb`, `02_power_score_sensitivity.ipynb`.
+- Playoff weeks: the assumptions held on this league's 2025 season (standings are regular season only; every team listed every week; byes unpaired; consolation games paired) and the pipeline passes on its real playoff weeks. Whether the reconciliation checks stop or warn in playoff weeks is an open decision (`docs/HANDOFF.md` risk 4).
 
 Roadmap:
 - Phase 0: Setup (environment, repo, API smoke test) — complete
