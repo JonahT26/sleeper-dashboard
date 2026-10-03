@@ -427,6 +427,8 @@ Rules shared by every award:
 - If no team is eligible (e.g. no losing team in a week with no games), the award is skipped that week.
 - Rankings in captions ("3rd-best") are by points among all teams that week.
 - Numbers in captions use the display rules: points to 1 decimal place, percentages as whole numbers.
+- Display names follow `UI_GUIDE.md` sentence case: Top score, Lowest score, Heartbreaker, Robbery, Blowout, Nail-biter, Bench blunder, Perfect lineup, MVP, Pickup of the week, Asleep at the wheel.
+- Caption details not shown in the table: a Pickup of the week added before `season_start_date` reads "added … before the season"; a free-agent add reads "added as a free agent"; a Perfect lineup below 100% reads "Got 87% of the points the best lineup would have scored."; Asleep at the wheel uses "1 player" in the singular. If two players on the same team tie for MVP or Pickup of the week, the team gets one row naming both.
 
 **Inputs.** `team_weeks`: `week`, `roster_id`, `points`, `opponent_roster_id`, `margin`, `result`. `player_weeks`: `player_id`, `full_name`, `is_starter`, `is_empty_slot`, `points`. `transactions`: `roster_id`, `player_id`, `action`, `type`, `week`, `created_at`. `teams`: `team_name`. Metric 3: *B* and *E* per team-week.
 
@@ -446,6 +448,7 @@ Pickup of the Week has **no recency limit** (owner decision): any waiver or free
 | Playoff weeks | **Every week** (owner decision). Score and lineup awards consider every team; matchup awards (`heartbreaker`, `robbery`, `blowout`, `nail_biter`) consider only teams with a game that week |
 | Median game | Ignored. Heartbreaker and Robbery are head-to-head only |
 | Empty starting slots | Their lost points show up in Bench Blunder through metric 3, and in Asleep at the Wheel if enabled |
+| Perfect lineups and Bench blunder | A team that left 0 points on the bench is not eligible; if every lineup that week was perfect, the award is skipped (Claude's reading of "no team is eligible", 2026-10-02) |
 | Players added mid-week | Count for Pickup of the Week: a player added on Saturday and started on Sunday qualifies, because the add is in that week's transactions. Preseason adds count too |
 | Pickup history | Only the team's most recent acquisition of the player counts. A player added off waivers and later traded away and back counts as a trade, so he does not qualify. Drafted players never qualify |
 | Head-to-head tie | A tied game is neither a win nor a loss, so neither team is eligible for Heartbreaker, Robbery, Blowout, or Nail-Biter that week |

@@ -24,6 +24,7 @@ KEYS = {
     "metrics_team_weeks": ["season", "week", "roster_id"],
     "metrics_season": ["season", "through_week", "roster_id"],
     "power_rankings": ["season", "week", "roster_id"],
+    "awards": ["season", "week", "award", "roster_id"],
 }
 LUCK_TOLERANCE = 1e-6  # wins
 BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "schedule"]  # built by transform; the rest by lineup and metrics
@@ -226,6 +227,50 @@ def check_power_rankings(rankings, team_weeks):
                    f"{rankings['week'].nunique()} weeks; mean 50, contributions add up, ranks 1-{rankings['roster_id'].nunique()}")
 
 
+def check_awards(awards, team_weeks, lineups):
+    """Weekly award invariants (METRICS_SPEC.md section 7, sanity checks 1-4).
+
+    Top and lowest score equal the week's max and min points; every Heartbreaker lost and no
+    loser scored more; every Robbery winner won and no winner scored less; Blowout equals the
+    largest winning margin; Bench blunder equals that team's points left on the bench.
+    """
+    problems = []
+    key = ["season", "week", "roster_id"]
+    merged = awards.merge(team_weeks[key + ["points", "result", "margin"]], on=key, how="left")
+    merged = merged.merge(lineups[key + ["bench_points_lost"]], on=key, how="left")
+    weekly = team_weeks.groupby(["season", "week"])
+    max_points, min_points = weekly["points"].max(), weekly["points"].min()
+    loser_max = team_weeks[team_weeks["result"] == "L"].groupby(["season", "week"])["points"].max()
+    winner_min = team_weeks[team_weeks["result"] == "W"].groupby(["season", "week"])["points"].min()
+    margin_max = team_weeks[team_weeks["result"] == "W"].groupby(["season", "week"])["margin"].max()
+
+    def off(a, b):
+        return pd.isna(b) or abs(a - b) > TOLERANCE
+
+    for r in merged.itertuples():
+        wk, where = (r.season, r.week), f"week {r.week}, {r.award}, roster {r.roster_id}"
+        if r.award in ("top_score", "lowest_score", "heartbreaker", "robbery") and off(r.value, r.points):
+            problems.append(f"{where}: value {r.value} is not this team's score {r.points}")
+        if r.award in ("blowout", "nail_biter") and off(r.value, r.margin):
+            problems.append(f"{where}: value {r.value} is not this team's margin {r.margin}")
+        if r.award == "top_score" and off(r.value, max_points.get(wk)):
+            problems.append(f"{where}: {r.value} is not the week's top score")
+        elif r.award == "lowest_score" and off(r.value, min_points.get(wk)):
+            problems.append(f"{where}: {r.value} is not the week's lowest score")
+        elif r.award == "heartbreaker" and (r.result != "L" or off(r.value, loser_max.get(wk))):
+            problems.append(f"{where}: not the highest-scoring loser")
+        elif r.award == "robbery" and (r.result != "W" or off(r.value, winner_min.get(wk))):
+            problems.append(f"{where}: not the lowest-scoring winner")
+        elif r.award == "blowout" and (r.result != "W" or off(r.value, margin_max.get(wk))):
+            problems.append(f"{where}: not the largest winning margin")
+        elif r.award == "bench_blunder" and off(r.value, r.bench_points_lost):
+            problems.append(f"{where}: value {r.value} vs points left on the bench {r.bench_points_lost}")
+    missing_caption = awards[awards["caption"].isna() | (awards["caption"].astype(str).str.strip() == "")]
+    problems += [f"week {r.week}, {r.award}: empty caption" for r in missing_caption.itertuples()]
+    return _result("Weekly awards are consistent", problems,
+                   f"{len(awards)} awards over {awards['week'].nunique()} weeks match their source tables")
+
+
 def check_optimal_lineups(lineups, chosen, team_weeks):
     """Optimal lineups are complete and consistent (METRICS_SPEC.md section 3, sanity checks 1 and 4).
 
@@ -334,6 +379,8 @@ def run_checks(tables, league, rosters):
             results.append(check_consistency_and_sos(tables["metrics_team_weeks"], tables["metrics_season"], league))
     if "power_rankings" in tables:
         results.append(check_power_rankings(tables["power_rankings"], team_weeks))
+    if "awards" in tables:
+        results.append(check_awards(tables["awards"], team_weeks, tables["lineups_optimal"]))
     results.append(check_unique_keys(tables))
     return results
 

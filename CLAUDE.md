@@ -49,6 +49,7 @@ python -m sleeper_dash.metrics.allplay      # rebuild every metric table; print 
 python -m sleeper_dash.metrics.consistency  # rebuild every metric table; print volatility, floor/ceiling, booms and busts
 python -m sleeper_dash.metrics.schedule     # rebuild every metric table; print strength of schedule, played and remaining
 python -m sleeper_dash.metrics.power        # rebuild every metric table; print power rankings with each component's contribution
+python -m sleeper_dash.metrics.awards       # rebuild every metric table; print this week's awards and the winners by week
 python -m sleeper_dash.validate    # re-run the checks on the saved tables and print pass/fail
 pytest                             # run all tests
 jupyter lab                        # open the notebooks

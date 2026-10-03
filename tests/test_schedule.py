@@ -132,9 +132,18 @@ def test_metric_tables_combine_every_module_and_pass_validation():
               "schedule": {"min_weeks": 1},
               "power": {"weights": {"season_scoring": 0.35, "recent_form": 0.25, "roster_strength": 0.2, "results": 0.2},
                         "recent_weeks": 3, "scale": 15, "shrink_weeks": 3}}
-    lineups = team_weeks[["season", "week", "roster_id"]].assign(optimal_points=team_weeks["points"] + 5)
-    tables = build_metric_tables({"team_weeks": team_weeks, "schedule": schedule, "lineups_optimal": lineups}, params)
+    params["awards"] = {"enabled": ["top_score", "blowout"]}
+    lineups = team_weeks[["season", "week", "roster_id"]].assign(
+        optimal_points=team_weeks["points"] + 5, bench_points_lost=5.0, efficiency=team_weeks["points"] / (team_weeks["points"] + 5))
+    players = team_weeks[["season", "week", "roster_id", "points"]].assign(
+        player_id=team_weeks["roster_id"].astype(str), full_name="Player", is_starter=True, is_empty_slot=False)
+    moves = pd.DataFrame(columns=["transaction_id", "season", "week", "type", "roster_id", "player_id", "action", "created_at", "is_preseason"])
+    teams = pd.DataFrame({"roster_id": [1, 2, 3, 4], "team_name": ["A", "B", "C", "D"]})
+    tables = build_metric_tables({"team_weeks": team_weeks, "schedule": schedule, "lineups_optimal": lineups,
+                                  "player_weeks": players, "transactions": moves, "teams": teams}, params)
     assert len(tables["power_rankings"]) == 3 * 4
+    # Constant scores make both games in weeks 2 and 3 equal-margin wins (20 and 40), so Blowout has co-winners there.
+    assert tables["awards"]["award"].value_counts().to_dict() == {"top_score": 3, "blowout": 5}
     weekly, season = tables["metrics_team_weeks"], tables["metrics_season"]
     assert len(weekly) == len(team_weeks) and len(season) == 3 * 4
     assert {"luck", "is_boom", "points_vs_median"} <= set(weekly.columns)

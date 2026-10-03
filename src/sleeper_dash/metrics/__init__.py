@@ -3,7 +3,8 @@
 Most modules add columns to the same two tables:
 - metrics_team_weeks: one row per team per completed week (key: season, week, roster_id)
 - metrics_season: one row per team as of every completed week (key: season, through_week, roster_id)
-The power score has its own table, power_rankings (key: season, week, roster_id).
+The power score has its own table, power_rankings (key: season, week, roster_id), and so do
+the weekly awards (key: season, week, award, roster_id).
 """
 
 TEAM_WEEK_KEY = ["season", "week", "roster_id"]
@@ -15,7 +16,7 @@ def build_metric_tables(tables, params):
 
     params = config.yaml metrics section.
     """
-    from sleeper_dash.metrics import allplay, consistency, power, schedule
+    from sleeper_dash.metrics import allplay, awards, consistency, power, schedule
 
     team_weeks = tables["team_weeks"]
     allplay_weekly = allplay.build_metrics_team_weeks(team_weeks)
@@ -32,7 +33,9 @@ def build_metric_tables(tables, params):
     if len(weekly) != len(team_weeks) or len(season) != len(allplay_season):
         raise ValueError("Metric tables lost rows while combining; check that every module covers the same team-weeks.")
     rankings = power.build_power_rankings(team_weeks, tables["lineups_optimal"], params["power"])
-    return {"metrics_team_weeks": weekly, "metrics_season": season, "power_rankings": rankings}
+    weekly_awards = awards.build_awards(team_weeks, tables["lineups_optimal"], tables["player_weeks"],
+                                        tables["transactions"], tables["teams"], params["awards"])
+    return {"metrics_team_weeks": weekly, "metrics_season": season, "power_rankings": rankings, "awards": weekly_awards}
 
 
 def rebuild_from_saved():
