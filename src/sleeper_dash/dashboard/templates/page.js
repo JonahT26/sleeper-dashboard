@@ -33,8 +33,8 @@
     var now = Date.now();
     var limit = Number(status.dataset.staleAfterDays) * 24 * 60 * 60 * 1000;
     if (now - Date.parse(status.dataset.updated) > limit) {
-      var upcoming = JSON.parse(document.getElementById("next-updates").textContent);
-      var next = upcoming.find(function (u) { return Date.parse(u.at) > now; });
+      var upcoming = document.getElementById("next-updates");  // absent once the season is over ("Final rankings")
+      var next = upcoming && JSON.parse(upcoming.textContent).find(function (u) { return Date.parse(u.at) > now; });
       if (next) {
         var due = document.getElementById("next-update");
         due.querySelector(".when").textContent = next.text;

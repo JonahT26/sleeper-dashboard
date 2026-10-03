@@ -149,6 +149,11 @@ Added 2026-10-03 (owner request: stale data must be impossible to mistake for fr
   > The latest rankings are from week 3. Next update due Tue Oct 6, 12:17 PM ET.
 
   "Latest" because the viewer may be looking at an earlier week. The week is the latest completed week in the page. The due time is the first scheduled run still ahead of the viewer, from the cron lines in `.github/workflows/weekly.yml` (the page lists the scheduled runs in the 120 days after the update); the date and time never break across lines. If none of those is still ahead (a page months old), only the first sentence shows.
+- **After the season** (Sleeper marks the league complete), the same line reads instead (owner, 2026-10-03):
+
+  > Final rankings for the 2026 season.
+
+  with no next update, since none will bring new data.
 - Checked in the browser, not at build time, because a page that has stopped updating can't rebuild itself. Without JavaScript the line never shows; the "Updated" time always does.
 - No pylon and no icon: the plain sentence in the masthead's brightest text is the warning (pylon stays the single accent for #1 and highlights).
 

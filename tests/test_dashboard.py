@@ -253,6 +253,16 @@ def test_a_workflow_without_a_schedule_stops_the_build(tmp_path):
         build.workflow_schedule(workflow)
 
 
+def test_once_the_season_is_over_the_stale_line_says_final_rankings():
+    """Owner, 2026-10-03: after the season, no "next update" promise; the line names the season instead."""
+    done = {**RUN, "league": {**RUN["league"], "season_complete": True}}
+    html = render(build_view(make_tables(), done, METRICS, build.freshness(done, 8, build.workflow_schedule())))
+    assert '<p class="stale" id="stale" hidden>Final rankings for the 2026 season.</p>' in html
+    assert 'id="next-updates"' not in html and "Next update due" not in html
+    in_season = render(build_view(make_tables(), RUN, METRICS, build.freshness(RUN, 8, build.workflow_schedule())))
+    assert "Final rankings for the" not in in_season and "The latest rankings are from week 3." in in_season
+
+
 def test_without_freshness_the_page_has_no_stale_line_but_still_shows_the_update_time():
     html = page()
     assert 'id="stale"' not in html and "data-stale-after-days" not in html

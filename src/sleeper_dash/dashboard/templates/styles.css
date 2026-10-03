@@ -35,7 +35,8 @@ h1, h2, h3, p { margin: 0; }
 .title { grid-area: title; margin-top: 8px; font-weight: 700; font-size: 28px; line-height: 1.15; }
 
 /* Status bar: the masthead's last line, pinned to the top of the screen while scrolling */
-.status { position: sticky; top: 0; z-index: 10; background: var(--masthead); color: var(--on-mast-muted); }
+.status { position: sticky; top: 0; z-index: 10; background: var(--masthead); color: var(--on-mast-muted);
+  margin-top: -1px; padding-top: 1px; }  /* overlap the masthead by 1px so no hairline shows at fractional pixel edges */
 .status .wrap { padding-top: 6px; padding-bottom: 10px; }
 .updated { font-size: 13px; color: var(--on-mast-muted); }
 .stale { font-weight: 600; color: var(--on-mast); max-width: 31em; }

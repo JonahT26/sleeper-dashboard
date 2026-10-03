@@ -221,8 +221,9 @@ def build_view(tables, run, params, fresh=None):
                       "awards": _award_tiles(awards[awards["week"] == week], teams), "charts": sections})
 
     chart_theme = theme.to_script_json({"layout": theme.base_layout(), "config": theme.CONFIG, "tokens": theme.TOKENS})
-    stale = fresh and {"after_days": fresh["stale_after_days"], "next_updates_json": theme.to_script_json(fresh["next_updates"])}
-    return {"league_name": run["league_name"], "updated": updated_text(run["finished_at"]), "updated_at": run["finished_at"],
+    stale = fresh and {"after_days": fresh["stale_after_days"], "next_updates_json": theme.to_script_json(fresh["next_updates"]),
+                       "final": bool(run["league"].get("season_complete"))}  # season over: "Final rankings", no next update
+    return {"league_name": run["league_name"], "season": run["season"], "updated": updated_text(run["finished_at"]), "updated_at": run["finished_at"],
             "stale": stale, "latest": views[-1], "earlier": views[:-1], "weeks": weeks,
             "plotly_cdn": theme.PLOTLY_CDN, "chart_theme": chart_theme,
             "how_it_works": explainer.sections(params, run["league"])}  # owner-approved copy, numbers from config.yaml

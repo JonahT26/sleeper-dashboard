@@ -17,7 +17,8 @@ in data/processed/. Exits with code 1 on any failure.
 
 A successful run also writes data/cache/pipeline_run.json (gitignored): when it finished,
 the league name, season, weeks, and the league facts the "How this works" copy quotes (number
-of teams, whether there's a median game, playoff start). The dashboard reads it.
+of teams, whether there's a median game, playoff start), and whether Sleeper marks the season
+complete (for the page's stale-data line). The dashboard reads it.
 
 When there is no new completed week, the run is the same full refresh and succeeds. If Sleeper's
 data hasn't changed either, every saved table comes out byte-identical; only a stat correction
@@ -50,6 +51,7 @@ def league_facts(league):
     if "num_teams" not in settings or "playoff_week_start" not in settings:
         return None
     return {"teams": int(settings["num_teams"]), "median_game": bool(settings.get("league_average_match")),
+            "season_complete": league.get("status") == "complete",  # Sleeper marks a finished season "complete"
             "playoff_week_start": int(settings["playoff_week_start"])}
 
 
