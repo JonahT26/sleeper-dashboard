@@ -11,8 +11,8 @@ The source of truth for every metric. Code follows this file, not the other way 
 | 3 | Lineup efficiency | **Confirmed** 2026-10-02 |
 | 4 | Consistency | **Confirmed** 2026-10-02 |
 | 5 | Strength of schedule | **Confirmed** 2026-10-02 |
-| 6 | Power score | In interview |
-| 7 | Weekly awards | Not started |
+| 6 | Power score | **Confirmed** 2026-10-02 |
+| 7 | Weekly awards | In interview |
 
 ## Conventions that apply to every metric
 
@@ -311,3 +311,77 @@ Owner decisions:
 3. The future schedule is symmetric (if A plays B in a week, B plays A) and each `matchup_id` appears exactly twice per week.
 4. Pairings in the `schedule` table for completed weeks match `team_weeks.opponent_roster_id`.
 5. If every team had the same mean points, every SOS value would be 0.
+
+---
+
+## 6. Power score
+
+**Status:** confirmed by the owner, 2026-10-02.
+
+**Meaning.** One score from 0 to 100 for how strong each team is right now, where 50 is league average. It blends four components. Every weight is shown on the dashboard, and each team's ladder row expands to show what each component contributed (`UI_GUIDE.md`).
+
+**Components**, for team *i* through week *t* (owner approved the components and weights):
+
+| Key | Component | Definition | Weight |
+|---|---|---|---|
+| `season_scoring` | Season scoring | mean points per week over all completed weeks 1…*t* | 0.35 |
+| `recent_form` | Recent form | simple mean points over the last `recent_weeks` completed weeks (*t* − `recent_weeks` + 1 … *t*); all weeks so far when *t* < `recent_weeks` | 0.25 |
+| `roster_strength` | Roster strength | mean **optimal** points per week (metric 3) over weeks 1…*t*: the talent on the roster, bench included | 0.20 |
+| `results` | Results | head-to-head win % = (W + ½T) ÷ games, regular-season games through *t* (metric 2's actual wins ÷ games) | 0.20 |
+
+Deliberately left out (owner approved): **efficiency** (already inside actual points; roster strength captures the upside), **consistency** (volatility hurts a good team and helps a bad one, so it has no clear direction), **all-play %** (almost the same as season scoring), and **strength of schedule** (a team's points don't depend on its opponent). In weeks 1–3, recent form equals season scoring, so the two act as one component weighted 0.60.
+
+**Formula.** In week *t*, for each component *c*:
+
+1. Standardise across the *N* teams: *z₍ᵢ,c₎* = (*x₍ᵢ,c₎* − mean₍c₎) ÷ SD₍c₎, using the population SD (divisor *N*). If SD₍c₎ = 0, every *z₍ᵢ,c₎* = 0.
+2. Early-season factor: *f* = *t* ÷ (*t* + `shrink_weeks`), where *t* is the number of completed weeks.
+3. Component score: *s₍ᵢ,c₎* = 50 + `scale` · *f* · *z₍ᵢ,c₎*.
+4. Contribution: *w₍c₎* · *s₍ᵢ,c₎*.
+5. **Power score** = Σ₍c₎ *w₍c₎* · *s₍ᵢ,c₎* = 50 + `scale` · *f* · Σ₍c₎ *w₍c₎ z₍ᵢ,c₎*.
+
+**Rank** is by power score, highest first. **Rank change** = previous week's rank − this week's rank, so positive means the team moved up; null in week 1.
+
+Why this scale (owner decision, over percentile ranks or min–max): with *N* teams, no |*z*| can exceed (*N* − 1) ÷ √*N* (3.18 for 12 teams). With `scale` 15, every component score and every power score therefore lies between 2.4 and 97.6, every contribution is positive (so the ladder's stacked bars work), and the league average is exactly 50. The code must stop with a clear error if `scale` · (*N* − 1) ÷ √*N* > 50, which could push scores outside 0–100.
+
+**Early-season compression (owner decision).** Because *z*-scores ignore scale, shrinking components toward the league mean would not change the ranking. What *f* changes is how confident the spread looks: in week 1, every score lies within 50 ± 12; by week 9 the spread is 75% of full. **The ranking is unaffected.**
+
+Display: power score to 1 decimal place as a thin bar; rank change as ▲/▼ with a number.
+
+**Inputs.** `team_weeks`: `week`, `roster_id`, `points`, `result`, `is_playoff`. Metric 3: weekly optimal points. League settings: `num_teams`.
+
+**Parameters** (`config.yaml`):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `metrics.power.weights.season_scoring` | 0.35 | Weight of season scoring |
+| `metrics.power.weights.recent_form` | 0.25 | Weight of recent form |
+| `metrics.power.weights.roster_strength` | 0.20 | Weight of roster strength |
+| `metrics.power.weights.results` | 0.20 | Weight of results |
+| `metrics.power.recent_weeks` | 3 | Window for recent form (simple mean, owner decision over an exponentially weighted mean) |
+| `metrics.power.scale` | 15 | Points of score per standard deviation |
+| `metrics.power.shrink_weeks` | 3 | *k* in the early-season factor *f* = *t* ÷ (*t* + *k*) |
+
+The weights must be ≥ 0 and sum to 1 (±0.000001), or the run stops. They are a judgement call: three weeks of data cannot fit them. A possible later step (Phase 5) is to backtest them on last season by checking which weighting best predicts the following week's results.
+
+**Edge cases.**
+
+| Case | Rule |
+|---|---|
+| Stat corrections to past weeks | **Recompute everything every run** (owner decision, settling the Phase 1 open question). Rank change is measured against the recomputed previous week, so posted rankings can shift slightly after corrections, and the numbers are always internally consistent |
+| Ties in power score | Broken by season scoring, then head-to-head win %, then lower `roster_id`. Every team gets a distinct rank |
+| Playoff weeks | **Every week, every team** (owner decision). Results stay frozen at the end-of-regular-season win %; the other three components keep updating |
+| Week 1 | Results are 0, ½, or 1 for every team; *f* = 0.25 keeps the spread small. Rank change is null |
+| Median game | Not used: results are head-to-head only (metric 2) |
+| Empty starting slots, players added mid-week | No adjustment. Season scoring and recent form use actual scores; roster strength uses the roster as Sleeper recorded it (metric 3 rules) |
+| A component with no spread | *z* = 0 for every team, so it contributes exactly 50 × weight to everyone |
+
+**Expected range.** Power score between 2.4 and 97.6 (with `scale` 15 and 12 teams), tighter early in the season. The league mean is exactly 50 every week.
+
+**Sanity checks.**
+1. The league's mean power score = 50.0 every week (±0.000001).
+2. Each team's contributions sum to its power score (±0.000001).
+3. Weights are ≥ 0 and sum to 1.
+4. A team ranked first on every component is ranked first overall.
+5. Setting a weight to 0 leaves that component with no effect on the ranking.
+6. Ranks are 1…*N* with no duplicates, every week.
+7. The ranking is identical for any `shrink_weeks` value.
