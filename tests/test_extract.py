@@ -2,7 +2,7 @@
 
 import pytest
 
-from sleeper_dash.extract import ExtractError, latest_completed_week
+from sleeper_dash.extract import ExtractError, future_schedule_weeks, latest_completed_week
 
 
 def make_state(week, season="2026", season_type="regular"):
@@ -45,3 +45,9 @@ def test_missing_last_scored_leg_is_an_error():
     league = {"season": "2026", "settings": {}}
     with pytest.raises(ExtractError, match="last_scored_leg"):
         latest_completed_week(make_state(4), league)
+
+
+@pytest.mark.parametrize("last_week, expected", [(0, list(range(1, 15))), (3, list(range(4, 15))), (14, []), (17, [])])
+def test_future_schedule_covers_the_rest_of_the_regular_season(last_week, expected):
+    league = {"settings": {"playoff_week_start": 15}}
+    assert future_schedule_weeks(league, last_week) == expected

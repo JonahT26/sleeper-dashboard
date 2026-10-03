@@ -1,6 +1,6 @@
 """All-play record, expected wins, and luck (docs/METRICS_SPEC.md sections 1 and 2).
 
-Run with:  python -m sleeper_dash.metrics.allplay   (rebuilds from the saved tables, checks, saves, and reports)
+Run with:  python -m sleeper_dash.metrics.allplay   (rebuilds every metric table, checks, saves, and reports)
 
 Pure functions: tables in, tables out. Reading and saving files happens in main().
 
@@ -128,21 +128,9 @@ def record_text(wins, losses, ties):
 
 
 def main():
-    from sleeper_dash.config import PROJECT_ROOT, load_config
-    from sleeper_dash.transform import read_raw, save_tables
-    from sleeper_dash.validate import BASE_TABLES, ValidationError, load_tables, validate
+    from sleeper_dash.metrics import rebuild_from_saved
 
-    season = load_config().season
-    league, rosters = read_raw(season, "league.json"), read_raw(season, "rosters.json")
-    tables = load_tables(names=BASE_TABLES)
-    metric_tables = build_allplay_tables(tables)
-    try:
-        validate({**tables, **metric_tables}, league, rosters)
-    except ValidationError as error:
-        raise SystemExit(str(error))
-    for name, path in save_tables(metric_tables).items():
-        print(f"Saved {len(metric_tables[name])} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
-
+    tables, metric_tables, _ = rebuild_from_saved()
     names = tables["teams"].set_index("roster_id")["team_name"]
     _report_season(metric_tables["metrics_season"], tables["team_weeks"], names)
     _report_weekly(metric_tables["metrics_team_weeks"])

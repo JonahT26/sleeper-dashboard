@@ -32,6 +32,7 @@ TRANSACTIONS_COLUMNS = [
     "transaction_id", "season", "week", "is_preseason", "type", "status", "roster_id",
     "player_id", "player_name", "action", "waiver_bid", "created_at",
 ]
+SCHEDULE_COLUMNS = ["season", "week", "roster_id", "matchup_id", "opponent_roster_id", "is_completed"]
 EMPTY_SLOT = "0"
 EASTERN = "America/New_York"
 
@@ -44,13 +45,17 @@ def read_raw(season, filename, raw_dir=RAW_DIR):
         return json.load(f)
 
 
-def read_weekly(season, kind, raw_dir=RAW_DIR):
+def read_weekly(season, kind, raw_dir=RAW_DIR, required=True):
     """Return {week: records} from data/raw/{season}/{kind}/week_XX.json.
 
-    kind is "matchups" or "transactions". Extract only saves completed weeks.
+    kind is "matchups" or "transactions" (completed weeks only), or "schedule" (future
+    regular-season weeks; the folder is absent once the regular season is over, so
+    pass required=False).
     """
     folder = raw_dir / str(season) / kind
     if not folder.exists():
+        if not required:
+            return {}
         raise FileNotFoundError(f"{folder} is missing. Run `python -m sleeper_dash.extract` first.")
     weeks = {}
     for path in sorted(folder.glob("week_*.json")):
@@ -203,6 +208,47 @@ def build_team_weeks(league, matchups_by_week):
     }
     team_weeks = team_weeks.astype({c: t for c, t in dtypes.items() if c in columns})
     return team_weeks.sort_values(["week", "roster_id"]).reset_index(drop=True)
+
+
+def build_schedule(league, matchups_by_week, schedule_by_week):
+    """Regular-season pairings for every week, played and still to come. Key: (season, week, roster_id).
+
+    Completed weeks come from the saved matchups; future regular-season weeks from the
+    schedule files, which Sleeper publishes ahead of time with 0 points. Playoff weeks are
+    left out: playoff opponents come from the bracket, not the schedule.
+    """
+    season = int(league["season"])
+    playoff_start = league["settings"]["playoff_week_start"]
+    overlap = sorted(set(matchups_by_week) & set(schedule_by_week))
+    if overlap:
+        raise ValueError(f"Week(s) {overlap} are in both the completed matchups and the future schedule.")
+
+    weeks = [(w, m, True) for w, m in matchups_by_week.items()] + [(w, m, False) for w, m in schedule_by_week.items()]
+    rows = []
+    for week, records, completed in sorted(weeks, key=lambda item: item[0]):
+        if week >= playoff_start:
+            continue
+        teams_in_matchup = defaultdict(list)
+        for m in records:
+            if m.get("matchup_id") is not None:
+                teams_in_matchup[m["matchup_id"]].append(m["roster_id"])
+        opponent = {}
+        for matchup_id, roster_ids in teams_in_matchup.items():
+            if len(roster_ids) != 2:
+                raise ValueError(f"Schedule week {week}: matchup_id {matchup_id} has {len(roster_ids)} team(s); expected 2.")
+            a, b = roster_ids
+            opponent[a], opponent[b] = b, a
+        for m in records:
+            rows.append({"season": season, "week": week, "roster_id": m["roster_id"], "matchup_id": m.get("matchup_id"),
+                         "opponent_roster_id": opponent.get(m["roster_id"]), "is_completed": completed})
+
+    schedule = pd.DataFrame(rows, columns=SCHEDULE_COLUMNS).astype(
+        {"season": "int64", "week": "int64", "roster_id": "int64", "matchup_id": "Int64",
+         "opponent_roster_id": "Int64", "is_completed": "bool"}
+    )
+    if schedule.duplicated(["season", "week", "roster_id"]).any():
+        raise ValueError("schedule has duplicate (season, week, roster_id) rows.")
+    return schedule.sort_values(["week", "roster_id"]).reset_index(drop=True)
 
 
 def _player_name(info):
@@ -386,6 +432,7 @@ def build_tables(season):
         "team_weeks": build_team_weeks(league, matchups),
         "player_weeks": build_player_weeks(league, matchups, players),
         "transactions": build_transactions(league, read_weekly(season, "transactions"), players, start_date),
+        "schedule": build_schedule(league, matchups, read_weekly(season, "schedule", required=False)),
     }
     return tables, league, rosters, start_date
 

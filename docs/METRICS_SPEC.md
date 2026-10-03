@@ -311,6 +311,10 @@ Owner decisions:
 
 **Expected range.** Roughly ±15 points per week early in the season, narrowing to about ±5 by the end of the regular season. Remaining SOS is null once the regular season is over.
 
+**Schedule structure (found 2026-10-02).** This league's 14-week schedule is an 11-week round-robin, and weeks 12–14 repeat the pairings of weeks 1–3. Two consequences, both following from the definition rather than from a bug:
+- **As of week 3, remaining SOS is exactly 0 for every team**: the 11 remaining games are one game against each other team, so their average strength equals the baseline. From week 4 on, remaining SOS differs between teams again.
+- **By the end of the regular season, SOS played = (3/14) × (average strength of the three teams played twice − baseline)**, because everyone else is faced exactly once. Played SOS therefore shrinks toward a small number as the season goes on; early values mostly reflect *when* a team met strong opponents.
+
 **Sanity checks.**
 1. Number of opponents in SOS played = regular-season games played.
 2. Games played + games remaining = number of regular-season weeks (14 in 2026) for every team.

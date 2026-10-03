@@ -20,9 +20,9 @@ lineup.py                                             optimal lineup per team-we
     │                                                 (from player_weeks, team_weeks, and the players cache)
     ▼
 metrics/                                              weekly and season-to-date metrics, in memory
-    │                                                 (built: all-play, expected wins, luck; planned: the rest)
+    │                                                 (built: all-play, luck, consistency, schedule; planned: the rest)
     ▼
-validate.py                                           8 checks on the in-memory tables; any failure stops the run
+validate.py                                           10 checks on the in-memory tables; any failure stops the run
     │                                                 before anything is saved
     ▼
 data/processed/*.csv                                  saved, then re-read and checked again
@@ -87,13 +87,16 @@ sleeper-dashboard/
 |---|---|---|---|
 | `config.py` | Load and validate `config.yaml` | 0 | built |
 | `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
-| `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`. Writes to a `.partial` staging folder and swaps it in only when every call succeeds. Also refreshes the players cache via `api.get_players()` (at most once a day) | 1 | built |
-| `transform.py` | Build the tidy tables below from saved files only (raw JSON plus the players cache): `teams`, `team_weeks`, `player_weeks`, `transactions` | 1 | built |
-| `validate.py` | Eight checks: one row per team per completed week (and no missing weeks); each `matchup_id` has exactly 2 teams; starter points equal team points (±0.01); regular-season W–L–T matches Sleeper's roster settings, counting median games when the league has them; regular-season points for/against match `fpts`/`fpts_against` (±0.01); optimal lineups are consistent (one per team-week, actual = team score, optimal ≥ actual, optimal = sum of chosen players, no player used twice; only when the lineup tables are present); all-play and luck are consistent (all-play W + L + T = teams − 1, league all-play wins = n(n − 1)/2 per week, expected wins = actual wins and luck sums to 0 in every regular-season week where all teams played, `median_result` = W exactly when all-play wins ≥ n/2, season totals = weekly sums, season record = Sleeper's official record; only when the metric tables are present); no duplicate keys in any table. `transform` runs them **before saving** and stops with a pass/fail table if any fail; `python -m sleeper_dash.validate` re-checks the saved CSVs | 1 | built |
-| `pipeline.py` | Orchestrates extract → transform → optimal lineups → metrics → validate → save → re-validate the saved CSVs; prints a run summary and soft-check warnings; exit code 1 on failure | 1–2 | built (through all-play and luck) |
+| `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`, plus the published pairings for the rest of the regular season (`schedule/week_XX.json`: matchups for future weeks, 0 points; about 11 extra calls early in the season, none after it). Writes to a `.partial` staging folder and swaps it in only when every call succeeds. Also refreshes the players cache via `api.get_players()` (at most once a day) | 1 | built |
+| `transform.py` | Build the tidy tables below from saved files only (raw JSON plus the players cache): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule` | 1–2 | built |
+| `validate.py` | Ten checks: one row per team per completed week (and no missing weeks); each `matchup_id` has exactly 2 teams; starter points equal team points (±0.01); regular-season W–L–T matches Sleeper's roster settings, counting median games when the league has them; regular-season points for/against match `fpts`/`fpts_against` (±0.01); optimal lineups are consistent (one per team-week, actual = team score, optimal ≥ actual, optimal = sum of chosen players, no player used twice; only when the lineup tables are present); all-play and luck are consistent (all-play W + L + T = teams − 1, league all-play wins = n(n − 1)/2 per week, expected wins = actual wins and luck sums to 0 in every regular-season week where all teams played, `median_result` = W exactly when all-play wins ≥ n/2, season totals = weekly sums, season record = Sleeper's official record; only when the metric tables are present); the schedule is complete and matches games played (one row per team in every regular-season week, symmetric pairings, `is_completed` right, completed pairings = `team_weeks`); consistency and schedule metrics are consistent (no week both boom and bust, floor ≤ ceiling, volatility ≥ 0, booms + busts ≤ weeks, SOS games played + remaining = regular-season weeks); no duplicate keys in any table. `transform` runs them **before saving** and stops with a pass/fail table if any fail; `python -m sleeper_dash.validate` re-checks the saved CSVs | 1 | built |
+| `pipeline.py` | Orchestrates extract → transform → optimal lineups → metrics → validate → save → re-validate the saved CSVs; prints a run summary and soft-check warnings; exit code 1 on failure | 1–2 | built (through consistency and schedule) |
 | `lineup.py` | Optimal lineup per team-week (METRICS_SPEC.md section 3), solved exactly as an assignment problem with `scipy.optimize.linear_sum_assignment`: slots × players, cost −points where eligible and 10⁶ where not, so every fillable slot is filled before points are maximised; tiny bonuses (< 0.01 in total) break exact ties toward the manager's own starters and slots. Eligibility from the players cache `fantasy_positions` (fallback: `position`; neither stops the run). `compare_to_sleeper_max` is the `ppts` soft check. `python -m sleeper_dash.lineup` rebuilds from the saved CSVs, validates, saves, and prints the latest week, season totals, and the soft check | 2 | built |
-| `metrics/allplay.py` | All-play record, expected wins, and luck (METRICS_SPEC.md sections 1–2): `build_metrics_team_weeks`, `build_metrics_season`. All-play by within-week ranking of points (2 dp); expected wins = weekly all-play % + median result; actual wins = head-to-head + median result; luck = actual − expected, regular season only. `python -m sleeper_dash.metrics.allplay` rebuilds from the saved CSVs, validates, saves, and prints the season table sorted by luck | 2 | built |
-| `metrics/*` (others) | Pure functions implementing the rest of `docs/METRICS_SPEC.md` | 2 | planned |
+| `metrics/allplay.py` | All-play record, expected wins, and luck (METRICS_SPEC.md sections 1–2): `build_metrics_team_weeks`, `build_metrics_season`. All-play by within-week ranking of points (2 dp); expected wins = weekly all-play % + median result; actual wins = head-to-head + median result; luck = actual − expected, regular season only. `python -m sleeper_dash.metrics.allplay` rebuilds every metric table from the saved CSVs, validates, saves, and prints the season table sorted by luck | 2 | built |
+| `metrics/consistency.py` | Volatility, floor/ceiling, boom/bust (section 4): `consistency_team_weeks`, `consistency_season`; `check_params` stops on unusable `config.yaml` values. `python -m sleeper_dash.metrics.consistency` reports | 2 | built |
+| `metrics/schedule.py` | Strength of schedule, played and remaining (section 5): `strength_of_schedule` from `team_weeks` and `schedule`. `python -m sleeper_dash.metrics.schedule` reports | 2 | built |
+| `metrics/__init__.py` | `build_metric_tables` merges every module's columns into `metrics_team_weeks` and `metrics_season`; `rebuild_from_saved` backs the modules' report commands | 2 | built |
+| `metrics/*` (others) | Power score and awards | 2 | planned |
 | `dashboard/*` | Render `site/index.html` per `docs/UI_GUIDE.md` | 3 | planned |
 
 ## Data model
@@ -180,6 +183,18 @@ Not represented: draft picks and FAAB traded inside trades (`draft_picks`, `waiv
 
 `season_start_date` comes from `/state/nfl`, which only describes the current NFL season; transform stops with a clear error if the league's season is no longer current. Revisit before re-running past seasons (Phase 5).
 
+### `schedule` (built)
+Grain: one row per team per regular-season week, played and future. Key: (`season`, `week`, `roster_id`). Source: completed `matchups/week_XX.json` plus future `schedule/week_XX.json`. Playoff weeks are excluded (opponents come from the bracket).
+
+| Column | Type | Notes |
+|---|---|---|
+| season, week, roster_id | int | |
+| matchup_id | Int64 | Sleeper's game ID within the week |
+| opponent_roster_id | Int64 | The team paired with this one that week |
+| is_completed | bool | True for weeks in `team_weeks` |
+
+2026 structure (checked 2026-10-02): weeks 1–11 are a full round-robin and weeks 12–14 repeat the pairings of weeks 1–3.
+
 ### `lineups_optimal` (built)
 Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`). Source: `lineup.py` from `player_weeks`, `team_weeks`, league `roster_positions`, and the players cache. Definitions: `docs/METRICS_SPEC.md` section 3.
 
@@ -206,8 +221,8 @@ Grain: one row per starting slot of each team's optimal lineup per week. Key: (`
 
 Soft check (printed by the pipeline and `python -m sleeper_dash.lineup`): regular-season Σ optimal_points vs Sleeper's `ppts`; warns if below, or above by more than `metrics.efficiency.ppts_warn_gap`. Through week 3: 5 teams match exactly, 7 are 0.02–4.00 above, no warnings. An independent integer-programming solve (scipy `milp`) matched all 36 team-weeks to the cent (2026-10-02).
 
-### `metrics_team_weeks` (built: all-play and luck columns)
-Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`). Source: `metrics/allplay.py` from `team_weeks`. Definitions: `docs/METRICS_SPEC.md` sections 1–2. Later metrics add columns to this table.
+### `metrics_team_weeks` (built: all-play, luck, consistency)
+Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`). Source: `metrics/` modules from `team_weeks`, combined by `metrics.build_metric_tables`. Definitions: `docs/METRICS_SPEC.md` sections 1, 2, and 4. Later metrics add columns to this table.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -220,9 +235,12 @@ Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`)
 | expected_wins | float | allplay_win_pct + median_wins |
 | luck | float | actual_wins − expected_wins (= h2h_actual_wins − allplay_win_pct) |
 
-The last five columns are null in playoff weeks and for a team-week without a head-to-head game.
+| points_vs_median | float | points − that week's league median, 3 dp (consistency's *d*) |
+| is_boom, is_bust | bool | points_vs_median ≥ `boom_margin` / ≤ −`bust_margin` |
 
-### `metrics_season` (built: all-play and luck columns)
+h2h_actual_wins through luck are null in playoff weeks and for a team-week without a head-to-head game.
+
+### `metrics_season` (built: all-play, luck, consistency, schedule)
 Grain: one row per team as of every completed week. Key: (`season`, `through_week`, `roster_id`). Running totals of `metrics_team_weeks` over weeks 1…`through_week`.
 
 | Column | Type | Notes |
@@ -234,12 +252,18 @@ Grain: one row per team as of every completed week. Key: (`season`, `through_wee
 | h2h_wins, h2h_losses, h2h_ties | int | Head-to-head part of the record (used by the power score's results component; not displayed) |
 | median_wins, median_losses | int | Median-game part of the record (not displayed) |
 | actual_wins, expected_wins, luck | float | Regular-season sums on the overall scale; frozen from the first playoff week on. League luck sums to 0 for every `through_week` |
+| weeks | int | Weeks played so far, playoffs included (consistency's *n*) |
+| volatility | float | Sample SD of points_vs_median, 2 dp; null until `metrics.consistency.min_weeks` weeks |
+| floor, ceiling | float | 10th / 90th percentile of weekly points (linear interpolation), 2 dp; null until `min_weeks` |
+| boom_weeks, bust_weeks | int | Counts so far |
+| boom_rate, bust_rate | float | Counts ÷ weeks |
+| sos_played, sos_remaining | float | Strength of schedule, points per week vs the other 11 teams' average, 2 dp; null until `metrics.schedule.min_weeks`; remaining null when no regular-season games are left |
+| sos_games_played, sos_games_remaining | int | Regular-season games behind and ahead; they sum to the number of regular-season weeks |
 
 ### Metric tables (Phase 2, planned)
 
 | Table | Grain | Contents |
 |---|---|---|
-| `schedule` | season, week, roster_id | opponent_roster_id and is_completed for every regular-season week, including future ones (needed for remaining strength of schedule) |
 | `power_rankings` | season, week, roster_id | power_score, rank, rank_change, one column per component contribution |
 | `awards` | season, week, award | roster_id, value, caption |
 
@@ -325,3 +349,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 2: `lineup.py` builds `lineups_optimal` and `lineups_optimal_players`; the pipeline builds them before validation; validation gains a seventh check (optimal lineups are consistent); `ppts` soft check printed as a warning. Tests in `tests/test_lineup.py`, including a FLEX/REC_FLEX case where a greedy fill loses 16 points and a brute-force comparison on 300 random lineups.
 - Phase 2: `metrics/allplay.py` builds `metrics_team_weeks` and `metrics_season` (all-play, expected wins, luck); eighth validation check (all-play and luck invariants, including the median cross-check). Tests in `tests/test_allplay.py` on synthetic 17-week seasons (one with forced ties) and the real week 1 fixture. Head-to-head records verified against Sleeper's `metadata.record` for all 12 teams.
 - Phase 2: record scale changed to overall (head-to-head + median games) by the owner after seeing the first luck table; `metrics_team_weeks` gains `h2h_actual_wins` and `median_wins`, `metrics_season` gains `wins`/`losses`/`ties` and the median split (`games` removed). Luck values unchanged. The validation check now also compares the record with Sleeper's.
+- Phase 2: extract pulls the future regular-season schedule; transform builds the `schedule` table; `metrics/consistency.py` and `metrics/schedule.py` add consistency and strength-of-schedule columns; `metrics/__init__.py` combines all metric modules; two new validation checks (10 in total). Tests in `tests/test_consistency.py` and `tests/test_schedule.py`. Pipeline now makes 23 API calls through week 3.

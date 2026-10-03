@@ -45,7 +45,9 @@ python -m sleeper_dash.pipeline    # full refresh: extract → transform → opt
 python -m sleeper_dash.extract     # step 1 only: re-download raw JSON into data/raw/{season}/ and refresh the players cache
 python -m sleeper_dash.transform   # step 2 only: rebuild tables from saved files, validate, save, print detailed reports
 python -m sleeper_dash.lineup      # rebuild optimal lineups from the saved tables; print latest week, season, and Sleeper max-points check
-python -m sleeper_dash.metrics.allplay  # rebuild all-play, expected wins, and luck; print the season table sorted by luck
+python -m sleeper_dash.metrics.allplay      # rebuild every metric table; print the season table sorted by luck
+python -m sleeper_dash.metrics.consistency  # rebuild every metric table; print volatility, floor/ceiling, booms and busts
+python -m sleeper_dash.metrics.schedule     # rebuild every metric table; print strength of schedule, played and remaining
 python -m sleeper_dash.validate    # re-run the checks on the saved tables and print pass/fail
 pytest                             # run all tests
 jupyter lab                        # open the notebooks

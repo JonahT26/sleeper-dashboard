@@ -43,6 +43,14 @@ def latest_completed_week(state, league):
     return max(completed, 0)
 
 
+def future_schedule_weeks(league, last_completed_week):
+    """Regular-season weeks after the latest completed week, whose pairings Sleeper already publishes.
+
+    Their matchups (0 points so far) give the remaining schedule for strength of schedule.
+    """
+    return list(range(last_completed_week + 1, league["settings"]["playoff_week_start"]))
+
+
 def _record_count(data):
     return len(data) if isinstance(data, list) else 1
 
@@ -98,6 +106,8 @@ def extract(config):
     for week in range(1, last_week + 1):
         fetch(f"{league_path}/matchups/{week}", f"matchups/week_{week:02d}.json")
         fetch(f"{league_path}/transactions/{week}", f"transactions/week_{week:02d}.json")
+    for week in future_schedule_weeks(league, last_week):
+        fetch(f"{league_path}/matchups/{week}", f"schedule/week_{week:02d}.json")
 
     if season_dir.exists():
         shutil.rmtree(season_dir)

@@ -18,13 +18,14 @@ KEYS = {
     "team_weeks": ["season", "week", "roster_id"],
     "player_weeks": ["season", "week", "roster_id", "slot_order"],
     "transactions": ["transaction_id", "player_id", "action"],
-    "lineups_optimal": ["season", "week", "roster_id"],
+    "schedule": ["season", "week", "roster_id"],
+    "lineups_optimal":["season", "week", "roster_id"],
     "lineups_optimal_players": ["season", "week", "roster_id", "slot_order"],
     "metrics_team_weeks": ["season", "week", "roster_id"],
     "metrics_season": ["season", "through_week", "roster_id"],
 }
 LUCK_TOLERANCE = 1e-6  # wins
-BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions"]  # built by transform; the rest by lineup
+BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "schedule"]  # built by transform; the rest by lineup and metrics
 
 
 @dataclass
@@ -127,6 +128,69 @@ def check_points_for_against(team_weeks, rosters):
     return _result("Points for/against match Sleeper", problems, f"{len(rosters)} teams within {TOLERANCE}")
 
 
+def _regular_weeks(league):
+    settings = league["settings"]
+    return list(range(settings.get("start_week", 1), settings["playoff_week_start"]))
+
+
+def check_schedule(schedule, team_weeks, league):
+    """The regular-season schedule is complete, symmetric, and agrees with the games already played.
+
+    Every regular-season week has one row per team; pairings are symmetric (A plays B, B
+    plays A); completed weeks are exactly the weeks in team_weeks and their pairings match it.
+    """
+    problems = []
+    teams = league["settings"]["num_teams"]
+    counts = schedule.groupby("week").size()
+    for week in _regular_weeks(league):
+        if counts.get(week, 0) != teams:
+            problems.append(f"week {week}: {counts.get(week, 0)} schedule rows, expected {teams}")
+
+    games = schedule.dropna(subset=["opponent_roster_id"])
+    pairs = games.merge(games, left_on=["week", "roster_id", "opponent_roster_id"],
+                        right_on=["week", "opponent_roster_id", "roster_id"], how="left", suffixes=("", "_other"))
+    problems += [f"week {r.week}, roster {r.roster_id}: opponent {r.opponent_roster_id} doesn't list it back"
+                 for r in pairs[pairs["matchup_id_other"].isna()].itertuples()]
+
+    played_weeks = set(team_weeks["week"])
+    wrong_flag = schedule[schedule["is_completed"].astype(bool) != schedule["week"].isin(played_weeks)]
+    problems += [f"week {w}: is_completed is wrong" for w in sorted(wrong_flag["week"].unique())]
+
+    regular = team_weeks[~team_weeks["is_playoff"].astype(bool)][["week", "roster_id", "opponent_roster_id"]]
+    merged = regular.merge(schedule[["week", "roster_id", "opponent_roster_id"]], on=["week", "roster_id"], how="left", suffixes=("", "_sched"))
+    ours, scheduled = merged["opponent_roster_id"].astype("Int64"), merged["opponent_roster_id_sched"].astype("Int64")
+    mismatch = merged[(ours != scheduled).fillna(ours.isna() != scheduled.isna())]
+    problems += [f"week {r.week}, roster {r.roster_id}: played {r.opponent_roster_id}, schedule says {r.opponent_roster_id_sched}"
+                 for r in mismatch.itertuples()]
+    return _result("Schedule is complete and matches games played", problems,
+                   f"{len(_regular_weeks(league))} regular-season weeks x {teams} teams")
+
+
+def check_consistency_and_sos(weekly, season, league):
+    """Consistency and strength-of-schedule invariants (METRICS_SPEC.md sections 4 and 5).
+
+    No week is both a boom and a bust; floor <= ceiling; volatility >= 0; booms + busts <= weeks.
+    Games played + remaining = regular-season weeks, and games played = regular-season weeks so far.
+    """
+    problems = []
+    both = weekly[weekly["is_boom"].astype(bool) & weekly["is_bust"].astype(bool)]
+    problems += [f"week {r.week}, roster {r.roster_id}: both a boom and a bust" for r in both.itertuples()]
+    where = lambda r: f"through week {r.through_week}, roster {r.roster_id}"
+    problems += [f"{where(r)}: floor {r.floor} above ceiling {r.ceiling}" for r in season[season["floor"] > season["ceiling"]].itertuples()]
+    problems += [f"{where(r)}: negative volatility" for r in season[season["volatility"] < 0].itertuples()]
+    problems += [f"{where(r)}: more booms + busts than weeks" for r in season[season["boom_weeks"] + season["bust_weeks"] > season["weeks"]].itertuples()]
+
+    regular = _regular_weeks(league)
+    total = season["sos_games_played"] + season["sos_games_remaining"]
+    problems += [f"{where(r)}: {r.sos_games_played} + {r.sos_games_remaining} games, expected {len(regular)}"
+                 for r in season[total != len(regular)].itertuples()]
+    so_far = season["through_week"].map(lambda t: sum(w <= t for w in regular))
+    problems += [f"{where(r)}: {r.sos_games_played} games played, expected {so_far[r.Index]}"
+                 for r in season[season["sos_games_played"] != so_far].itertuples()]
+    return _result("Consistency and schedule metrics are consistent", problems,
+                   f"{len(season)} team-season rows; every team has {len(regular)} regular-season games")
+
+
 def check_optimal_lineups(lineups, chosen, team_weeks):
     """Optimal lineups are complete and consistent (METRICS_SPEC.md section 3, sanity checks 1 and 4).
 
@@ -227,8 +291,12 @@ def run_checks(tables, league, rosters):
     ]
     if "lineups_optimal" in tables:
         results.append(check_optimal_lineups(tables["lineups_optimal"], tables["lineups_optimal_players"], team_weeks))
+    if "schedule" in tables:
+        results.append(check_schedule(tables["schedule"], team_weeks, league))
     if "metrics_team_weeks" in tables:
         results.append(check_allplay_and_luck(tables["metrics_team_weeks"], tables["metrics_season"], team_weeks, rosters))
+        if "is_boom" in tables["metrics_team_weeks"]:
+            results.append(check_consistency_and_sos(tables["metrics_team_weeks"], tables["metrics_season"], league))
     results.append(check_unique_keys(tables))
     return results
 

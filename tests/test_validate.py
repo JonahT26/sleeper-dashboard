@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 
 from sleeper_dash import validate as v
-from sleeper_dash.transform import build_player_weeks, build_team_weeks, build_teams, build_transactions
+from sleeper_dash.transform import build_player_weeks, build_schedule, build_team_weeks, build_teams, build_transactions
 
 FIXTURES = Path(__file__).parent / "fixtures"
 ROSTER_POSITIONS = ["QB", "RB", "RB", "WR", "WR", "FLEX", "REC_FLEX", "SUPER_FLEX", "K", "DEF"] + ["BN"] * 6
@@ -68,6 +68,8 @@ def tables(week_1, rosters):
         "team_weeks": build_team_weeks(league, {1: week_1}),
         "player_weeks": build_player_weeks(league, {1: week_1}, players={}),
         "transactions": build_transactions(league, {}, {}, "2026-09-09"),
+        # Weeks 2-14 not played yet: Sleeper publishes their pairings ahead of time (reused from week 1 here).
+        "schedule": build_schedule(league, {1: week_1}, {week: week_1 for week in range(2, 15)}),
     }
 
 
@@ -83,7 +85,7 @@ def test_settings_helper_matches_a_known_result(week_1):
 
 def test_all_checks_pass_on_fixture_data(tables, rosters):
     results = v.run_checks(tables, make_league(), rosters)
-    assert len(results) == 6
+    assert len(results) == 7
     assert failed(results) == []
 
 

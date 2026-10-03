@@ -14,7 +14,7 @@ import time
 from sleeper_dash import extract, lineup, transform, validate
 from sleeper_dash.api import SleeperAPIError
 from sleeper_dash.config import load_config
-from sleeper_dash.metrics import allplay
+from sleeper_dash import metrics
 
 
 def run():
@@ -26,7 +26,7 @@ def run():
 
     tables, league, rosters, _ = transform.build_tables(config.season)
     tables.update(lineup.build_lineup_tables(tables, league, transform.read_players()))
-    tables.update(allplay.build_allplay_tables(tables))
+    tables.update(metrics.build_metric_tables(tables, config.metrics))
     validate.validate(tables, league, rosters)  # before saving: failures never overwrite good tables
     transform.save_tables(tables)
 
