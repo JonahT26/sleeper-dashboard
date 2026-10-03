@@ -112,8 +112,8 @@ def test_a_new_week_is_reported(run_pipeline):
 # Sleeper's real 2025 playoffs for this league looked like PlayoffLeague() with no behaviours:
 # standings count the regular season only, every team is listed every week, byes have no
 # matchup_id, and consolation games are paired. The other behaviours are what Sleeper might do
-# instead. Cases that stop the run are recorded as they behave today; how those checks should
-# behave in playoff weeks is waiting on the owner's decision.
+# instead. Owner decisions 2026-10-03: standings that also count the playoffs are accepted (one
+# standard must fit every team); teams missing from the matchups or without a lineup stop the run.
 
 from fake_sleeper import PlayoffLeague  # noqa: E402
 from sleeper_dash import validate  # noqa: E402
@@ -141,21 +141,54 @@ def test_playoff_weeks_run_cleanly_and_publish(run_pipeline, tmp_path, behaviour
     assert 'id="week-8"' in (root / "site" / "index.html").read_text(encoding="utf-8")
 
 
-@pytest.mark.parametrize("behaviours, failed_check", [
-    (("roster_wins_include_playoff_games",), "Records match Sleeper"),
-    (("roster_wins_include_playoff_games", "roster_wins_include_playoff_median"), "Records match Sleeper"),
-    (("roster_points_include_playoffs",), "Points for/against match Sleeper"),
-    (("no_game_teams_missing",), "Every week has one row per team"),
-], ids=["wins count playoff games", "wins count playoff games and median", "points count playoffs", "no-game teams missing"])
-def test_playoff_behaviours_that_stop_the_run_today(run_pipeline, tmp_path, behaviours, failed_check):
-    # Owner decision pending (HANDOFF.md risk 4): stop, as now, or warn and continue in playoff weeks.
-    with pytest.raises(validate.ValidationError, match=failed_check):
-        run_pipeline(PlayoffLeague(behaviours))
+def check_detail(summary, name):
+    return next(detail for check, _, detail in summary["data_checks"] if check == name)
+
+
+@pytest.mark.parametrize("behaviours, records, points", [
+    (("roster_wins_include_playoff_games",), "regular season + playoff games", "regular season"),
+    (("roster_wins_include_playoff_games", "roster_wins_include_playoff_median"),
+     "regular season + playoff games and median", "regular season"),
+    (("roster_points_include_playoffs",), "regular season", "regular season + every playoff week"),
+    (("roster_wins_include_playoff_games", "roster_points_include_playoffs"),
+     "regular season + playoff games", "regular season + every playoff week"),
+], ids=["wins count playoff games", "wins count playoff games and median", "points count playoffs", "both count playoffs"])
+def test_either_counting_standard_is_accepted_in_playoff_weeks(run_pipeline, tmp_path, behaviours, records, points):
+    # Owner decision 2026-10-03: Sleeper's standings may count the playoffs too, as long as one
+    # standard fits every team. Our numbers never depend on it, so the tables are identical.
+    baseline = run_pipeline(PlayoffLeague(), "baseline")
+    assert check_detail(baseline, "Records match Sleeper").endswith("; regular season")
+    summary = run_pipeline(PlayoffLeague(behaviours), "other")
+    assert all_passed(summary)
+    assert check_detail(summary, "Records match Sleeper").endswith(f"; {records}")
+    assert check_detail(summary, "Points for/against match Sleeper").endswith(f"; {points}")
+    assert saved_files(tmp_path, "other") == saved_files(tmp_path, "baseline")
+
+
+def test_standings_that_fit_no_single_standard_still_stop_the_run(run_pipeline, tmp_path):
+    # Team 1 counted with its playoff games, everyone else without: no one standard fits every team.
+    regular, with_playoffs = PlayoffLeague(), PlayoffLeague(("roster_wins_include_playoff_games",))
+
+    class Mixed:
+        def get(self, path):
+            if path.endswith("/rosters"):
+                return [with_playoffs.get(path)[0]] + regular.get(path)[1:]
+            return regular.get(path)
+
+    with pytest.raises(validate.ValidationError, match="no counting standard fits every team"):
+        run_pipeline(Mixed())
+    assert not (tmp_path / "a" / "processed").exists()
+
+
+def test_teams_left_out_of_playoff_matchups_stop_the_run(run_pipeline, tmp_path):
+    # Owner decision 2026-10-03: keep stopping (never seen; continuing would publish a broken ladder).
+    with pytest.raises(validate.ValidationError, match="Every week has one row per team"):
+        run_pipeline(PlayoffLeague(("no_game_teams_missing",)))
     assert not (tmp_path / "a" / "processed").exists()  # nothing saved, so nothing published
 
 
-def test_unscored_no_game_teams_stop_the_run_today(run_pipeline, tmp_path):
-    # Owner decision pending (HANDOFF.md risk 4). Stops in transform, before any check runs.
+def test_unscored_no_game_teams_stop_the_run(run_pipeline, tmp_path):
+    # Owner decision 2026-10-03: keep stopping (never seen). Stops in transform, before any check runs.
     with pytest.raises(ValueError, match="Week 8, roster 1: 0 starters"):
         run_pipeline(PlayoffLeague(("no_game_teams_unscored",)))
     assert not (tmp_path / "a" / "processed").exists()

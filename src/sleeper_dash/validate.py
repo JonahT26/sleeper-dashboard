@@ -97,38 +97,114 @@ def _sleeper_totals(rosters):
     }
 
 
-def check_records(team_weeks, rosters, league):
-    """Regular-season W-L-T matches Sleeper's roster settings, counting median games if the league plays them."""
-    regular = team_weeks[~team_weeks["is_playoff"]]
-    plays_median = league["settings"].get("league_average_match") == 1
-    problems = []
-    for roster_id, sleeper in sorted(_sleeper_totals(rosters).items()):
-        games = regular[regular["roster_id"] == roster_id]
-        ours = {k: int((games["result"] == k).sum()) for k in ("W", "L", "T")}
+# Sleeper's roster totals have counted the regular season only (this league's 2025 season). In
+# playoff weeks either standard is accepted (owner decision 2026-10-03): the totals must match one
+# standard for every team, or the run stops. Before the playoffs every standard is the same.
+REGULAR_SEASON = "regular season"
+
+
+def _record_standards(team_weeks):
+    """{standard: {roster_id: (W, L, T)}}: head-to-head plus median games, under each way Sleeper might count."""
+    plays_median = "median_result" in team_weeks
+    playoff = team_weeks[team_weeks["is_playoff"]]
+    playoff_median = pd.Series("", index=playoff.index)
+    if plays_median and len(playoff):  # transform plays no median in playoff weeks; compute the one Sleeper might
+        median = playoff.groupby("week")["points"].transform("median")
+        playoff_median = playoff_median.mask(playoff["points"] > median, "W").mask(playoff["points"] < median, "L")
+
+    def records(include_games, include_median):
+        rows = team_weeks if include_games else team_weeks[~team_weeks["is_playoff"]]
+        out = {}
+        for roster_id in sorted(team_weeks["roster_id"].unique()):
+            games = rows[rows["roster_id"] == roster_id]
+            w, l, t = (int((games["result"] == k).sum()) for k in ("W", "L", "T"))
+            if plays_median:
+                regular = games[~games["is_playoff"]]
+                w += int((regular["median_result"] == "W").sum())
+                l += int((regular["median_result"] == "L").sum())
+                if include_median:
+                    mine = playoff_median[playoff["roster_id"] == roster_id]
+                    w, l = w + int((mine == "W").sum()), l + int((mine == "L").sum())
+            out[int(roster_id)] = (w, l, t)
+        return out
+
+    standards = {REGULAR_SEASON: records(False, False)}
+    if len(playoff):
+        standards["regular season + playoff games"] = records(True, False)
         if plays_median:
-            ours["W"] += int((games["median_result"] == "W").sum())
-            ours["L"] += int((games["median_result"] == "L").sum())
-        if (ours["W"], ours["L"], ours["T"]) != (sleeper["W"], sleeper["L"], sleeper["T"]):
-            problems.append(
-                f"roster {roster_id}: ours {ours['W']}–{ours['L']}–{ours['T']}, "
-                f"Sleeper {sleeper['W']}–{sleeper['L']}–{sleeper['T']}"
-            )
-    note = "including median games" if plays_median else "head-to-head"
-    return _result("Records match Sleeper", problems, f"{len(rosters)} teams, {note}")
+            standards["regular season + playoff games and median"] = records(True, True)
+    return standards
+
+
+def _points_standards(team_weeks):
+    """{standard: {roster_id: (points for, points against)}} under each way Sleeper might count."""
+    def totals(for_rows, against_rows):
+        return {int(rid): (for_rows.loc[for_rows["roster_id"] == rid, "points"].sum(),
+                           against_rows.loc[against_rows["roster_id"] == rid, "opponent_points"].sum())
+                for rid in sorted(team_weeks["roster_id"].unique())}
+
+    playoff, has_game = team_weeks["is_playoff"], team_weeks["opponent_points"].notna()
+    regular = team_weeks[~playoff]
+    standards = {REGULAR_SEASON: totals(regular, regular)}
+    if playoff.any():  # points against only exist where there was a game, so both playoff standards share them
+        standards["regular season + playoff games"] = totals(team_weeks[~playoff | has_game], team_weeks)
+        standards["regular season + every playoff week"] = totals(team_weeks, team_weeks)
+    return standards
+
+
+def _matching_standard(standards, sleeper, matches):
+    """The first standard under which every team matches Sleeper, or None."""
+    for name, ours in standards.items():
+        if all(rid in ours and matches(ours[rid], sleeper[rid]) for rid in sleeper):
+            return name
+    return None
+
+
+def check_records(team_weeks, rosters, league):
+    """W-L-T matches Sleeper's roster settings, counting median games if the league plays them.
+
+    Regular season only, as Sleeper counts it; in playoff weeks a standard that also counts playoff
+    games (and a playoff median) is accepted too, as long as one standard fits every team.
+    """
+    sleeper = {rid: (s["W"], s["L"], s["T"]) for rid, s in _sleeper_totals(rosters).items()}
+    standards = _record_standards(team_weeks)
+    standard = _matching_standard(standards, sleeper, lambda ours, theirs: ours == theirs)
+    problems = []
+    if standard is None:
+        regular = standards[REGULAR_SEASON]
+        for roster_id, theirs in sorted(sleeper.items()):
+            ours = regular.get(roster_id, (0, 0, 0))
+            if ours != theirs:
+                problems.append(f"roster {roster_id}: ours {'–'.join(map(str, ours))}, Sleeper {'–'.join(map(str, theirs))}")
+        if len(standards) > 1:
+            problems.append(f"no counting standard fits every team (tried: {', '.join(standards)})")
+    note = "including median games" if league["settings"].get("league_average_match") == 1 else "head-to-head"
+    return _result("Records match Sleeper", problems, f"{len(rosters)} teams, {note}; {standard or REGULAR_SEASON}")
 
 
 def check_points_for_against(team_weeks, rosters):
-    """Regular-season points for and against match Sleeper's fpts and fpts_against (within TOLERANCE)."""
-    regular = team_weeks[~team_weeks["is_playoff"]]
+    """Points for and against match Sleeper's fpts and fpts_against (within TOLERANCE).
+
+    Regular season only, as Sleeper counts it; in playoff weeks a standard that also counts playoff
+    points is accepted too, as long as one standard fits every team.
+    """
+    sleeper = {rid: (s["PF"], s["PA"]) for rid, s in _sleeper_totals(rosters).items()}
+    standards = _points_standards(team_weeks)
+    close = lambda ours, theirs: abs(ours[0] - theirs[0]) <= TOLERANCE and abs(ours[1] - theirs[1]) <= TOLERANCE
+    standard = _matching_standard(standards, sleeper, close)
     problems = []
-    for roster_id, sleeper in sorted(_sleeper_totals(rosters).items()):
-        games = regular[regular["roster_id"] == roster_id]
-        pf, pa = games["points"].sum(), games["opponent_points"].sum()
-        if abs(pf - sleeper["PF"]) > TOLERANCE:
-            problems.append(f"roster {roster_id}: points for {pf:.2f} vs Sleeper {sleeper['PF']:.2f}")
-        if abs(pa - sleeper["PA"]) > TOLERANCE:
-            problems.append(f"roster {roster_id}: points against {pa:.2f} vs Sleeper {sleeper['PA']:.2f}")
-    return _result("Points for/against match Sleeper", problems, f"{len(rosters)} teams within {TOLERANCE}")
+    if standard is None:
+        regular = standards[REGULAR_SEASON]
+        for roster_id, (spf, spa) in sorted(sleeper.items()):
+            pf, pa = regular.get(roster_id, (0.0, 0.0))
+            if abs(pf - spf) > TOLERANCE:
+                problems.append(f"roster {roster_id}: points for {pf:.2f} vs Sleeper {spf:.2f}")
+            if abs(pa - spa) > TOLERANCE:
+                problems.append(f"roster {roster_id}: points against {pa:.2f} vs Sleeper {spa:.2f}")
+        if len(standards) > 1:
+            problems.append(f"no counting standard fits every team (tried: {', '.join(standards)})")
+    return _result("Points for/against match Sleeper", problems,
+                   f"{len(rosters)} teams within {TOLERANCE}; {standard or REGULAR_SEASON}")
 
 
 def _regular_weeks(league):
@@ -374,14 +450,23 @@ def check_allplay_and_luck(weekly, season, team_weeks, rosters):
         diff = (last[column] - sums[column]).abs()
         problems += [f"roster {rid}: season {column} differs from the weekly total" for rid in diff[diff > LUCK_TOLERANCE].index]
 
-    # The displayed record (head-to-head + median) must be Sleeper's official record.
-    for roster_id, sleeper in sorted(_sleeper_totals(rosters).items()):
+    # The displayed record (head-to-head + median, regular season) must be Sleeper's official record.
+    # In playoff weeks Sleeper may count playoff games too (see check_records): then the displayed
+    # record must equal the regular-season record from the games, and Sleeper's must fit a standard.
+    standards = _record_standards(team_weeks)
+    official = {rid: (s["W"], s["L"], s["T"]) for rid, s in _sleeper_totals(rosters).items()}
+    sleeper_fits = _matching_standard(standards, official, lambda ours, theirs: ours == theirs) is not None
+    for roster_id, sleeper in sorted(official.items()):
         if roster_id not in last.index:
             problems.append(f"roster {roster_id}: missing from metrics_season")
             continue
         ours = tuple(int(last.at[roster_id, c]) for c in ("wins", "losses", "ties"))
-        if ours != (sleeper["W"], sleeper["L"], sleeper["T"]):
-            problems.append(f"roster {roster_id}: record {'–'.join(map(str, ours))} vs Sleeper {sleeper['W']}–{sleeper['L']}–{sleeper['T']}")
+        expected = standards[REGULAR_SEASON].get(roster_id)
+        if not sleeper_fits and ours != sleeper:
+            problems.append(f"roster {roster_id}: record {'–'.join(map(str, ours))} vs Sleeper {'–'.join(map(str, sleeper))}")
+        elif ours != expected:
+            problems.append(f"roster {roster_id}: record {'–'.join(map(str, ours))} vs "
+                            f"{'–'.join(map(str, expected or ()))} from the regular-season games (Sleeper {'–'.join(map(str, sleeper))})")
     return _result("All-play and luck are consistent", problems,
                    f"{len(weekly)} team-weeks; luck sums to 0 each week; median cross-check agrees; records match Sleeper")
 

@@ -445,7 +445,7 @@ Pickup of the Week has **no recency limit** (owner decision): any waiver or free
 | Case | Rule |
 |---|---|
 | Ties | Co-winners by default; tiebreaks as listed in the table (owner decision) |
-| Playoff weeks | **Every week** (owner decision). Score and lineup awards consider every team; matchup awards (`heartbreaker`, `robbery`, `blowout`, `nail_biter`) consider only teams with a game that week |
+| Playoff weeks | **Every week** (owner decision). Score and lineup awards consider every team; matchup awards (`heartbreaker`, `robbery`, `blowout`, `nail_biter`) consider only teams with a game that week. Consolation-bracket and placement games (e.g. 5th place) count as games, since Sleeper pairs them like any other (owner decision 2026-10-03) |
 | Median game | Ignored. Heartbreaker and Robbery are head-to-head only |
 | Empty starting slots | Their lost points show up in Bench Blunder through metric 3, and in Asleep at the Wheel if enabled |
 | Perfect lineups and Bench blunder | A team that left 0 points on the bench is not eligible; if every lineup that week was perfect, the award is skipped (Claude's reading of "no team is eligible", 2026-10-02) |
