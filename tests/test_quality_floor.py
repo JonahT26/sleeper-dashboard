@@ -195,7 +195,7 @@ def test_the_contrast_ratios_stated_in_the_guide_are_true(pair, foreground, back
 
 
 # Text on the masthead band; everything else sits on the page background.
-MASTHEAD_TEXT = {".mast", ".updated", ".week-pick select"}
+MASTHEAD_TEXT = {".mast", ".status", ".updated", ".stale", ".week-pick select"}  # the status bar is masthead-coloured
 LITERAL_BACKGROUNDS = {".week-pick select option": "#F6F8F4"}  # the open dropdown list draws its own background
 LARGE_TEXT = {".team:first-child .rank"}                       # the #1 rank numeral, 48px bold: 3:1 is enough
 
@@ -220,7 +220,12 @@ def test_all_text_meets_wcag_aa(mode):
         ratio = contrast(colour(value, mode), back)
         checked.append(selector)
         assert ratio >= (3 if selector in LARGE_TEXT else 4.5), f"{selector}: {ratio:.2f}:1 in {mode} mode"
-    assert {"body", ".updated", ".key", ".move.up", ".move.down", ".team:first-child .rank"} <= set(checked)
+    assert {"body", ".updated", ".stale", ".key", ".move.up", ".move.down", ".team:first-child .rank"} <= set(checked)
+
+
+def test_the_status_bar_stays_on_screen_with_the_masthead_colour():
+    status = next(d for m, selectors, d in RULES if m is None and selectors == [".status"])
+    assert status["position"] == "sticky" and status["top"] == "0" and status["background"] == "var(--masthead)"
 
 
 @pytest.mark.parametrize("mode", ["light", "dark"])

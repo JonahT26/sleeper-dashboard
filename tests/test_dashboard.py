@@ -5,6 +5,7 @@ Tables are synthetic, so nothing depends on this season's data; nothing touches 
 
 import json
 import re
+from datetime import datetime
 
 import pandas as pd
 import pytest
@@ -90,7 +91,7 @@ def test_page_opens_on_the_latest_week_drawn_into_the_html():
     shown, _ = split(page())
     assert '<h1 class="title display" id="title">Week 3 power rankings</h1>' in shown
     assert shown.count('<li class="team" data-roster=') == 12
-    assert "Test League" in shown and "Updated Tue Oct 6, 9:00 AM ET" in shown
+    assert "Test League" in shown and 'Updated <time datetime="2026-10-06T13:00:00+00:00">Tue Oct 6, 9:00 AM ET</time>' in shown
     assert re.search(r'<option value="3" selected>Week 3</option>', shown)
 
 
@@ -199,6 +200,65 @@ def test_updated_time_is_shown_in_eastern_time_across_daylight_saving():
     assert updated_text("2026-12-08T14:00:00+00:00") == "Tue Dec 8, 9:00 AM ET"    # EST, UTC−5
 
 
+# --- Freshness: the stale-data line ------------------------------------------------------------
+
+def utc(text):
+    return datetime.fromisoformat(text)
+
+
+def test_the_schedule_is_read_from_the_weekly_workflow():
+    """Tuesday and Thursday 12:17 PM Eastern (owner, 2026-10-03), straight from the cron lines GitHub runs."""
+    schedule = build.workflow_schedule()
+    assert [(minute, hour, days, str(zone)) for minute, hour, days, zone in schedule] == [
+        (17, 12, {2}, "America/New_York"), (17, 12, {4}, "America/New_York")]
+
+
+def test_next_updates_are_the_scheduled_runs_after_the_last_one_in_eastern_time():
+    upcoming = build.upcoming_updates(build.workflow_schedule(), utc("2026-10-06T16:30:00+00:00"), days=10)
+    assert [u["text"] for u in upcoming] == ["Thu Oct 8, 12:17 PM ET", "Tue Oct 13, 12:17 PM ET", "Thu Oct 15, 12:17 PM ET"]
+    assert upcoming[0]["at"] == "2026-10-08T16:17:00+00:00"
+
+
+def test_next_updates_follow_daylight_saving_like_github():
+    # Clocks go back on Sun Nov 1, 2026: 12:17 PM Eastern is 16:17 UTC before and 17:17 UTC after.
+    upcoming = build.upcoming_updates(build.workflow_schedule(), utc("2026-10-29T17:00:00+00:00"), days=6)
+    assert [(u["at"], u["text"]) for u in upcoming] == [("2026-11-03T17:17:00+00:00", "Tue Nov 3, 12:17 PM ET")]
+
+
+def test_a_run_just_before_its_slot_lists_that_slot():
+    upcoming = build.upcoming_updates(build.workflow_schedule(), utc("2026-10-06T16:00:00+00:00"), days=3)
+    assert [u["text"] for u in upcoming] == ["Tue Oct 6, 12:17 PM ET", "Thu Oct 8, 12:17 PM ET"]
+
+
+def test_the_page_lists_four_months_of_scheduled_updates():
+    fresh = build.freshness(RUN, 8, build.workflow_schedule())
+    assert fresh["stale_after_days"] == 8
+    assert len(fresh["next_updates"]) == 35  # Tuesdays and Thursdays in the 120 days after Tue Oct 6, 9 AM ET
+    assert fresh["next_updates"][0]["text"] == "Tue Oct 6, 12:17 PM ET"   # the same day's run, still ahead
+    assert fresh["next_updates"][-1]["text"] == "Tue Feb 2, 12:17 PM ET"
+
+
+@pytest.mark.parametrize("cron", ["17 12 * * 1-5", "*/15 * * * *", "17 12 1 * *", "17 12 * * TUE"])
+def test_a_schedule_the_page_cannot_read_stops_the_build(tmp_path, cron):
+    workflow = tmp_path / "weekly.yml"
+    workflow.write_text(f'on:\n  schedule:\n    - cron: "{cron}"\n', encoding="utf-8")
+    with pytest.raises(DashboardError, match="only 'minute hour \\* \\* weekdays'"):
+        build.workflow_schedule(workflow)
+
+
+def test_a_workflow_without_a_schedule_stops_the_build(tmp_path):
+    workflow = tmp_path / "weekly.yml"
+    workflow.write_text("on:\n  workflow_dispatch:\n", encoding="utf-8")
+    with pytest.raises(DashboardError, match="no schedule"):
+        build.workflow_schedule(workflow)
+
+
+def test_without_freshness_the_page_has_no_stale_line_but_still_shows_the_update_time():
+    html = page()
+    assert 'id="stale"' not in html and "data-stale-after-days" not in html
+    assert "Updated <time" in html
+
+
 # --- Files -----------------------------------------------------------------------------------
 
 def test_build_site_writes_the_page_from_saved_csvs(tmp_path):
@@ -209,8 +269,12 @@ def test_build_site_writes_the_page_from_saved_csvs(tmp_path):
     run_path = tmp_path / "pipeline_run.json"
     run_path.write_text(json.dumps(RUN), encoding="utf-8")
     path, view = build_site(out_dir=tmp_path / "site", processed_dir=processed, run_path=run_path)
-    assert path.read_text(encoding="utf-8").startswith("<!doctype html>")
+    html = path.read_text(encoding="utf-8")
+    assert html.startswith("<!doctype html>")
     assert view["weeks"] == [1, 2, 3]
+    # The published page always carries the stale-data line, the configured threshold, and the schedule.
+    assert 'id="stale" hidden' in html and 'data-stale-after-days="8"' in html
+    assert '"text":"Thu Oct 8, 12:17 PM ET"' in html
 
 
 def test_missing_run_record_stops_with_a_clear_message(tmp_path, monkeypatch, capsys):

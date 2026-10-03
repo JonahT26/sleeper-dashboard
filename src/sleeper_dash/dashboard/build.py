@@ -13,11 +13,12 @@ a week is left out entirely (owner decision, no placeholder).
 import gzip
 import json
 import re
-from datetime import datetime
+from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pandas as pd
+import yaml
 from jinja2 import Environment, PackageLoader
 
 from sleeper_dash.config import PROJECT_ROOT
@@ -26,6 +27,9 @@ from sleeper_dash.dashboard import charts, explainer, theme
 SITE_DIR = PROJECT_ROOT / "site"
 TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards"]
 EASTERN = ZoneInfo("America/New_York")
+# The weekly workflow's schedule is the one source for "next update due" (UI_GUIDE.md "Status bar").
+WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "weekly.yml"
+UPCOMING_DAYS = 120  # scheduled updates listed in the page, counted from the run; the viewer's browser picks the next one
 
 # Ladder breakdown rows, in display order (METRICS_SPEC.md section 6; labels from UI_GUIDE.md Ladder row).
 COMPONENTS = ["season_scoring", "recent_form", "roster_strength", "results"]
@@ -101,13 +105,61 @@ def updated_text(finished_at):
     return f"{when:%a %b} {when.day}, {when.hour % 12 or 12}:{when:%M} {'AM' if when.hour < 12 else 'PM'} ET"
 
 
+# --- Freshness: when the next update is due -------------------------------------------------
+
+def workflow_schedule(path=None):
+    """[(minute, hour, cron weekdays, time zone)] for each scheduled run in the weekly workflow.
+
+    Reads the cron lines GitHub runs, so the page can't name a different time. Only the plain
+    "minute hour * * weekdays" form is understood; anything else stops the build with a clear message.
+    """
+    path = Path(path or WORKFLOW_PATH)
+    workflow = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    triggers = workflow.get("on", workflow.get(True)) or {}  # YAML 1.1 reads a bare `on:` key as true
+    schedule = []
+    for entry in triggers.get("schedule") or []:
+        fields = str(entry.get("cron", "")).split()
+        days = fields[4].split(",") if len(fields) == 5 else []
+        if len(fields) != 5 or fields[2:4] != ["*", "*"] or not all(f.isdigit() for f in fields[:2] + days):
+            raise DashboardError(f"Can't read the schedule {entry.get('cron')!r} in {path.name}: the page understands "
+                                 "only 'minute hour * * weekdays', e.g. '17 12 * * 2'.")
+        schedule.append((int(fields[0]), int(fields[1]), {int(d) % 7 for d in days}, ZoneInfo(entry.get("timezone", "UTC"))))
+    if not schedule:
+        raise DashboardError(f"{path.name} has no schedule, so the page can't say when the next update is due.")
+    return schedule
+
+
+def upcoming_updates(schedule, after, days=UPCOMING_DAYS):
+    """Every scheduled run in the `days` after `after` (an aware datetime), oldest first.
+
+    Each is {"at": UTC ISO time for the browser to compare, "text": "Tue Oct 6, 12:17 PM ET"}.
+    Times are wall-clock in the schedule's time zone, so they follow daylight saving as GitHub does.
+    """
+    runs = set()
+    for minute, hour, weekdays, zone in schedule:
+        first = after.astimezone(zone).date()
+        for offset in range(days + 1):
+            day = first + timedelta(days=offset)
+            when = datetime.combine(day, time(hour, minute), tzinfo=zone)
+            if day.isoweekday() % 7 in weekdays and after < when <= after + timedelta(days=days):
+                runs.add(when.astimezone(timezone.utc))
+    return [{"at": when.isoformat(timespec="seconds"), "text": updated_text(when.isoformat())} for when in sorted(runs)]
+
+
+def freshness(run, stale_after_days, schedule):
+    """What the page needs to warn about stale data: the threshold and the scheduled updates after this run."""
+    return {"stale_after_days": stale_after_days,
+            "next_updates": upcoming_updates(schedule, datetime.fromisoformat(run["finished_at"]))}
+
+
 # --- View model -----------------------------------------------------------------------------
 
-def build_view(tables, run, params):
+def build_view(tables, run, params, fresh=None):
     """Everything the template needs, as plain values and formatted strings. Pure: no file access.
 
     tables: teams, team_weeks, power_rankings, metrics_season, lineups_optimal, awards. run: the pipeline's run record.
     params: config.yaml metrics (power weights and windows for the ladder; every weight and threshold for "How this works").
+    fresh: freshness() for the stale-data line; build_site always passes it. Without it the page has no stale-data line.
     """
     teams = tables["teams"].set_index("roster_id")
     power, season, awards = tables["power_rankings"], tables["metrics_season"], tables["awards"]
@@ -169,8 +221,9 @@ def build_view(tables, run, params):
                       "awards": _award_tiles(awards[awards["week"] == week], teams), "charts": sections})
 
     chart_theme = theme.to_script_json({"layout": theme.base_layout(), "config": theme.CONFIG, "tokens": theme.TOKENS})
-    return {"league_name": run["league_name"], "updated": updated_text(run["finished_at"]),
-            "latest": views[-1], "earlier": views[:-1], "weeks": weeks,
+    stale = fresh and {"after_days": fresh["stale_after_days"], "next_updates_json": theme.to_script_json(fresh["next_updates"])}
+    return {"league_name": run["league_name"], "updated": updated_text(run["finished_at"]), "updated_at": run["finished_at"],
+            "stale": stale, "latest": views[-1], "earlier": views[:-1], "weeks": weeks,
             "plotly_cdn": theme.PLOTLY_CDN, "chart_theme": chart_theme,
             "how_it_works": explainer.sections(params, run["league"])}  # owner-approved copy, numbers from config.yaml
 
@@ -215,12 +268,14 @@ def read_run_record(path=None):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def build_site(out_dir=None, processed_dir=None, run_path=None):
-    """Read the saved tables and run record, write site/index.html, and return (path, view)."""
+def build_site(out_dir=None, processed_dir=None, run_path=None, workflow_path=None):
+    """Read the saved tables, run record, config, and workflow schedule; write site/index.html; return (path, view)."""
     from sleeper_dash.config import load_config
     from sleeper_dash.validate import load_tables
 
-    view = build_view(load_tables(processed_dir, names=TABLES), read_run_record(run_path), load_config().metrics)
+    config, run = load_config(), read_run_record(run_path)
+    fresh = freshness(run, config.dashboard["stale_after_days"], workflow_schedule(workflow_path))
+    view = build_view(load_tables(processed_dir, names=TABLES), run, config.metrics, fresh)
     out_dir = Path(out_dir or SITE_DIR)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "index.html"
@@ -241,5 +296,8 @@ def main():
     print(f"  Sections: power rankings; weekly awards in {sum(bool(v['awards']) for v in every)} of {len(weeks)} weeks; "
           f"charts in the latest week: {', '.join(c['key'] for c in view['latest']['charts']) or 'none'}")
     print(f"  Updated:  {view['updated']}")
+    upcoming = json.loads(view["stale"]["next_updates_json"])
+    print(f"  Stale:    the page warns if this is more than {view['stale']['after_days']} days old; "
+          f"next scheduled update {upcoming[0]['text'] if upcoming else 'none listed'}")
     compressed = len(gzip.compress(path.read_bytes()))  # the budget counts what a visitor downloads (owner, 2026-10-02)
     print(f"  Size:     {compressed / 1024:.0f} KB compressed, of the 1 MB budget ({size / 1024:.0f} KB before compression)")

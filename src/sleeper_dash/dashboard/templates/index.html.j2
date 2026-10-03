@@ -89,7 +89,6 @@
   <div class="wrap">
     <p class="league display">{{ league_name }}</p>
     <h1 class="title display" id="title">{{ latest.title }}</h1>
-    <p class="updated">Updated {{ updated }}</p>
     <div class="week-pick"><label class="sr" for="week">Week</label>
       <select id="week">
       {% for w in weeks %}
@@ -99,6 +98,16 @@
     </div>
   </div>
 </header>
+{# Pinned to the top of the screen while scrolling, so the update time is always in view (UI_GUIDE.md "Status bar"). #}
+<div class="status" id="status" data-updated="{{ updated_at }}"{% if stale %} data-stale-after-days="{{ stale.after_days }}"{% endif %}>
+  <div class="wrap">
+    <p class="updated">Updated <time datetime="{{ updated_at }}">{{ updated }}</time></p>
+    {% if stale %}
+    <p class="stale" id="stale" hidden>The latest rankings are from week {{ latest.week }}.<span id="next-update" hidden> Next update due <span class="when"></span>.</span></p>
+    <script type="application/json" id="next-updates">{{ stale.next_updates_json|safe }}</script>
+    {% endif %}
+  </div>
+</div>
 <main>
   <div class="wrap week-view" id="week-view" data-week="{{ latest.week }}">
 {{ week_sections(latest) }}

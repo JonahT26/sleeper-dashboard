@@ -18,6 +18,18 @@ def test_project_config_loads():
     assert config.season_start_date.startswith(str(config.season))
 
 
+def test_the_stale_page_warning_threshold_is_configurable(tmp_path):
+    assert load_config().dashboard["stale_after_days"] == 8
+    assert load_config(write(tmp_path, VALID)).dashboard["stale_after_days"] == 8   # default when the section is missing
+    assert load_config(write(tmp_path, VALID + "dashboard:\n  stale_after_days: 10\n")).dashboard["stale_after_days"] == 10
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "eight", "true"])
+def test_the_stale_threshold_must_be_a_positive_number(tmp_path, value):
+    with pytest.raises(ValueError, match="stale_after_days"):
+        load_config(write(tmp_path, VALID + f"dashboard:\n  stale_after_days: {value}\n"))
+
+
 def test_unquoted_and_quoted_dates_both_load_as_text(tmp_path):
     assert load_config(write(tmp_path, VALID)).season_start_date == "2026-09-09"
     quoted = VALID.replace("2026-09-09", '"2026-09-09"')

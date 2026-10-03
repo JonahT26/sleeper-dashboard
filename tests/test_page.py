@@ -176,7 +176,7 @@ def assert_bar(span, gap, axis_end):
 
 def built(tables, params):
     weeks = sorted(int(w) for w in tables["power_rankings"]["week"].unique())
-    html = render(build_view(tables, {**RUN, "weeks": weeks}, params))
+    html = render(build_view(tables, {**RUN, "weeks": weeks}, params, build.freshness(RUN, 8, build.workflow_schedule())))
     return SimpleNamespace(tables=tables, params=params, html=html, doc=parse(html))
 
 
@@ -226,10 +226,25 @@ def test_every_week_is_in_the_page_and_the_selector_opens_on_the_latest(season):
         assert nodes[week].attrs["data-title"] == f"Week {week} power rankings"
 
 
-def test_masthead_shows_the_league_and_when_it_was_updated(season):
+def test_masthead_shows_the_league_and_the_status_bar_when_it_was_updated(season):
     mast = season.doc.one("header", "mast")
     assert mast.one("p", "league").text() == RUN["league_name"]
-    assert mast.one("p", "updated").text() == "Updated Tue Oct 6, 9:00 AM ET"
+    status = season.doc.one("div", "status", id="status")
+    assert status.attrs["data-updated"] == RUN["finished_at"]
+    assert status.one("p", "updated").text() == "Updated Tue Oct 6, 9:00 AM ET"
+    assert status.one("time").attrs["datetime"] == RUN["finished_at"]
+
+
+def test_the_stale_data_line_names_the_latest_week_and_waits_for_the_browser(season):
+    """Hidden in the page; page.js shows it when the update is more than stale_after_days old on the viewer's clock."""
+    weeks = sorted(int(w) for w in season.tables["power_rankings"]["week"].unique())
+    status = season.doc.one("div", "status", id="status")
+    assert status.attrs["data-stale-after-days"] == "8"
+    line = status.one("p", "stale", id="stale")
+    assert "hidden" in line.attrs and "hidden" in line.one("span", id="next-update").attrs
+    assert line.text() == f"The latest rankings are from week {weeks[-1]}. Next update due ."   # the browser fills in the time
+    upcoming = json.loads(status.one("script", id="next-updates").text())
+    assert upcoming[0] == {"at": "2026-10-06T16:17:00+00:00", "text": "Tue Oct 6, 12:17 PM ET"}  # the run is Tue Oct 6, 9 AM ET
 
 
 def test_every_week_shows_exactly_the_sections_its_data_supports_in_guide_order(season):

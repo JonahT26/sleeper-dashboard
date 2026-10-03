@@ -18,6 +18,7 @@ class Config:
     # transactions. Stored here because Sleeper's /state/nfl only describes the current season.
     season_start_dates: dict
     metrics: dict = field(default_factory=dict)  # metric parameters; defined in docs/METRICS_SPEC.md
+    dashboard: dict = field(default_factory=dict)  # page settings, e.g. stale_after_days (docs/UI_GUIDE.md)
 
     def start_date(self, season):
         """The season's start date, 'YYYY-MM-DD'. Raises ValueError if config.yaml doesn't have it."""
@@ -65,7 +66,13 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
     if not isinstance(metrics, dict):
         raise ValueError(f"metrics in {path} must be a section of named settings")
 
-    return Config(league_id=league_id, season=season, season_start_dates=start_dates, metrics=metrics)
+    dashboard = raw.get("dashboard") or {}
+    stale = dashboard.get("stale_after_days", 8) if isinstance(dashboard, dict) else None
+    if not isinstance(stale, (int, float)) or isinstance(stale, bool) or stale <= 0:
+        raise ValueError(f"dashboard.stale_after_days in {path} must be a number of days above 0, e.g. stale_after_days: 8")
+
+    return Config(league_id=league_id, season=season, season_start_dates=start_dates, metrics=metrics,
+                  dashboard={**dashboard, "stale_after_days": stale})
 
 
 def _is_whole_number(value):

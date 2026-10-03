@@ -55,7 +55,7 @@ A single page with a week selector. The default view is the latest completed wee
 
 Section order, top to bottom:
 
-1. **Masthead:** league name, "Week 5 power rankings", "Updated Tue Oct 6, 9:00 AM ET", and the week selector. "Updated" is the time the pipeline ran, which the pipeline records; never a file date.
+1. **Masthead:** league name, "Week 5 power rankings", and the week selector, then the **status bar**: "Updated Tue Oct 6, 9:00 AM ET", pinned to the top of the screen while scrolling, and the stale-data line when it applies (Components, "Status bar"). "Updated" is the time the pipeline ran, which the pipeline records; never a file date.
 2. **Power rankings ladder:** the hero. No separate hero card above it; the rankings are the first thing anyone sees.
 3. **Weekly awards**
 4. **Luck:** actual wins vs expected wins
@@ -73,8 +73,8 @@ Phase 5 adds a **Playoff odds** section after the ladder.
 ┌────────────────────────────────┐
 │ League Name           Week 5 ▾ │  ← masthead band
 │ Week 5 power rankings          │
-│ Updated Tue Oct 6, 9:00 AM ET  │
-├────────────────────────────────┤
+│ Updated Tue Oct 6, 9:00 AM ET  │  ← status bar, pinned to the top
+├────────────────────────────────┤     while scrolling
 │  1  Team Name              ▲2  │
 │     user   8–2, all-play 41–14 │
 │     ───────┼████──────   57.8  │
@@ -92,6 +92,7 @@ Phase 5 adds a **Playoff odds** section after the ladder.
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ League Name   Week 5 power rankings            Week 5 ▾       │
+│ Updated Tue Oct 6, 9:00 AM ET          (status bar, pinned)   │
 ├──────────────────────────────────┬───────────────────────────┤
 │ Rankings ladder (12 rows)         │ Weekly awards (stacked)   │
 │                                   │                           │
@@ -137,6 +138,19 @@ Settled in the prototype review with the owner, 2026-10-02.
 ### Award tile
 
 Award name, team name, the number, and a one-line caption, e.g. "Left 38.4 points on the bench." Captions are where personality is allowed. Keep them factual and specific; the number does the joking. Nine awards are enabled (2026-10-02), so in the 2-column mobile grid the last tile sits alone on its row. Beside the ladder on desktop, each tile puts the award name and the number on one line, so the awards column is about as tall as the ladder.
+
+### Status bar
+
+Added 2026-10-03 (owner request: stale data must be impossible to mistake for fresh). The pinned bar and the wording below were approved by the owner as drafted, 2026-10-03; wording changes need approval again.
+
+- The masthead's last line, in the masthead colour, separate from the masthead so it can stay pinned to the top of the screen (`position: sticky`) on every screen width. It always shows "Updated Tue Oct 6, 9:00 AM ET" (13px, `--on-mast-muted`). On a fresh page it takes the same space the "Updated" line took inside the masthead (7 teams still fit on a 390px screen).
+- **Stale-data line:** when the last update is more than `dashboard.stale_after_days` (config.yaml, 8) days old on the viewer's own clock, a second line appears below it, 15px semibold `--on-mast` (10.7:1), held to the reading width:
+
+  > The latest rankings are from week 3. Next update due Tue Oct 6, 12:17 PM ET.
+
+  "Latest" because the viewer may be looking at an earlier week. The week is the latest completed week in the page. The due time is the first scheduled run still ahead of the viewer, from the cron lines in `.github/workflows/weekly.yml` (the page lists the scheduled runs in the 120 days after the update); the date and time never break across lines. If none of those is still ahead (a page months old), only the first sentence shows.
+- Checked in the browser, not at build time, because a page that has stopped updating can't rebuild itself. Without JavaScript the line never shows; the "Updated" time always does.
+- No pylon and no icon: the plain sentence in the masthead's brightest text is the warning (pylon stays the single accent for #1 and highlights).
 
 ### Week selector
 

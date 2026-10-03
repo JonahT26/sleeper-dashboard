@@ -29,11 +29,17 @@ h1, h2, h3, p { margin: 0; }
 
 /* Masthead */
 .mast { background: var(--masthead); color: var(--on-mast); }
-.mast .wrap { padding-top: 16px; padding-bottom: 16px; display: grid; gap: 4px 16px;
-  grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "league week" "title title" "updated updated"; }
+.mast .wrap { padding-top: 16px; padding-bottom: 4px; display: grid; gap: 4px 16px;
+  grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "league week" "title title"; }
 .league { grid-area: league; font-weight: 600; font-size: 20px; line-height: 1.15; align-self: center; }
 .title { grid-area: title; margin-top: 8px; font-weight: 700; font-size: 28px; line-height: 1.15; }
-.updated { grid-area: updated; font-size: 13px; color: var(--on-mast-muted); }
+
+/* Status bar: the masthead's last line, pinned to the top of the screen while scrolling */
+.status { position: sticky; top: 0; z-index: 10; background: var(--masthead); color: var(--on-mast-muted); }
+.status .wrap { padding-top: 6px; padding-bottom: 10px; }
+.updated { font-size: 13px; color: var(--on-mast-muted); }
+.stale { font-weight: 600; color: var(--on-mast); max-width: 31em; }
+.stale .when { white-space: nowrap; }  /* never break inside "Tue Oct 6, 12:17 PM ET" */
 .week-pick { grid-area: week; align-self: center; visibility: hidden; }
 .js .week-pick { visibility: visible; }  /* the selector needs JavaScript; without it the page shows the latest week */
 .week-pick select {
@@ -132,8 +138,9 @@ details[open]::details-content { block-size: auto; }
 }
 @media (min-width: 1024px) {
   body { font-size: 16px; }
-  .mast .wrap { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "league title week" ". updated .";
-    column-gap: 40px; padding-top: 24px; padding-bottom: 24px; }
+  .mast .wrap { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "league title week";
+    column-gap: 40px; padding-top: 24px; padding-bottom: 8px; }
+  .status .wrap { padding-bottom: 12px; }
   .title { margin-top: 0; align-self: baseline; } .league { align-self: baseline; }
   .week-view { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; align-items: start; }
   .tiles { grid-template-columns: 1fr; }

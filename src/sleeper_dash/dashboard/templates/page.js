@@ -24,6 +24,26 @@
     view.dispatchEvent(new Event("weekshown"));  // charts.js draws this week's charts
   });
 
+  // Stale data: when the last update is older than the limit on the viewer's own clock, say which week the
+  // rankings are from and when the next scheduled update is due. Python writes the update times in; this only
+  // picks the first one still ahead. Checked in the browser because a page that stopped updating can't rebuild itself.
+  var status = document.getElementById("status");
+  var stale = document.getElementById("stale");
+  if (stale) {
+    var now = Date.now();
+    var limit = Number(status.dataset.staleAfterDays) * 24 * 60 * 60 * 1000;
+    if (now - Date.parse(status.dataset.updated) > limit) {
+      var upcoming = JSON.parse(document.getElementById("next-updates").textContent);
+      var next = upcoming.find(function (u) { return Date.parse(u.at) > now; });
+      if (next) {
+        var due = document.getElementById("next-update");
+        due.querySelector(".when").textContent = next.text;
+        due.hidden = false;
+      }
+      stale.hidden = false;
+    }
+  }
+
   // The ladder's bars grow out from the average line once, on first load (CSS skips it for reduced motion).
   requestAnimationFrame(function () {
     requestAnimationFrame(function () { document.documentElement.classList.remove("preload"); });

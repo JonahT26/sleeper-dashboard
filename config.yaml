@@ -10,6 +10,12 @@ season: 2026
 season_start_dates:
   2026: 2026-09-09
 
+# The page's freshness warning (docs/UI_GUIDE.md "Status bar"). When the last update is more than
+# this many days old on the viewer's clock, the page says which week the rankings are from and
+# when the next update is due (the times come from .github/workflows/weekly.yml).
+dashboard:
+  stale_after_days: 8
+
 # Metric parameters. Definitions and the reasoning behind each value are in
 # docs/METRICS_SPEC.md; change a value there first, with the owner's approval.
 metrics:

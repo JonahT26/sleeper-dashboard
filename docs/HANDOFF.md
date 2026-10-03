@@ -20,7 +20,7 @@ As of 2026-10-03, end of session (NFL week 4 in progress, so weeks 1–3 are the
 - `python -m sleeper_dash.dashboard`: builds `site/index.html` (masthead with week selector, ladder, awards, five charts, "How this works"). 27 KB compressed for weeks 1–3.
 - Unattended-job risks fixed: the season start date no longer depends on Sleeper's current season (risk 1); every dependency and Python 3.14.7 pinned, and tested against what's installed (risk 2); the page tests run again on each run's fresh tables (risk 5); extract's folder swap retries when Windows briefly refuses it (risk 5a); playoff-week behaviour checked on this league's real 2025 playoffs and settled with the owner (risk 4).
 - **Playoff weeks:** the real pipeline passed 14 of 14 checks on all 17 weeks of the 2025 season. In playoff weeks the standings checks accept either counting standard (one must fit every team); teams missing from the matchups or without a lineup stop the run; consolation games count for awards (owner decisions, section 6).
-- **406 tests pass**, locally and in GitHub Actions. Git clean and in sync with `origin/main`.
+- **429 tests pass**, locally and in GitHub Actions. Git clean and in sync with `origin/main`.
 
 ## 2. Working with the owner
 
@@ -99,7 +99,7 @@ Dev/
 │       ├── explainer.py          "How this works" copy, numbers from config.yaml (owner-approved)
 │       └── templates/            index.html.j2, styles.css, page.js (week selector), charts.js (drawing,
 │                                 highlight, label placement, phone labels); CSS and JS are inlined into the page
-├── tests/                        406 tests, one file per module, plus test_page (every number on the page equals
+├── tests/                        429 tests, one file per module, plus test_page (every number on the page equals
 │                                 the CSVs), test_quality_floor, test_dependencies (pins = installed), and
 │                                 test_pipeline_offline (the real pipeline against fake_sleeper.py); conftest
 │                                 blocks the network. Tests read only committed files, so they run in Actions
@@ -181,6 +181,8 @@ Dev/
 | 2026-10-03 | Playoff weeks: standings checks accept either counting standard (one must fit every team, named in the check); teams missing from matchups or without a lineup keep stopping the run | Owner (options 2 and 1) | validate.py, CODEBASE.md |
 | 2026-10-03 | Consolation and placement games count for matchup awards in playoff weeks | Owner | METRICS_SPEC.md §7 |
 | 2026-10-03 | Workflow reviewed against the owner's requirements; Tuesday + Thursday 12:17 PM ET schedule and committing refreshed CSVs both reconfirmed, workflow unchanged | Owner | weekly.yml |
+| 2026-10-03 | Run summary on each workflow run's GitHub page: latest week, checks passed, tables written, commit, step results, published URL, or where it failed | Owner (request), Claude (layout) | weekly.yml, pipeline.py |
+| 2026-10-03 | "Updated" always visible (status bar pinned to the top while scrolling); stale-data line after 8 days (`dashboard.stale_after_days`), checked on the viewer's clock, next update time read from the workflow's cron lines | Owner (request, 8 days; approved Claude's wording and pinned bar unchanged) | UI_GUIDE.md "Status bar", config.yaml |
 
 ## 7. Open questions and assumptions to verify
 
@@ -189,6 +191,8 @@ Dev/
 **Week 15 (first playoff week, mid-December):** the three playoff assumptions held for this league's 2025 season (risk 4), and the pipeline passes on 2025's real playoff weeks. Still confirm the first 2026 playoff run succeeded. Consolation-bracket and placement games are paired like real games, so matchup awards (Heartbreaker, Robbery, Blowout, Nail-biter) in playoff weeks can go to them: kept by the owner (2026-10-03, METRICS_SPEC.md section 7).
 
 **Known gaps:** Sleeper's `ppts` sits 0.02–4.00 points below our optimal lineups for 7 teams (soft check only); on the 2025 season the gap reached 8.5–15.3 points for 6 teams, probably because player positions are today's (risk 10), which matters for past seasons (Phase 5); FAAB and picks traded inside trades aren't in `transactions`; player positions describe today, not past weeks; `winners_bracket` not pulled (Phase 5). A season with no completed week yet (next season's preseason, after `config.yaml` moves to 2027) stops the pipeline with a misleading "matchups is missing. Run `python -m sleeper_dash.extract` first" message (checked with the fake league): decide the season-rollover behaviour before then (section 7a).
+
+**Stale-data line after the season (decide before late December):** once the final week is in, the tables stop changing but the page keeps saying "Updated" with each Tue/Thu run until GitHub switches the schedule off (~60 days). After that, 8 days on, the line will say "The latest rankings are from week 17. Next update due …" with a date that no longer means new data. Options: hide the line once the season's last week is in, or word it as final ("Final rankings for the 2026 season"). Owner to decide.
 
 **Open product questions:**
 - Where league members see updates: bookmark only, or also a group-chat post (Phase 5).
@@ -241,7 +245,7 @@ Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 r
 
 1. `git pull` (the bot commits to `main`).
 2. Read `CLAUDE.md`, this file, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`.
-3. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **406 passed**; a `test_dependencies` failure means the local environment drifted from the pins, see `docs/CODEBASE.md` "Dependencies") and `git status` (clean, in sync).
+3. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **429 passed**; a `test_dependencies` failure means the local environment drifted from the pins, see `docs/CODEBASE.md` "Dependencies") and `git status` (clean, in sync).
 4. Check the weekly job: `gh run list --workflow weekly.yml --limit 5`. Any failure comes first (section 7a). The first scheduled runs are Tue Oct 6 (should commit "Weekly refresh: tables through week 4") and Thu Oct 8 (should report no new week); if a session starts before then, there's nothing scheduled to check yet.
 5. If week 4 or later has arrived, check the live page at 360, 390, 1024 and 1280px in light and dark (section 3), paying attention to the section 7 items.
 6. Then section 9: ask the owner which Phase 5 extra comes first.
