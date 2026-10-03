@@ -21,6 +21,7 @@
     delete parked[week];
     view.dataset.week = shown = week;
     title.textContent = titles[week];
+    view.dispatchEvent(new Event("weekshown"));  // charts.js draws this week's charts
   });
 
   // The ladder's bars grow out from the average line once, on first load (CSS skips it for reduced motion).

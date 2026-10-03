@@ -28,9 +28,13 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None):
     teams = pd.DataFrame({"season": 2026, "roster_id": range(1, n + 1),
                           "team_name": team_names or [f"Team {i}" for i in range(1, n + 1)],
                           "display_name": [f"user{i}" for i in range(1, n + 1)]})
-    power, season, awards = [], [], []
+    power, season, awards, team_weeks, lineups = [], [], [], [], []
     for week in range(1, weeks + 1):
         for i in range(1, n + 1):
+            team_weeks.append({"season": 2026, "week": week, "roster_id": i, "is_playoff": week >= 15})
+            actual = 140.0 - 3 * i
+            lineups.append({"season": 2026, "week": week, "roster_id": i, "actual_points": actual,
+                            "optimal_points": actual + i, "bench_points_lost": float(i), "efficiency": actual / (actual + i)})
             gap = ((n + 1) / 2 - i) * 2.0
             row = {"season": 2026, "week": week, "roster_id": i, "rank": i,
                    "rank_change": float("nan") if week == 1 else 0.0, "power_score": 50 + gap,
@@ -38,8 +42,13 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None):
             row.update({f"contrib_{c}": w * (50 + gap) for c, w in WEIGHTS.items()})
             power.append(row)
             wins = 2 * week if i == 1 else week
+            regular = min(week, 14)
+            actual_wins = 2 * regular if i == 1 else regular
+            expected = actual_wins - 0.5 + i / 12
             season.append({"season": 2026, "through_week": week, "roster_id": i,
                            "wins": wins, "losses": 2 * week - wins, "ties": 0,
+                           "actual_wins": float(actual_wins), "expected_wins": expected, "luck": actual_wins - expected,
+                           "efficiency": round((140.0 - 3 * i) / (140.0 - 2 * i), 4),
                            "allplay_wins": (n - i) * week, "allplay_losses": (i - 1) * week, "allplay_ties": 0,
                            "h2h_wins": week if i == 1 else 0, "h2h_losses": 0 if i == 1 else week, "h2h_ties": 0})
         if week in award_weeks:
@@ -51,7 +60,8 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None):
                 {"season": 2026, "week": week, "award": "blowout", "award_name": "Blowout", "roster_id": 3,
                  "value": 40.0, "caption": "Beat Team 8 by 40.0.", "player_id": None},
             ]
-    return {"teams": teams, "power_rankings": pd.DataFrame(power), "metrics_season": pd.DataFrame(season),
+    return {"teams": teams, "team_weeks": pd.DataFrame(team_weeks), "lineups_optimal": pd.DataFrame(lineups),
+            "power_rankings": pd.DataFrame(power), "metrics_season": pd.DataFrame(season),
             "awards": pd.DataFrame(awards, columns=["season", "week", "award", "award_name", "roster_id", "value", "caption", "player_id"])}
 
 
@@ -71,7 +81,7 @@ def split(html):
 def test_page_opens_on_the_latest_week_drawn_into_the_html():
     shown, _ = split(page())
     assert '<h1 class="title display" id="title">Week 3 power rankings</h1>' in shown
-    assert shown.count('<li class="team">') == 12
+    assert shown.count('<li class="team" data-roster=') == 12
     assert "Test League" in shown and "Updated Tue Oct 6, 9:00 AM ET" in shown
     assert re.search(r'<option value="3" selected>Week 3</option>', shown)
 
@@ -81,7 +91,7 @@ def test_every_earlier_week_waits_in_a_template_for_the_selector():
     _, templates = split(html)
     assert sorted(templates) == [1, 2]
     assert 'data-title="Week 1 power rankings"' in html
-    assert all(t.count('<li class="team">') == 12 for t in templates.values())
+    assert all(t.count('<li class="team" data-roster=') == 12 for t in templates.values())
 
 
 def test_each_week_shows_records_and_details_as_of_that_week():
@@ -139,9 +149,10 @@ def test_team_names_are_escaped():
 
 # --- Page limits (docs/UI_GUIDE.md "Quality floor") -----------------------------------------
 
-def test_only_google_fonts_are_loaded_from_outside_the_page():
+def test_only_google_fonts_and_plotly_are_loaded_from_outside_the_page():
     urls = re.findall(r'(?:src|href)="(https?://[^"]+)"', page())
-    assert urls and all(u.startswith(("https://fonts.googleapis.com", "https://fonts.gstatic.com")) for u in urls)
+    assert urls and all(u.startswith(("https://fonts.googleapis.com", "https://fonts.gstatic.com", "https://cdn.plot.ly/")) for u in urls)
+    assert '<script src="https://cdn.plot.ly/plotly-basic-' in page() and " defer>" in page()
 
 
 def test_a_full_17_week_season_stays_under_1_mb():

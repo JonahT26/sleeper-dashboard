@@ -21,9 +21,10 @@ import pandas as pd
 from jinja2 import Environment, PackageLoader
 
 from sleeper_dash.config import PROJECT_ROOT
+from sleeper_dash.dashboard import charts, theme
 
 SITE_DIR = PROJECT_ROOT / "site"
-TABLES = ["teams", "power_rankings", "metrics_season", "awards"]
+TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards"]
 EASTERN = ZoneInfo("America/New_York")
 
 # Ladder breakdown rows, in display order (METRICS_SPEC.md section 6; labels from UI_GUIDE.md Ladder row).
@@ -105,11 +106,14 @@ def updated_text(finished_at):
 def build_view(tables, run, power_params):
     """Everything the template needs, as plain values and formatted strings. Pure: no file access.
 
-    tables: teams, power_rankings, metrics_season, awards. run: the pipeline's run record.
+    tables: teams, team_weeks, power_rankings, metrics_season, lineups_optimal, awards. run: the pipeline's run record.
     power_params: config.yaml metrics.power (weights and recent_weeks).
     """
     teams = tables["teams"].set_index("roster_id")
     power, season, awards = tables["power_rankings"], tables["metrics_season"], tables["awards"]
+    lineups, team_weeks = tables["lineups_optimal"], tables["team_weeks"]
+    names = teams["team_name"].to_dict()
+    regular_weeks = sorted(int(w) for w in team_weeks.loc[~team_weeks["is_playoff"].astype(bool), "week"].unique())
     weights, recent_weeks = power_params["weights"], power_params["recent_weeks"]
     weeks = sorted(int(w) for w in power["week"].unique())
     if not weeks:
@@ -143,11 +147,24 @@ def build_view(tables, run, power_params):
                 "score": one_dp(r.power_score), "gap": signed(r.power_score - 50), "bar": bar(r.power_score - 50, power_axis),
                 "parts": parts,
             })
+        highlight = ladder[0]["roster_id"]  # the #1 team, matching the pylon #1 on the ladder, until the viewer taps another
+        sections = []
+        luck_rows = standings.reset_index()
+        played = [w for w in regular_weeks if w <= week]
+        if played and luck_rows["expected_wins"].notna().all():
+            sections.append(charts.luck_chart(luck_rows, names, highlight, week, played[-1]))
+        so_far = lineups[lineups["week"] <= week]
+        if not so_far.empty:
+            sections.append(charts.efficiency_chart(so_far, standings["efficiency"], names, highlight, week))
+        for section in sections:
+            section["figure_json"] = theme.to_script_json(section["figure"])
         views.append({"week": week, "title": f"Week {week} power rankings", "ladder": ladder,
-                      "awards": _award_tiles(awards[awards["week"] == week], teams)})
+                      "awards": _award_tiles(awards[awards["week"] == week], teams), "charts": sections})
 
+    chart_theme = theme.to_script_json({"layout": theme.base_layout(), "config": theme.CONFIG, "tokens": theme.TOKENS})
     return {"league_name": run["league_name"], "updated": updated_text(run["finished_at"]),
-            "latest": views[-1], "earlier": views[:-1], "weeks": weeks}
+            "latest": views[-1], "earlier": views[:-1], "weeks": weeks,
+            "plotly_cdn": theme.PLOTLY_CDN, "chart_theme": chart_theme}
 
 
 def _component_detail(component, raw, standings, recent):
@@ -212,6 +229,8 @@ def main():
     weeks = view["weeks"]
     print(f"Dashboard built: {path.relative_to(PROJECT_ROOT).as_posix()}")
     print(f"  Weeks:    {weeks[0]}–{weeks[-1]} (opens on week {weeks[-1]}; the others are in the page for the week selector)")
-    print(f"  Sections: power rankings, weekly awards ({sum(bool(v['awards']) for v in [view['latest'], *view['earlier']])} of {len(weeks)} weeks have awards)")
+    every = [view["latest"], *view["earlier"]]
+    print(f"  Sections: power rankings; weekly awards in {sum(bool(v['awards']) for v in every)} of {len(weeks)} weeks; "
+          f"charts in the latest week: {', '.join(c['key'] for c in view['latest']['charts']) or 'none'}")
     print(f"  Updated:  {view['updated']}")
     print(f"  Size:     {size / 1024:.0f} KB of the 1 MB budget ({math.ceil(size / len(weeks) / 1024)} KB a week)")

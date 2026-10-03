@@ -81,9 +81,9 @@ Where things stand:
 - `python -m sleeper_dash.pipeline` runs a full refresh: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric invariant checks → save → re-check the saved files. Either group of checks stops the run before anything is saved. Weeks 1–3: every check passes, 23 API calls, ~6.5 seconds, and two consecutive runs give byte-identical outputs.
 - 11 tables in `data/processed/` (schemas in `docs/CODEBASE.md`): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule`, `lineups_optimal`, `lineups_optimal_players`, `metrics_team_weeks`, `metrics_season`, `power_rankings`, `awards`.
 - Every metric follows `docs/METRICS_SPEC.md` (owner-approved): all-play record, expected wins and luck, lineup efficiency, consistency, strength of schedule, power score, weekly awards. Every weight and threshold is in `config.yaml` under `metrics:`.
-- 245 tests pass. Notebooks: `01_data_check.ipynb` (data eyeballing), `02_power_score_sensitivity.ipynb` (power weights ±25%: rankings robust; only near-tied teams move).
+- 263 tests pass. Notebooks: `01_data_check.ipynb` (data eyeballing), `02_power_score_sensitivity.ipynb` (power weights ±25%: rankings robust; only near-tied teams move).
 - Phase 3 step 1 done (2026-10-02): `metrics_season` has season-to-date lineup efficiency (Σ actual ÷ Σ optimal) and points left on the bench, with their own metric check.
-- Phase 3 step 3 under way (2026-10-02): `python -m sleeper_dash.dashboard` builds `site/index.html` with the masthead, the power rankings ladder, and weekly awards for every completed week (week selector, no network calls). Chart sections and "How this works" are next.
+- Phase 3 step 3 under way (2026-10-02): `python -m sleeper_dash.dashboard` builds `site/index.html` with the masthead, the power rankings ladder, and weekly awards, and the Luck and Lineup efficiency charts for every completed week (week selector, no network calls; charts use the shared theme in `dashboard/theme.py`). Consistency, strength of schedule, rank history, and "How this works" are next.
 - To verify at week 15: whether Sleeper plays the median game in the playoffs, whether roster `wins`/`fpts`/`ppts` include playoff games, and how non-playoff teams appear in matchups.
 
 Roadmap:

@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<script src="{{ plotly_cdn }}" defer></script>
 <style>
 {% include "styles.css" %}
 </style>
@@ -23,7 +24,7 @@
   <p class="key">Power score: 50 is the league average. Bars run left or right from it. Tap a team to see how its score is built.</p>
   <ol class="ladder" role="list">
   {% for t in v.ladder %}
-    <li class="team">
+    <li class="team" data-roster="{{ t.roster_id }}">
       <details>
         <summary class="row">
           <span class="rank display num">{{ t.rank }}</span>
@@ -69,6 +70,19 @@
   </ul>
 </section>
 {% endif %}
+{% if v.charts %}
+<div class="charts">
+{% for c in v.charts %}
+<section class="chart-section" aria-labelledby="{{ c.id }}-title">
+  <h2 class="section-title display" id="{{ c.id }}-title">{{ c.title }}</h2>
+  <p class="sub">{{ c.subtitle }}</p>
+  <div class="chart" data-figure="{{ c.id }}" role="img" aria-label="{{ c.summary }}"
+       style="--h-phone:{{ c.figure.height.phone }}px;--h-desktop:{{ c.figure.height.desktop }}px"><p class="chart-fallback">{{ c.summary }}</p></div>
+  <script type="application/json" id="fig-{{ c.id }}">{{ c.figure_json|safe }}</script>
+</section>
+{% endfor %}
+</div>
+{% endif %}
 {% endmacro %}
 
 <header class="mast">
@@ -95,8 +109,12 @@
 {{ week_sections(v) }}
 </template>
 {% endfor %}
+<script type="application/json" id="chart-theme">{{ chart_theme|safe }}</script>
 <script>
 {% include "page.js" %}
+</script>
+<script>
+{% include "charts.js" %}
 </script>
 </body>
 </html>
