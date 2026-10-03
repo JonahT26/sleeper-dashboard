@@ -1,6 +1,6 @@
 """Load and validate project settings from config.yaml."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -13,6 +13,7 @@ CONFIG_PATH = PROJECT_ROOT / "config.yaml"
 class Config:
     league_id: str
     season: int
+    metrics: dict = field(default_factory=dict)  # metric parameters; defined in docs/METRICS_SPEC.md
 
 
 def load_config(path: Path = CONFIG_PATH) -> Config:
@@ -35,4 +36,8 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
     if not isinstance(season, int) or isinstance(season, bool):
         raise ValueError(f"season in {path} must be a whole number, e.g. season: 2026")
 
-    return Config(league_id=league_id, season=season)
+    metrics = raw.get("metrics") or {}
+    if not isinstance(metrics, dict):
+        raise ValueError(f"metrics in {path} must be a section of named settings")
+
+    return Config(league_id=league_id, season=season, metrics=metrics)

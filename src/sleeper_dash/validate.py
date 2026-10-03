@@ -18,7 +18,10 @@ KEYS = {
     "team_weeks": ["season", "week", "roster_id"],
     "player_weeks": ["season", "week", "roster_id", "slot_order"],
     "transactions": ["transaction_id", "player_id", "action"],
+    "lineups_optimal": ["season", "week", "roster_id"],
+    "lineups_optimal_players": ["season", "week", "roster_id", "slot_order"],
 }
+BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions"]  # built by transform; the rest by lineup
 
 
 @dataclass
@@ -121,6 +124,33 @@ def check_points_for_against(team_weeks, rosters):
     return _result("Points for/against match Sleeper", problems, f"{len(rosters)} teams within {TOLERANCE}")
 
 
+def check_optimal_lineups(lineups, chosen, team_weeks):
+    """Optimal lineups are complete and consistent (METRICS_SPEC.md section 3, sanity checks 1 and 4).
+
+    Every team-week has one, actual points equal the team score, optimal points are at
+    least actual points and equal the sum of the chosen players, and no player is used twice.
+    """
+    key = ["season", "week", "roster_id"]
+    merged = team_weeks[key + ["points"]].merge(lineups, on=key, how="outer", indicator="source")
+    problems = [f"week {r.week}, roster {r.roster_id}: missing from {'lineups_optimal' if r.source == 'left_only' else 'team_weeks'}"
+                for r in merged[merged["source"] != "both"].itertuples()]
+    both = merged[merged["source"] == "both"]
+    chosen_sum = chosen.groupby(key)["points"].sum().rename("chosen_points").reset_index()
+    both = both.merge(chosen_sum, on=key, how="left")
+    for r in both.itertuples():
+        where = f"week {r.week}, roster {r.roster_id}"
+        if abs(r.actual_points - r.points) > TOLERANCE:
+            problems.append(f"{where}: actual {r.actual_points:.2f} vs team score {r.points:.2f}")
+        if r.optimal_points < r.actual_points - TOLERANCE:
+            problems.append(f"{where}: optimal {r.optimal_points:.2f} below actual {r.actual_points:.2f}")
+        if pd.isna(r.chosen_points) or abs(r.optimal_points - r.chosen_points) > TOLERANCE:
+            problems.append(f"{where}: optimal {r.optimal_points:.2f} vs chosen players' total {r.chosen_points}")
+    filled = chosen[~chosen["is_empty_slot"].astype(bool)]
+    reused = filled[filled.duplicated(key + ["player_id"])]
+    problems += [f"week {r.week}, roster {r.roster_id}: player {r.player_id} used twice" for r in reused.itertuples()]
+    return _result("Optimal lineups are consistent", problems, f"{len(both)} team-weeks; optimal >= actual")
+
+
 def check_unique_keys(tables):
     """No table has two rows with the same key."""
     problems = []
@@ -132,16 +162,19 @@ def check_unique_keys(tables):
 
 
 def run_checks(tables, league, rosters):
-    """Run every check. tables maps table name to DataFrame (teams, team_weeks, player_weeks, transactions)."""
+    """Run every check. tables maps table name to DataFrame: the BASE_TABLES, plus the lineup tables when present."""
     team_weeks = tables["team_weeks"]
-    return [
+    results = [
         check_team_rows_per_week(team_weeks, league),
         check_matchup_pairs(team_weeks),
         check_starter_points(tables["player_weeks"], team_weeks),
         check_records(team_weeks, rosters, league),
         check_points_for_against(team_weeks, rosters),
-        check_unique_keys(tables),
     ]
+    if "lineups_optimal" in tables:
+        results.append(check_optimal_lineups(tables["lineups_optimal"], tables["lineups_optimal_players"], team_weeks))
+    results.append(check_unique_keys(tables))
+    return results
 
 
 def format_results(results):
@@ -162,16 +195,16 @@ def validate(tables, league, rosters):
     return results
 
 
-def load_tables(processed_dir=None):
-    """Read the saved tables back with IDs kept as text."""
+def load_tables(processed_dir=None, names=None):
+    """Read the saved tables back with IDs kept as text. names defaults to every table in KEYS."""
     from sleeper_dash.transform import PROCESSED_DIR
 
     processed_dir = processed_dir or PROCESSED_DIR
     tables = {}
-    for name in KEYS:
+    for name in names or KEYS:
         path = processed_dir / f"{name}.csv"
         if not path.exists():
-            raise FileNotFoundError(f"{path} is missing. Run `python -m sleeper_dash.transform` first.")
+            raise FileNotFoundError(f"{path} is missing. Run `python -m sleeper_dash.pipeline` first.")
         tables[name] = pd.read_csv(
             path, dtype={"owner_id": str, "player_id": str, "transaction_id": str}, encoding="utf-8-sig"
         )

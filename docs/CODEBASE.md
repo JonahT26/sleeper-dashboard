@@ -16,13 +16,16 @@ extract.py ─────────► data/raw/{season}/*.json        untouc
 transform.py                                          builds tidy tables in memory (see Data model)
     │
     ▼
-validate.py                                           6 checks on the in-memory tables; any failure stops the run
+lineup.py                                             optimal lineup per team-week, in memory
+    │                                                 (from player_weeks, team_weeks, and the players cache)
+    ▼
+validate.py                                           7 checks on the in-memory tables; any failure stops the run
     │                                                 before anything is saved
     ▼
 data/processed/*.csv                                  saved, then re-read and checked again
     │
     ▼
-lineup.py + metrics/ ► data/processed/metrics_*.csv   Phase 2: optimal lineups, luck, power score, awards
+metrics/  ─────────► data/processed/metrics_*.csv     Phase 2 (planned): luck, power score, awards
     │
     ▼
 dashboard/  (Phase 3) ► site/index.html               static page
@@ -31,7 +34,7 @@ dashboard/  (Phase 3) ► site/index.html               static page
 GitHub Pages (Phase 4)                                rebuilt every Tuesday by GitHub Actions
 ```
 
-`python -m sleeper_dash.pipeline` runs every built step in order as a full refresh (currently extract → transform → validate → save → re-validate). Nothing is appended incrementally. Two back-to-back runs produce byte-identical raw and processed files (verified 2026-10-02: 16 of 16 files). It prints weeks processed, API calls, rows per table, checks passed, and run time (~3 seconds), and exits with code 1 on any failure, leaving the last good tables in place.
+`python -m sleeper_dash.pipeline` runs every built step in order as a full refresh (currently extract → transform → optimal lineups → validate → save → re-validate), then prints soft-check warnings (e.g. optimal points vs Sleeper's max points) that never stop the run. Nothing is appended incrementally. Two back-to-back runs produce byte-identical raw and processed files (verified 2026-10-02: 16 of 16 files). It prints weeks processed, API calls, rows per table, checks passed, and run time (~3 seconds), and exits with code 1 on any failure, leaving the last good tables in place.
 
 ## Repository layout
 
@@ -53,7 +56,7 @@ sleeper-dashboard/
 │   ├── extract.py               API → data/raw/
 │   ├── transform.py             data/raw/ → data/processed/ tidy tables
 │   ├── validate.py              reconciliation and integrity checks
-│   ├── lineup.py                optimal lineup solver
+│   ├── lineup.py                optimal lineup solver (assignment problem)
 │   ├── metrics/
 │   │   ├── __init__.py
 │   │   ├── allplay.py           all-play record, expected wins, luck
@@ -86,9 +89,9 @@ sleeper-dashboard/
 | `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
 | `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`. Writes to a `.partial` staging folder and swaps it in only when every call succeeds. Also refreshes the players cache via `api.get_players()` (at most once a day) | 1 | built |
 | `transform.py` | Build the tidy tables below from saved files only (raw JSON plus the players cache): `teams`, `team_weeks`, `player_weeks`, `transactions` | 1 | built |
-| `validate.py` | Six checks: one row per team per completed week (and no missing weeks); each `matchup_id` has exactly 2 teams; starter points equal team points (±0.01); regular-season W–L–T matches Sleeper's roster settings, counting median games when the league has them; regular-season points for/against match `fpts`/`fpts_against` (±0.01); no duplicate keys in any table. `transform` runs them **before saving** and stops with a pass/fail table if any fail; `python -m sleeper_dash.validate` re-checks the saved CSVs | 1 | built |
-| `pipeline.py` | Orchestrates extract → transform → validate → save → re-validate the saved CSVs; prints a run summary; exit code 1 on failure. Metrics are added in Phase 2 | 1–2 | built (Phase 1 steps) |
-| `lineup.py` | Optimal lineup per team-week, solved as an assignment problem | 2 | planned |
+| `validate.py` | Seven checks: one row per team per completed week (and no missing weeks); each `matchup_id` has exactly 2 teams; starter points equal team points (±0.01); regular-season W–L–T matches Sleeper's roster settings, counting median games when the league has them; regular-season points for/against match `fpts`/`fpts_against` (±0.01); optimal lineups are consistent (one per team-week, actual = team score, optimal ≥ actual, optimal = sum of chosen players, no player used twice; only when the lineup tables are present); no duplicate keys in any table. `transform` runs them **before saving** and stops with a pass/fail table if any fail; `python -m sleeper_dash.validate` re-checks the saved CSVs | 1 | built |
+| `pipeline.py` | Orchestrates extract → transform → optimal lineups → validate → save → re-validate the saved CSVs; prints a run summary and soft-check warnings; exit code 1 on failure | 1–2 | built (through lineups) |
+| `lineup.py` | Optimal lineup per team-week (METRICS_SPEC.md section 3), solved exactly as an assignment problem with `scipy.optimize.linear_sum_assignment`: slots × players, cost −points where eligible and 10⁶ where not, so every fillable slot is filled before points are maximised; tiny bonuses (< 0.01 in total) break exact ties toward the manager's own starters and slots. Eligibility from the players cache `fantasy_positions` (fallback: `position`; neither stops the run). `compare_to_sleeper_max` is the `ppts` soft check. `python -m sleeper_dash.lineup` rebuilds from the saved CSVs, validates, saves, and prints the latest week, season totals, and the soft check | 2 | built |
 | `metrics/*` | Pure functions implementing `docs/METRICS_SPEC.md` | 2 | planned |
 | `dashboard/*` | Render `site/index.html` per `docs/UI_GUIDE.md` | 3 | planned |
 
@@ -176,11 +179,37 @@ Not represented: draft picks and FAAB traded inside trades (`draft_picks`, `waiv
 
 `season_start_date` comes from `/state/nfl`, which only describes the current NFL season; transform stops with a clear error if the league's season is no longer current. Revisit before re-running past seasons (Phase 5).
 
-### Metric tables (Phase 2)
+### `lineups_optimal` (built)
+Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`). Source: `lineup.py` from `player_weeks`, `team_weeks`, league `roster_positions`, and the players cache. Definitions: `docs/METRICS_SPEC.md` section 3.
+
+| Column | Type | Notes |
+|---|---|---|
+| season, week, roster_id | int | |
+| actual_points | float | `team_weeks.points` |
+| optimal_points | float | Best possible score from that week's matchup `players` (starters, bench, IR) with hindsight, 2 dp |
+| bench_points_lost | float | optimal − actual, ≥ 0, 2 dp (the spec's "points left on the bench") |
+| efficiency | float | actual ÷ optimal as a fraction (0.8761, 4 dp); null if optimal ≤ 0. Season efficiency is Σ actual ÷ Σ optimal, never the mean of this column |
+
+### `lineups_optimal_players` (built)
+Grain: one row per starting slot of each team's optimal lineup per week. Key: (`season`, `week`, `roster_id`, `slot_order`).
+
+| Column | Type | Notes |
+|---|---|---|
+| season, week, roster_id | int | |
+| slot_order | int | 0-based index of the starting slot, same numbering as `player_weeks` |
+| lineup_slot | str | e.g. `QB`, `FLEX`, `SUPER_FLEX` |
+| player_id, full_name, position | str | The player the optimal lineup puts in this slot; null if the slot can't be filled (no eligible player rostered) |
+| points | float | That player's points; 0 for an unfillable slot |
+| is_empty_slot | bool | True when no eligible player was available |
+| was_started | bool | The manager actually started this player (in any slot). False rows are the start/sit mistakes, used by awards |
+
+Soft check (printed by the pipeline and `python -m sleeper_dash.lineup`): regular-season Σ optimal_points vs Sleeper's `ppts`; warns if below, or above by more than `metrics.efficiency.ppts_warn_gap`. Through week 3: 5 teams match exactly, 7 are 0.02–4.00 above, no warnings. An independent integer-programming solve (scipy `milp`) matched all 36 team-weeks to the cent (2026-10-02).
+
+### Metric tables (Phase 2, planned)
 
 | Table | Grain | Contents |
 |---|---|---|
-| `lineups_optimal` | season, week, roster_id | optimal_points, actual_points, efficiency, bench_points_lost |
+| `schedule` | season, week, roster_id | opponent_roster_id and is_completed for every regular-season week, including future ones (needed for remaining strength of schedule) |
 | `metrics_team_weeks` | season, week, roster_id | all-play W/L/T, expected wins, luck, and other weekly metrics |
 | `metrics_season` | season, through_week, roster_id | cumulative metrics as of each week |
 | `power_rankings` | season, week, roster_id | power_score, rank, rank_change, one column per component contribution |
@@ -264,3 +293,5 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 1: `validate.py` with six checks, run by transform before saving; all pass on weeks 1–3. Assumption to verify at week 15: Sleeper's roster `wins`/`fpts` exclude playoff games.
 - Phase 1: `pipeline.py` runs the full refresh end to end; two consecutive runs gave identical outputs. `transform.build_tables` / `save_tables` shared by transform and pipeline.
 - Phase 1 complete: `notebooks/01_data_check.ipynb` (standings, weekly box plot, score histogram, team-by-week heatmap; committed without outputs).
+- Phase 2: `docs/METRICS_SPEC.md` written with the owner (all seven metrics confirmed); metric parameters added to `config.yaml` under `metrics:` and exposed as `Config.metrics`.
+- Phase 2: `lineup.py` builds `lineups_optimal` and `lineups_optimal_players`; the pipeline builds them before validation; validation gains a seventh check (optimal lineups are consistent); `ppts` soft check printed as a warning. Tests in `tests/test_lineup.py`, including a FLEX/REC_FLEX case where a greedy fill loses 16 points and a brute-force comparison on 300 random lineups.

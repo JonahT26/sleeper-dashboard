@@ -150,12 +150,13 @@ Solved exactly as an assignment problem (slots × players).
 
 | Slot | Eligible positions |
 |---|---|
-| QB, RB, WR, K, DEF | that position only |
+| QB, RB, WR, TE, K, DEF | that position only |
 | FLEX | RB, WR, TE |
+| WRRB_FLEX | RB, WR |
 | REC_FLEX | WR, TE |
 | SUPER_FLEX | QB, RB, WR, TE |
 
-The slot list is read from league settings each run. The eligibility table is Sleeper's rule, not a tunable parameter, so it is fixed in this spec. A slot name not in this table stops the run.
+This league uses QB, RB, WR, FLEX, REC_FLEX, SUPER_FLEX, K, and DEF. TE and WRRB_FLEX are Sleeper slots it doesn't use; they are listed so a settings change wouldn't stop the run. A player's positions are his `fantasy_positions` in the players cache (his primary `position` if that list is empty), and he may fill a slot if any of them is eligible. The slot list is read from league settings each run. The eligibility table is Sleeper's rule, not a tunable parameter, so it is fixed in this spec. A slot name not in this table stops the run.
 
 **Formula.** For team *i* in week *w*:
 

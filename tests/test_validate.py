@@ -144,7 +144,7 @@ def test_points_mismatch_fails(tables, rosters):
     assert "roster 1: points for" in result.detail and "roster 2: points against" in result.detail
 
 
-@pytest.mark.parametrize("name", list(v.KEYS))
+@pytest.mark.parametrize("name", v.BASE_TABLES)  # lineup tables: tests/test_lineup.py
 def test_duplicate_keys_fail(tables, name):
     table = tables[name]
     if table.empty:  # no transactions in the fixture; make one row to duplicate
