@@ -1,0 +1,105 @@
+# Roll back the live page: publish the exact page an earlier "Weekly refresh" run published.
+# Manual only (Actions tab → "Roll back the live page" → Run workflow, or
+# gh workflow run rollback.yml --ref main -f run_id=<run number>). Steps: docs/RUNBOOK.md.
+#
+# It changes only the live page: no data, no commits. The next weekly run publishes fresh
+# numbers again, so pause the schedule first if the rollback should stay up.
+name: Roll back the live page
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run ID of the earlier Weekly refresh whose page to put back (the long number at the end of the run's web address)"
+        required: true
+
+# Shares the weekly job's queue, so a rollback and a refresh never publish at the same time.
+concurrency:
+  group: weekly-refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read # download the earlier run's page
+    steps:
+      - name: Check the run ID
+        env:
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          if ! [[ "$RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::'$RUN_ID' isn't a run ID. Use the long number at the end of the run's web address."
+            exit 1
+          fi
+
+      - name: Download that run's page
+        uses: actions/download-artifact@v8
+        with:
+          name: github-pages
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: restored
+
+      - name: Unpack it
+        run: |
+          mkdir site
+          tar -xf restored/artifact.tar -C site
+          test -f site/index.html
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+          retention-days: 90
+
+      - name: Run summary
+        if: always()
+        env:
+          RUN_ID: ${{ inputs.run_id }}
+          STATUS: ${{ job.status }}
+        run: |
+          # "Updated …" sits in a <time> tag from 2026-10-03 on; older pages have plain text.
+          updated=$( (grep -o '<p class="updated">[^<]*<time[^>]*>[^<]*' site/index.html || grep -o '<p class="updated">[^<]*' site/index.html) 2>/dev/null | sed 's/<[^>]*>//g' || true)
+          title=$(grep -o '<h1 class="title display" id="title">[^<]*' site/index.html 2>/dev/null | sed 's/<[^>]*>//g' || true)
+          {
+            if [ "$STATUS" = "success" ]; then
+              echo "## Rolling back to the page from run $RUN_ID"
+              echo
+              echo "That page shows: **${title:-unknown}**, ${updated:-update time unknown}. It is published next (deploy job)."
+            else
+              echo "## Rollback FAILED. The live page is unchanged."
+              echo
+              echo "Check the run ID: it must be a Weekly refresh run from the last 90 days that published a page."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    needs: restore
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Run summary
+        if: always()
+        env:
+          OUTCOME: ${{ steps.deployment.outcome }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          if [ "$OUTCOME" = "success" ]; then
+            echo "## Published: $PAGE_URL" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Publish: FAILED. The live page is unchanged." >> "$GITHUB_STEP_SUMMARY"
+          fi
