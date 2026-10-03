@@ -1,6 +1,6 @@
 # Codebase guide
 
-What lives where, how data moves, and the shape of every table. Phases 0–2 are built (data pull and metrics, 2026-10-02); the dashboard (Phase 3) and automation (Phase 4) are still planned. As modules get built, change their status from `planned` to `built`.
+What lives where, how data moves, and the shape of every table. Phases 0–3 are built (data pull, metrics, and the dashboard, 2026-10-02); automation (Phase 4) is planned. As modules get built, change their status from `planned` to `built`.
 
 > Claude: keep this file current. When you add or change a module, table, or column, update this file in the same commit.
 
@@ -33,7 +33,8 @@ dashboard/ ► site/index.html                          static page (python -m s
     │                                                 and data/cache/pipeline_run.json (when the pipeline last finished)
     │
     ▼
-GitHub Pages (Phase 4)                                GitHub Actions builds site/ and publishes it (not committed)
+GitHub Pages (Phase 4, planned)                       GitHub Actions: pytest → pipeline → dashboard → page tests on the
+                                                      fresh tables → publish site/ (never committed)
 ```
 
 `python -m sleeper_dash.pipeline` runs every step in order as a full refresh: extract → transform → data checks → metrics (optimal lineups and every metric table) → metric checks → save → re-read and re-check the saved CSVs. Data checks and metric checks each stop the run on any failure, before anything is saved. The summary lists tables and row counts, every data and metric check with PASS/FAIL, the saved-file re-check, soft-check warnings (e.g. optimal points vs Sleeper's max points) that never stop the run, API calls, and run time (~6.5 seconds). Nothing is appended incrementally. Two back-to-back runs produce byte-identical raw and processed files (verified 2026-10-02 with every metric table in place: 35 of 35 files, SHA-256). Exit code 1 on any failure, leaving the last good tables in place.
@@ -87,7 +88,7 @@ sleeper-dashboard/
 │   ├── fixtures/                saved API responses for offline tests
 │   └── test_*.py
 ├── site/                        Phase 3 build output (gitignored; GitHub Actions builds and publishes it to Pages)
-└── .github/workflows/weekly.yml Phase 4 schedule
+└── .github/workflows/weekly.yml Phase 4 schedule (planned; the folder is empty)
 ```
 
 ## Modules
@@ -111,6 +112,9 @@ sleeper-dashboard/
 | `dashboard/theme.py` | The one shared Plotly theme (UI_GUIDE.md Charts): `base_layout()` (fonts, transparent backgrounds, horizontal gridlines only, no legend, no zoom or drag), `CONFIG` (no mode bar, responsive), `PLOTLY_CDN` (basic bundle, version matched to the installed `plotly`), `team_colour` (pylon for the highlighted team, bar grey for the rest). Colours are token names (`@pylon`) that the page fills from CSS custom properties; `resolve_tokens` does the same in Python for tests. `to_script_json` embeds JSON safely (every `<` written `\u003c`) | 3 | built |
 | `dashboard/explainer.py` | The "How this works" copy as `sections(params, league)` → headings and paragraphs, with every weight, window, threshold, and league fact (teams, median game, playoff start) filled in when built; `as_text` for review. `python -m sleeper_dash.dashboard.explainer` prints it as plain text. Approved by the owner 2026-10-02 and rendered once as the page's last section; wording changes need the owner's approval | 3 | built |
 | `dashboard/charts.py` | Pure functions returning a chart section per week (title, how-to-read subtitle, text summary, figure): `luck_chart` (metrics_season actual vs expected wins, 45° line, one label per team) and `efficiency_chart` (lineups_optimal points per week, actual vs optimal, sorted by `metrics_season.efficiency`), `consistency_chart` (team_weeks scores as a strip plot with floor–ceiling bars and the league median; None until volatility exists), `schedule_chart` (sos_played and sos_remaining as bars from 0 in two panels; one panel when remaining is all 0.0 or over; None until SOS exists), `rank_history_chart` (power rank by week, one trace per team; None before week 2). Team-name labels carry the `roster_id` in `name` and `captureevents`, so tapping one moves the highlight. Teams carry their `roster_id` in each trace's `meta` so `charts.js` can move the highlight. Team names are HTML-escaped for Plotly text | 3 | built |
+| `dashboard/templates/` | `index.html.j2` (one Jinja2 macro draws a week; the latest week in the page, earlier weeks in `<template>` blocks), `styles.css` (tokens, mobile-first layout, the ladder's one-line layout as a container query), `page.js` (week selector, first-load grow-in), `charts.js` (fills colour tokens, draws with Plotly, moves the highlight, places luck labels, applies phone labels). All inlined into the page | 3 | built |
+| `dashboard/__main__.py` | `python -m sleeper_dash.dashboard`: runs `build.main` (prints weeks, sections, size; exit 1 with a clear message if the pipeline hasn't run) | 3 | built |
+| `.github/workflows/weekly.yml` | Scheduled refresh and Pages deploy | 4 | planned |
 
 ## Data model
 
@@ -395,3 +399,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 3: "How this works" (owner-approved, no edits) published as the page's last section, with every number from `config.yaml` and league facts from the pipeline run record. The page-weight budget counts compressed bytes (owner decision); weeks 1–3: 26 KB compressed. 274 tests.
 - Phase 3: page-level tests (`test_page`, `test_quality_floor`; plan step 5). Weeks 1–3: 26 KB compressed; this season stretched to 17 weeks: 135 KB compressed. One finding: UI_GUIDE.md stated chalk on turf as 11.9:1, but it is 11.85:1; the guide now says 11.8:1 (owner). 346 tests.
 - Phase 3: design review at 360, 390, 1024 and 1280px, light and dark (approved fixes): the ladder's one-line layout now depends on the ladder's width (a CSS container query), fixing a 1024px collapse; reading text ~72 characters a line; compact award tiles on desktop; luck labels on a page background; rank-history names cut to 14 characters on phones (`charts.SHORT_NAME`, figure `phone` labels and margin applied by `charts.js` below 768px); centred 1200px column; key "League average: 50". 348 tests.
+- **Phase 3 complete (2026-10-02).** `python -m sleeper_dash.dashboard` builds the full page (masthead and week selector, ladder with breakdowns, nine weekly awards, five charts, "How this works") for every completed week. Privacy check before closing: no value from `data/raw/` (user settings, mascot messages, player nicknames, league chat fields, avatars) appears in the page or in any tracked file; owner IDs appear only in `data/processed/teams.csv` (owner-approved); notebooks have no outputs; fixtures are anonymised. Pipeline: 14 of 14 checks, byte-identical outputs. 348 tests. Next: Phase 4 (HANDOFF.md section 9).

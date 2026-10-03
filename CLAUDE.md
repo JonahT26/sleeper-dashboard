@@ -51,7 +51,8 @@ python -m sleeper_dash.metrics.schedule     # rebuild every metric table; print 
 python -m sleeper_dash.metrics.power        # rebuild every metric table; print power rankings with each component's contribution
 python -m sleeper_dash.metrics.awards       # rebuild every metric table; print this week's awards and the winners by week
 python -m sleeper_dash.validate    # re-run the data and metric checks on the saved tables and print pass/fail
-python -m sleeper_dash.dashboard   # build site/index.html from the saved tables (run the pipeline first)
+python -m sleeper_dash.dashboard   # build site/index.html from the saved tables and the last run record (run the pipeline first); prints weeks, sections, size
+python -m http.server 8766 --directory site   # view the built page at http://localhost:8766 (Ctrl+C to stop)
 python -m sleeper_dash.dashboard.explainer  # print the "How this works" draft, numbers filled in from config.yaml
 pytest                             # run all tests
 jupyter lab                        # open the notebooks
@@ -74,24 +75,23 @@ Keep this list current as commands are added.
 
 ## Current status
 
-**Phase 3 — Dashboard: in progress** (static HTML per `docs/UI_GUIDE.md`; plan in `docs/HANDOFF.md` section 9). Phase 2 — Metrics: complete (2026-10-02). Update this section at the end of every phase.
+**Phase 3 — Dashboard: complete (2026-10-02).** Phase 4 — Automation is next (plan in `docs/HANDOFF.md` section 9). Update this section at the end of every phase.
 
 **Starting a new session? Read `docs/HANDOFF.md` first.** It covers working style, environment quirks, the decisions log, open questions, and the next steps.
 
 Where things stand:
 - `python -m sleeper_dash.pipeline` runs a full refresh: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric invariant checks → save → re-check the saved files. Either group of checks stops the run before anything is saved. Weeks 1–3: every check passes, 23 API calls, ~6.5 seconds, and two consecutive runs give byte-identical outputs.
 - 11 tables in `data/processed/` (schemas in `docs/CODEBASE.md`): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule`, `lineups_optimal`, `lineups_optimal_players`, `metrics_team_weeks`, `metrics_season`, `power_rankings`, `awards`.
-- Every metric follows `docs/METRICS_SPEC.md` (owner-approved): all-play record, expected wins and luck, lineup efficiency, consistency, strength of schedule, power score, weekly awards. Every weight and threshold is in `config.yaml` under `metrics:`.
-- 348 tests pass. Notebooks: `01_data_check.ipynb` (data eyeballing), `02_power_score_sensitivity.ipynb` (power weights ±25%: rankings robust; only near-tied teams move).
-- Phase 3 step 1 done (2026-10-02): `metrics_season` has season-to-date lineup efficiency (Σ actual ÷ Σ optimal) and points left on the bench, with their own metric check.
-- Phase 3 step 3 under way (2026-10-02): `python -m sleeper_dash.dashboard` builds `site/index.html` with the masthead, the power rankings ladder, and weekly awards, and all five charts (luck, lineup efficiency, consistency, strength of schedule, rank history) for every completed week (week selector, no network calls; charts use the shared theme in `dashboard/theme.py`). "How this works" (owner-approved copy, numbers from `config.yaml`) is the last section. Phase 3 is functionally complete; next is a final review with the owner, then Phase 4.
+- Every metric follows `docs/METRICS_SPEC.md` (owner-approved). Every weight and threshold is in `config.yaml` under `metrics:`.
+- `python -m sleeper_dash.dashboard` builds `site/index.html`: masthead with week selector, power rankings ladder (tap a row for its breakdown), weekly awards, five charts (luck, lineup efficiency, consistency, strength of schedule, rank history), and "How this works". Every completed week is in the page; no network calls except Google Fonts and the Plotly CDN; 27 KB compressed for weeks 1–3. Checked at 360, 390, 1024 and 1280px in light and dark mode.
+- 348 tests pass, including page-level tests (every number on the page equals the CSVs) and the UI_GUIDE quality floor. Notebooks: `01_data_check.ipynb`, `02_power_score_sensitivity.ipynb`.
 - To verify at week 15: whether Sleeper plays the median game in the playoffs, whether roster `wins`/`fpts`/`ppts` include playoff games, and how non-playoff teams appear in matchups.
 
 Roadmap:
 - Phase 0: Setup (environment, repo, API smoke test) — complete
 - Phase 1: Data pull (raw extract, tidy tables, validation) — complete
 - Phase 2: Metrics (spec, optimal lineups, luck, consistency, schedule, power score, awards) — complete
-- Phase 3: Dashboard (static HTML per `docs/UI_GUIDE.md`)
+- Phase 3: Dashboard (static HTML per `docs/UI_GUIDE.md`) — complete
 - Phase 4: Automation (weekly GitHub Action, GitHub Pages)
 - Phase 5: Extras (playoff odds simulation, past seasons, posting to league chat)
 
@@ -117,6 +117,7 @@ Roadmap:
 - **Ladder design** (owner, prototype review 2026-10-02; details in `docs/UI_GUIDE.md` Ladder row): build mobile first; power score bars run from the league average (50), not 0–100; the tap-to-expand breakdown shows each component's "Score" (contribution), then its gap from average as a small bar and signed number, totalling "Power score"; the results component is labelled "Head-to-head wins" with the head-to-head record, while the ladder keeps the overall record; the latest week is written into the HTML at build time, and "Updated" is the pipeline's run time.
 - **Page weight** (owner, 2026-10-02): the 1 MB budget counts compressed bytes, what a visitor downloads.
 - **How this works** (owner, 2026-10-02): the draft was approved with no edits and is published; any wording change needs the owner's approval again.
+- **Phase 3 wrap-up** (owner, 2026-10-02): the guide's chalk-on-turf contrast corrected to 11.8:1; design-review fixes approved (ladder key "League average: 50"; rank-history team names cut to 14 characters on phones; reading text ~72 characters a line; compact award tiles on desktop; centred 1200px column). Details in `docs/UI_GUIDE.md` and `docs/HANDOFF.md` section 6.
 - **Hosting** (Claude, delegated by the owner, 2026-10-02): GitHub Pages publishes the built `site/` folder through a GitHub Actions workflow (Pages source: "GitHub Actions"), not from a branch or the `docs/` folder. `site/` is a build output and stays out of git; `docs/` stays internal.
 
 ## Open decisions
