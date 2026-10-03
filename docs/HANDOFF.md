@@ -1,6 +1,6 @@
 # Session handoff
 
-Rewritten 2026-10-02 at the end of Phase 3 (the dashboard). A new Claude session should read this file first, then `CLAUDE.md`, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`, before doing anything. Those docs are the source of truth for design, data, metrics, and the page; this file covers everything else: how the owner works, environment quirks, decisions and their reasons, open questions, risks, and the plan for Phase 4.
+Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 at the end of Phase 4 (automation). A new Claude session should read this file first, then `CLAUDE.md`, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`, before doing anything. Those docs are the source of truth for design, data, metrics, and the page; this file covers everything else: how the owner works, environment quirks, decisions and their reasons, open questions, risks, running the weekly job, and what's next.
 
 ## 1. Where things stand
 
@@ -10,16 +10,16 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard). A new Claude session
 | 1 · Data pull (raw extract, tidy tables, validation, pipeline) | **Complete** |
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
-| 4 · Automation (weekly GitHub Action, GitHub Pages) | **In progress** (started 2026-10-03). Owner's answers in section 6; risks 1 and 2 fixed; workflow live and first manual run succeeded; next: check the live page (section 9, step 5), then docs |
-| 5 · Extras | Not started |
+| 4 · Automation (weekly GitHub Action, GitHub Pages) | **Complete** (2026-10-03) |
+| 5 · Extras | Not started. Ask the owner which extra comes first (section 9) |
 
-At the end of Phase 3 (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
+At the end of Phase 4 (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
 
-- `python -m sleeper_dash.pipeline`: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric checks → save 11 tables → re-check the saved CSVs. 14 of 14 checks pass, 23 API calls, ~6.5 seconds, processed CSVs byte-identical across runs. A successful run also writes `data/cache/pipeline_run.json` (finish time, league name, season, weeks, and league facts: 12 teams, median game on, playoffs from week 15).
-- `python -m sleeper_dash.dashboard`: builds `site/index.html` from the saved CSVs and the run record. Sections, top to bottom: masthead with week selector, power rankings ladder (tap a row for its breakdown), weekly awards, five charts (Luck, Lineup efficiency, Consistency, Strength of schedule, Rank history), and "How this works". Every completed week is in the page; each week shows rankings, records, awards, and charts as of that week. 27 KB compressed (196 KB raw) for weeks 1–3; this season stretched to 17 weeks would be ~135 KB compressed.
-- The page passed a full design review against `docs/UI_GUIDE.md` at 360, 390, 1024 and 1280px in light and dark mode; every approved fix is in.
-- Privacy check at the close of Phase 3: no value from `data/raw/` (user settings, mascot messages, player nicknames, league chat fields, avatars) appears in the page or in any tracked file. Owner IDs appear only in `data/processed/teams.csv` (owner-approved). Notebooks are committed without outputs; fixtures are anonymised. The page's only outside requests are Google Fonts and cdn.plot.ly.
-- **348 tests pass.** Git clean and in sync with `origin/main` at the `Phase 3: dashboard` commit.
+- **Live:** https://jonaht26.github.io/sleeper-dashboard/, published by `.github/workflows/weekly.yml` every Tuesday and Thursday at 12:17 PM Eastern (section 7a). Three manual runs on 2026-10-03 all succeeded; the owner checked the live page in every format and approved it. **The first scheduled run is Tuesday Oct 6**, and should bring week 4 (section 7).
+- `python -m sleeper_dash.pipeline`: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric checks → save 11 tables → re-check the saved CSVs. 14 of 14 checks, 23 API calls, ~7 seconds. The summary now says whether the latest week moved and which tables changed ("no new completed week since the last run", "unchanged (every file identical)").
+- `python -m sleeper_dash.dashboard`: builds `site/index.html` (masthead with week selector, ladder, awards, five charts, "How this works"). 27 KB compressed for weeks 1–3.
+- Unattended-job risks fixed: the season start date no longer depends on Sleeper's current season (risk 1); every dependency and Python 3.14.7 pinned, and tested against what's installed (risk 2); the page tests run again on each run's fresh tables (risk 5); extract's folder swap retries when Windows briefly refuses it (risk 5a).
+- **397 tests pass**, locally and in GitHub Actions. Git clean and in sync with `origin/main`.
 
 ## 2. Working with the owner
 
@@ -44,8 +44,8 @@ At the end of Phase 3 (NFL week 4 in progress, so weeks 1–3 are the completed 
 |---|---|
 | OS / shells | Windows 11. PowerShell **5.1** is primary (no `&&`, `?:`, `??`); Bash (Git Bash) also available |
 | Project root | `C:\Personal Projects\FF\Dev`. Sessions may open in the parent `FF`; work in `Dev` |
-| Python | 3.14.7. Venv `.venv`, package installed editable. In tool calls use `.venv\Scripts\python.exe` directly |
-| git / GitHub | Repo-local `user.email` is `jonahtersol@gmail.com` (never the global work address). `gh` logged in as **JonahT26**; remote `https://github.com/JonahT26/sleeper-dashboard` (public), branch `main`. Fresh shells may not see `gh`; prefix with `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')` |
+| Python | 3.14.7, pinned in `.python-version` (GitHub Actions uses the same). Venv `.venv`, package installed editable with `pip install -e ".[dev]"`. In tool calls use `.venv\Scripts\python.exe` directly |
+| git / GitHub | **The workflow's bot pushes commits to `main`** (refreshed tables), so `git pull` before starting local work. Repo-local `user.email` is `jonahtersol@gmail.com` (never the global work address). `gh` logged in as **JonahT26**; remote `https://github.com/JonahT26/sleeper-dashboard` (public), branch `main`. Fresh shells may not see `gh`; prefix with `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')` |
 | Unicode output | Set `$env:PYTHONIOENCODING='utf-8'` before Python that prints team names (curly quotes) |
 | Editing files | Prefer the Edit/Write tools. For multi-file edits, write a small Python script to the scratchpad with the Write tool and run it; each replacement asserts its target appears exactly once. **Bash heredocs break on some content** (apostrophes, backslashes): don't pipe Python through heredocs when the code contains them. **PowerShell `[IO.File]` methods use the .NET working directory, not the PowerShell location**: always pass absolute paths |
 | BOM trap | PowerShell 5.1 `Set-Content -Encoding utf8` writes a byte-order mark. Don't use it on source files |
@@ -70,17 +70,21 @@ At the end of Phase 3 (NFL week 4 in progress, so weeks 1–3 are the completed 
 ```
 Dev/
 ├── CLAUDE.md                     rules, commands, current status, decisions, open decisions
-├── config.yaml                   league_id (quoted), season, every metric weight and threshold
-├── pyproject.toml                package + dependencies (UNPINNED: risk 2); dashboard templates as package data
+├── config.yaml                   league_id (quoted), season, season_start_dates, every metric weight and threshold
+├── pyproject.toml                package + exact dependency versions (dev extra: pytest, jupyterlab)
+├── requirements-ci.txt           lock file: every package GitHub Actions installs, exact versions
+├── .python-version               3.14.7, read by the workflow
+├── .github/workflows/weekly.yml  Tue + Thu 12:17 PM Eastern and a manual button: tests → pipeline → dashboard →
+│                                 page tests → commit changed tables → publish to GitHub Pages
 ├── docs/
-│   ├── CODEBASE.md               data flow, modules, table schemas, Sleeper quirks, changelog
+│   ├── CODEBASE.md               data flow, modules, table schemas, Sleeper quirks, dependencies, changelog
 │   ├── METRICS_SPEC.md           owner-approved metric definitions (code follows the spec)
 │   ├── UI_GUIDE.md               design system and every dashboard decision (ladder, charts, copy)
 │   ├── DATA_DICTIONARY.md        raw Sleeper fields and findings
 │   └── HANDOFF.md                this file
 ├── src/sleeper_dash/
 │   ├── config.py, api.py, extract.py, transform.py, validate.py (14 checks), lineup.py, metrics/
-│   ├── pipeline.py               full refresh; writes data/cache/pipeline_run.json on success
+│   ├── pipeline.py               full refresh; reports week and table changes; writes data/cache/pipeline_run.json
 │   └── dashboard/
 │       ├── build.py              tables → view (every number formatted once) → HTML; `python -m sleeper_dash.dashboard`
 │       ├── theme.py              the one shared Plotly theme; colours as CSS tokens ("@pylon"); CDN URL
@@ -88,13 +92,13 @@ Dev/
 │       ├── explainer.py          "How this works" copy, numbers from config.yaml (owner-approved)
 │       └── templates/            index.html.j2, styles.css, page.js (week selector), charts.js (drawing,
 │                                 highlight, label placement, phone labels); CSS and JS are inlined into the page
-├── tests/                        348 tests, one file per module, plus page-level test_page (every number on the
-│                                 page equals the CSVs) and test_quality_floor; conftest blocks the network.
-│                                 Tests read only committed files, so they run unchanged in GitHub Actions
-├── .github/workflows/            EMPTY: weekly.yml is Phase 4
+├── tests/                        397 tests, one file per module, plus test_page (every number on the page equals
+│                                 the CSVs), test_quality_floor, test_dependencies (pins = installed), and
+│                                 test_pipeline_offline (the real pipeline against fake_sleeper.py); conftest
+│                                 blocks the network. Tests read only committed files, so they run in Actions
 ├── data/raw/, data/cache/        GITIGNORED
-├── data/processed/               COMMITTED, public (owner decision)
-└── site/                         GITIGNORED build output (index.html)
+├── data/processed/               COMMITTED, public (owner decision); refreshed by the workflow's bot
+└── site/                         GITIGNORED build output (index.html), published by the workflow
 ```
 
 ### How the page works (read before changing it)
@@ -157,44 +161,51 @@ Dev/
 | 2026-10-03 | Weekly run Tuesday 12:17 PM Eastern (cron `17 12 * * 2`, `timezone: America/New_York`, so it follows daylight saving); "12:17 EST" read as 12:17 PM local Eastern time | Owner (time), Claude (PM and time-zone reading) | weekly.yml |
 | 2026-10-03 | Second weekly run for stat corrections: Thursday 12:17 PM Eastern | Owner | weekly.yml |
 | 2026-10-03 | The workflow commits refreshed `data/processed/*.csv` back to `main` as the GitHub Actions bot (`contents: write`); local work starts with `git pull` | Owner | weekly.yml, CLAUDE.md |
-| 2026-10-03 | Python 3.14 in GitHub Actions, matching local | Owner | weekly.yml, pyproject.toml |
+| 2026-10-03 | Python 3.14 in GitHub Actions, matching local (later pinned to exactly 3.14.7) | Owner | weekly.yml, pyproject.toml |
 | 2026-10-03 | Failed runs: GitHub's default email to the account that last changed the workflow's schedule | Owner | — |
-| 2026-10-03 | Season start date lives in `config.yaml` (`season_start_date`), checked against `/state/nfl` while Sleeper still describes the season (risk 1 fixed) | Owner | config.yaml, CODEBASE.md |
+| 2026-10-03 | Season start date lives in `config.yaml`, checked against `/state/nfl` while Sleeper still describes the season (first version; replaced by `season_start_dates` below) | Owner | config.yaml, CODEBASE.md |
 | 2026-10-03 | Claude switches the Pages source to "GitHub Actions" with `gh` | Owner | — |
 | 2026-10-03 | Phase 4 plan (section 9) approved; commit and push after each step | Owner | — |
 | 2026-10-03 | Season start dates stored per season (`season_start_dates`), never derived from `/state/nfl`, so rollover and past seasons (Phase 5) work; deriving from the NFL calendar rejected (Sleeper's 2026 date isn't kickoff Thursday) | Owner (requirement), Claude (design) | config.yaml, CODEBASE.md |
 | 2026-10-03 | Python pinned to exactly 3.14.7 (`.python-version`, read by the workflow), matching local; the lock file is checked against the installed packages by tests | Owner (requirement), Claude (method) | CODEBASE.md "Dependencies" |
 | 2026-10-03 | A run with no new completed week is a normal full refresh that succeeds; numbers change only through stat corrections; the summary reports whether the week moved and which tables changed, compared with the saved tables | Owner (requirement), Claude (reporting) | pipeline.py, CODEBASE.md |
+| 2026-10-03 | Extract's raw-folder swap retries up to 5 times (2 s at most) when Windows refuses it, then stops with a clear message | Claude, delegated by owner | extract.py, CODEBASE.md |
+| 2026-10-03 | Live page checked by the owner in every format (360–1280px, light and dark) and approved; Phase 4 closed | Owner | — |
 
 ## 7. Open questions and assumptions to verify
 
-**Phase 4 decisions the owner needs to make before the workflow is written** (ask as numbered questions with recommendations):
-1. **Run time.** GitHub Actions cron runs in UTC, so a fixed time shifts an hour when daylight saving ends (Nov 1). Recommended: Tuesday 11:00 UTC (7 AM EDT, 6 AM EST), after Monday night's game is scored. Sleeper's completed-week rule means a run before scoring finishes simply shows the previous week.
-2. **A second weekly run for stat corrections?** NFL stat corrections land later in the week, and every run recomputes the season. Recommended: also Friday 11:00 UTC.
-3. **Commit the refreshed processed CSVs back to the repo from the workflow?** Recommended: yes. It keeps `data/processed/` current (today they're committed by hand), gives a week-by-week history, means the tests check this week's data, and keeps the repo active so GitHub doesn't switch the schedule off (risk 3). It needs `contents: write` and commits as the GitHub Actions bot.
-4. **Python version for Actions.** Recommended: 3.14, matching local.
-5. **Who gets told when a run fails?** GitHub emails the account that last changed the workflow's schedule. Recommended: that's enough for now.
+**Verify at week 4 (Tuesday Oct 6, the first scheduled run):** the run succeeds and its bot commits "Weekly refresh: tables through week 4"; then `git pull`. On the live page: the Strength of schedule chart switches to two panels (remaining no longer all 0.0); luck labels and the efficiency chart still read cleanly at 390px with new values; rank-history labels at 360px. Thursday Oct 8's run should report "no new completed week" (and commit only if Sleeper made a stat correction).
 
-**Verify at week 4 (first new data since the dashboard was built):** the Strength of schedule chart should switch to two panels (remaining no longer all 0.0); luck labels and the efficiency chart should still read cleanly at 390px with new values; rank-history labels at 360px; the pipeline should produce four weeks of processed CSVs.
+**Verify at week 15 (first playoff week, mid-December; the first run after it is scored):** whether Sleeper plays the median game in the playoffs (code assumes not); whether roster `wins`/`losses`/`fpts` include playoff games (validation assumes not); how non-playoff teams appear in matchups (null `matchup_id` handled either way). A wrong assumption stops the run before publishing (risk 4), so watch for a failure email that week.
 
-**Verify at week 15 (first playoff week):** whether Sleeper plays the median game in the playoffs (code assumes not); whether roster `wins`/`losses`/`fpts` include playoff games (validation assumes not); how non-playoff teams appear in matchups (null `matchup_id` handled either way).
-
-**Known gaps:** Sleeper's `ppts` sits 0.02–4.00 points below our optimal lineups for 7 teams (soft check only); FAAB and picks traded inside trades aren't in `transactions`; player positions describe today, not past weeks; `winners_bracket` not pulled (Phase 5).
+**Known gaps:** Sleeper's `ppts` sits 0.02–4.00 points below our optimal lineups for 7 teams (soft check only); FAAB and picks traded inside trades aren't in `transactions`; player positions describe today, not past weeks; `winners_bracket` not pulled (Phase 5). A season with no completed week yet (next season's preseason, after `config.yaml` moves to 2027) stops the pipeline with a misleading "matchups is missing. Run `python -m sleeper_dash.extract` first" message (checked with the fake league): decide the season-rollover behaviour before then (section 7a).
 
 **Open product questions:**
 - Where league members see updates: bookmark only, or also a group-chat post (Phase 5).
 - Boom/bust weeks are explained in "How this works" but not displayed yet (owner wants them kept for a future display).
 
+## 7a. Running the weekly job
+
+- **Schedule:** Tuesday and Thursday 12:17 PM Eastern (`timezone: America/New_York`, so it follows daylight saving). GitHub can start scheduled runs late, sometimes by tens of minutes.
+- **Manual run:** the "Run workflow" button on the repo's Actions tab, or `gh workflow run weekly.yml --ref main`. Watch with `gh run watch <id>`; read with `gh run view <id> --log`.
+- **What a run does:** installs the lock file on Python 3.14.7 → all tests on the committed tables → pipeline → dashboard → page tests on this run's tables → commits changed `data/processed/*.csv` as `github-actions[bot]` ("Weekly refresh: tables through week N"; nothing when unchanged) → publishes `site/`. Any failure stops before publishing; the last good page stays live and GitHub emails the owner.
+- **A failed run:** read the log first. A failed check names itself (e.g. "Records match Sleeper"); explain the cause to the owner before changing code (section 2).
+- **Before local work:** `git pull`, because the bot commits to `main`.
+- **Season rollover (before the 2027 season):**
+  1. GitHub switches the schedule off after 60 days without repository activity, and in the off-season the tables stop changing, so expect it to be off by about March. Re-enable it on the Actions tab (or `gh workflow enable weekly.yml`).
+  2. Put the 2027 league ID and season in `config.yaml`, and add `2027:` to `season_start_dates` (Sleeper's `/state/nfl` `season_start_date` once it describes 2027).
+  3. Decide what the page shows between rollover and week 1 (it currently can't build a season with no completed week; section 7), and whether 2026 stays viewable (Phase 5, past seasons).
+
 ## 8. Known risks
 
-Ordered by impact on an unattended weekly job.
+Ordered by impact on the unattended weekly job.
 
-1. **Off-season breakage: fixed 2026-10-03.** Season start dates live in `config.yaml` `season_start_dates`, one per season, and never come from `/state/nfl`, which is only a cross-check while it describes the league's season and gives a date. Proven offline (`test_pipeline_offline`: Sleeper in 2026, the off-season, 2027's preseason, 2027 under way, no date) and on the real league (four `/state/nfl` variants, 14 of 14 checks, all 11 tables identical to the committed CSVs). **Each new season, change `season` and add its line to `season_start_dates`** (config refuses a season without one). Phase 5 needs a line for each past season; `/state/nfl` can't supply them, and Sleeper's 2026 date (2026-09-09) falls on a Wednesday, so confirm what Sleeper's date marks before filling in 2025.
-2. **Unpinned dependencies: fixed 2026-10-03.** Exact versions in `pyproject.toml`; `requirements-ci.txt` (the lock file) pins all 23 packages Actions installs; jupyterlab and pytest are the `dev` extra; `.python-version` pins Python 3.14.7, which the workflow reads (GitHub already offers 3.14.8, so "3.14" alone could have drifted). `test_dependencies` fails, locally or in Actions, if the installed packages or Python differ from the pins or the lock misses a package. Proof: a fresh environment built from the lock matched it exactly, passed 395 tests, and produced all 11 tables and the page byte-identical to the local ones; GitHub's Linux run also left the tables unchanged. Update steps (with commands) in `docs/CODEBASE.md` "Dependencies"; a dry run of them reproduced the lock exactly.
-3. **GitHub switches off scheduled workflows in public repos after 60 days with no repository activity.** A quiet stretch from mid-November would stop the weekly run without any error. Committing the refreshed CSVs from the workflow (section 7, question 3) prevents this.
+1. **Off-season breakage: fixed 2026-10-03.** Season start dates live in `config.yaml` `season_start_dates`, one per season, and never come from `/state/nfl`, which is only a cross-check while it describes the league's season and gives a date. Proven offline (`test_pipeline_offline`: Sleeper in 2026, the off-season, 2027's preseason, 2027 under way, no date) and on the real league (four `/state/nfl` variants, 14 of 14 checks, all 11 tables identical to the committed CSVs). Phase 5 needs a line for each past season; `/state/nfl` can't supply them, and Sleeper's 2026 date (2026-09-09) falls on a Wednesday, so confirm what Sleeper's date marks before filling in 2025.
+2. **Unpinned dependencies: fixed 2026-10-03.** Exact versions in `pyproject.toml`; `requirements-ci.txt` (the lock file) pins all 23 packages Actions installs; `.python-version` pins Python 3.14.7, which the workflow reads (GitHub already offers 3.14.8). `test_dependencies` fails, locally or in Actions, if the installed packages or Python differ from the pins or the lock misses a package. A fresh environment from the lock produced all 11 tables and the page byte-identical. Update steps in `docs/CODEBASE.md` "Dependencies".
+3. **GitHub switches off scheduled workflows after 60 days with no repository activity.** In season the bot's weekly commits keep it on. After the season the tables stop changing, so it will switch off (expected, harmless); re-enable it before next season (section 7a).
 4. **Week 15 untested on real data** (section 7). A wrong assumption fails "Records match Sleeper" and stops the run: safe, but the page stops updating until fixed.
-5. **The tests in the workflow check the committed tables, not this run's.** `test_page` builds the page from `data/processed/` as committed. Run `pytest tests/test_page.py` again after the pipeline and dashboard steps, so the numbers about to be published are checked too.
-5a. **Windows: extract's raw-folder swap can be refused (found 2026-10-03, not fixed; awaiting the owner).** `extract.extract` deletes `data/raw/{season}/` and immediately renames the staging folder into its place. In the offline tests (temp folder, back-to-back runs) Windows refused the rename ("Access is denied", WinError 5) in about 1 of 14 runs, most likely because antivirus or indexing still held the just-deleted folder. Never seen in real local runs, and it can't happen on GitHub's Linux runners. The run fails safely (nothing saved). Proposed fix: retry the rename a few times with short waits, or move the old folder aside before the swap. The offline tests give each run its own raw folder in the meantime.
+5. **Tests on this run's tables: fixed.** The workflow runs `pytest tests/test_page.py` again after the pipeline and dashboard, so the numbers about to be published are checked.
+5a. **Windows folder swap: fixed 2026-10-03.** Extract deleted `data/raw/{season}/` and renamed the new download into place; Windows sometimes refused the rename while antivirus or indexing still held the old folder (about 1 in 14 back-to-back test runs). `extract._swap_in` now retries up to 5 times (2 s at most) and then stops with a clear message; the offline tests reuse one raw folder again and passed 6 runs in a row. Never seen in real runs; can't happen on GitHub's Linux machines.
 6. **Sleeper's API is unofficial.** Shape changes surface as failed checks, without notice.
 7. **Label placement is a heuristic** (`charts.js`): crowded luck charts could still overlap in some weeks. Check new weeks at 390px.
 8. **The page depends on two CDNs** (Google Fonts, cdn.plot.ly). If Plotly fails to load, each chart shows its one-sentence text summary instead. Loading fonts from Google also tells Google each visitor's IP address; self-hosting the fonts would remove both.
@@ -203,30 +214,23 @@ Ordered by impact on an unattended weekly job.
 11. **Posted numbers can change** after stat corrections (deliberate full recompute; explained in "How this works").
 12. **Near-ties at the top** of the power rankings (#1 and #2 both show 57.8 through week 3).
 
-## 9. Plan: Phase 4 (automation)
+## 9. Next: Phase 5 (extras)
 
-Propose this plan to the owner and get the section 7 answers before starting. In order:
+Not planned yet. The roadmap in `CLAUDE.md` lists playoff odds (a simulation), past seasons, and posting to the league chat. Ask the owner which comes first, as numbered questions with a recommendation, before planning. What each needs:
 
-1. **Fix risk 1** (season start date) with tests, including one where `/state/nfl` describes the next season.
-2. **Pin dependencies** (risk 2): exact versions from section 3 in `pyproject.toml` (or a lock file installed with `pip install -r`), `jupyterlab` and `pytest` moved to a `[dev]` extra, `requires-python` matching the Actions version. Prove it with a fresh virtual environment: install, `pytest`, pipeline, dashboard.
-3. **Add `.github/workflows/weekly.yml`:**
-   - Triggers: the agreed `schedule` (section 7) and `workflow_dispatch` (a manual run button). One run at a time (`concurrency`).
-   - Build job: check out → set up Python with a pip cache → install → `pytest` → `python -m sleeper_dash.pipeline` → `python -m sleeper_dash.dashboard` → `pytest tests/test_page.py` (risk 5) → if approved, commit changed `data/processed/*.csv` only → upload `site/` as the Pages artifact.
-   - Deploy job: `actions/deploy-pages` to the `github-pages` environment.
-   - Any failed step stops the job before deploy (rule 8); the last good page stays live.
-   - Permissions: `contents: read` (or `write` if committing CSVs), `pages: write`, `id-token: write`.
-4. **The owner switches the repo's Pages source to "GitHub Actions"** (Settings → Pages). This is a repository-settings change: ask the owner to do it, or ask before doing it.
-5. **First run by hand** (`workflow_dispatch`); watch it; open the live URL at 390 and 1280px in light and dark; share the URL with the owner.
-6. Update `CLAUDE.md`, `docs/CODEBASE.md` (workflow module, data flow), and this file; mark Phase 4 complete.
+- **Playoff odds:** a new section after the ladder (UI_GUIDE.md); a definition written into METRICS_SPEC.md with the owner first (model for future scores, number of simulations, tie-breakers, the median game); the remaining schedule is already in `schedule`. Most useful from mid-season.
+- **Past seasons:** the previous league (`1243747994637963265`) through `previous_league_id`; a `season_start_dates` line for each season (risk 1); extract and the pipeline run per season (`data/raw/{season}/` already separates them); the page needs a season selector; `winners_bracket` for playoff results.
+- **Posting to the league chat:** decide where and how (open product question); Sleeper's API is read-only, so it needs another channel.
 
 ## 10. Commit history
 
-Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 runs from `487e76c` (season-to-date lineup efficiency) to `Phase 3: dashboard`. Use `git log --oneline` for the full list.
+Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 runs from `487e76c` (season-to-date lineup efficiency) to `8966259 Phase 3: dashboard`; Phase 4 runs from `8dee0e8` (season start date in config) to `Phase 4: automation`. From Phase 4 on, `github-actions[bot]` commits refreshed tables ("Weekly refresh: tables through week N"). Use `git log --oneline` for the full list.
 
 ## 11. First steps for the new session
 
-1. Read `CLAUDE.md`, this file, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`.
-2. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **348 passed**) and `git status` (expect clean, in sync with `origin/main`).
-3. Refresh: `.venv\Scripts\python.exe -m sleeper_dash.pipeline` (every check passes; 9 awards a week; week 4 appears once Sleeper has scored it), then `.venv\Scripts\python.exe -m sleeper_dash.dashboard`. Commit and push any changed processed CSVs.
-4. If week 4 has arrived, check the page in the browser pane (section 3) at 360, 390, 1024 and 1280px, paying attention to the week-4 items in section 7.
-5. Then section 9: ask the owner the section 7 Phase 4 questions, then start Phase 4.
+1. `git pull` (the bot commits to `main`).
+2. Read `CLAUDE.md`, this file, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`.
+3. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **397 passed**; a `test_dependencies` failure means the local environment drifted from the pins, see `docs/CODEBASE.md` "Dependencies") and `git status` (clean, in sync).
+4. Check the weekly job: `gh run list --workflow weekly.yml --limit 5`. Any failure comes first (section 7a).
+5. If week 4 or later has arrived, check the live page at 360, 390, 1024 and 1280px in light and dark (section 3), paying attention to the section 7 items.
+6. Then section 9: ask the owner which Phase 5 extra comes first.

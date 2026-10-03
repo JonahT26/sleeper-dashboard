@@ -17,17 +17,14 @@ from sleeper_dash.validate import KEYS
 def run_pipeline(monkeypatch, tmp_path):
     """run_pipeline(fake, folder="a", start_date=...) runs pipeline.run() with every file under tmp_path/folder.
 
-    Runs in the same folder share the saved tables (data/processed/), as consecutive weekly runs
-    do. Each run gets its own raw folder, which every run re-downloads anyway; on Windows,
-    replacing a just-deleted raw folder in a temp directory is sometimes refused (see HANDOFF.md).
+    Runs in the same folder share every file, as consecutive weekly runs do: the second run
+    replaces the first one's raw folder (extract's swap) and compares with its saved tables.
     """
     metrics = load_config().metrics
-    runs = []
 
     def run(fake, folder="a", start_date=START_DATE):
         root = tmp_path / folder
-        runs.append(folder)
-        raw = root / f"raw_{len(runs)}"
+        raw = root / "raw"
         monkeypatch.setattr(api, "get", fake.get)
         monkeypatch.setattr(api, "PLAYERS_CACHE_PATH", root / "cache" / "players_nfl.json")
         monkeypatch.setattr(extract, "RAW_DIR", raw)

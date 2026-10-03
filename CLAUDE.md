@@ -39,9 +39,10 @@ Scoring settings, roster slots, playoff start week, and whether the league plays
 ## Commands
 
 ```powershell
+git pull                           # start of every session: the weekly workflow's bot commits refreshed tables to main
 .venv\Scripts\Activate.ps1         # start of every session, from the project folder (Mac/Linux: source .venv/bin/activate)
 pip install -e ".[dev]"            # one-time setup, or after changing pyproject.toml (dev adds pytest and jupyterlab)
-python -m sleeper_dash.pipeline    # full refresh: extract → transform → data checks → metrics → metric checks → save; summary lists every check; exit 1 on failure
+python -m sleeper_dash.pipeline    # full refresh: extract → transform → data checks → metrics → metric checks → save; summary lists every check, whether the week moved, and which tables changed; exit 1 on failure
 python -m sleeper_dash.extract     # step 1 only: re-download raw JSON into data/raw/{season}/ and refresh the players cache
 python -m sleeper_dash.transform   # step 2 only: rebuild tables from saved files, validate, save, print detailed reports
 python -m sleeper_dash.lineup      # rebuild optimal lineups from the saved tables; print latest week, season, and Sleeper max-points check
@@ -56,6 +57,8 @@ python -m http.server 8766 --directory site   # view the built page at http://lo
 python -m sleeper_dash.dashboard.explainer  # print the "How this works" draft, numbers filled in from config.yaml
 pytest                             # run all tests
 jupyter lab                        # open the notebooks
+gh workflow run weekly.yml --ref main         # run the weekly refresh on GitHub now (same as the Actions tab's "Run workflow" button)
+gh run list --workflow weekly.yml --limit 5   # recent weekly runs and whether they passed
 ```
 
 Keep this list current as commands are added.
@@ -65,26 +68,28 @@ Keep this list current as commands are added.
 1. **Full refresh every run.** The pipeline re-pulls and recomputes the whole season each time, so Sleeper stat corrections and model changes flow through everywhere. No incremental appends.
 2. **Raw before tidy.** Save untouched API JSON to `data/raw/` first, then transform from those files. Transform and metric code never calls the API.
 3. **Tests never hit the network.** Use saved fixtures in `tests/fixtures/`.
-4. **Config, not constants.** League ID, season, model weights, and thresholds live in `config.yaml`.
+4. **Config, not constants.** League ID, season, season start dates, model weights, and thresholds live in `config.yaml`.
 5. **IDs are strings:** `league_id`, `user_id`, `owner_id`, `player_id`, `transaction_id`, `draft_id`. `roster_id` is a small integer and is the team key everywhere.
 6. **Be polite to Sleeper.** Stay far below 1,000 calls per minute. Fetch `/players/nfl` at most once per day and cache it.
 7. **No secrets are needed.** If anything seems to need a key, token, or password, stop and ask me.
 8. **Validate before publishing.** Every pipeline run ends with reconciliation checks. A failed check stops the run with a clear message. Never publish numbers that fail.
 9. **Metrics are pure functions:** DataFrames in, DataFrames out, no file or network access inside them.
-10. **Commit after each working step** with a short plain message, e.g. `Add team_weeks table`, then push to GitHub right away (owner's standing approval). The repo is public, so check that nothing private is staged before committing.
+10. **Commit after each working step** with a short plain message, e.g. `Add team_weeks table`, then push to GitHub right away (owner's standing approval). The repo is public, so check that nothing private is staged before committing. The weekly workflow also commits (refreshed `data/processed/` tables), so pull before starting work.
 
 ## Current status
 
-**Phase 3 — Dashboard: complete (2026-10-02).** Phase 4 — Automation is next (plan in `docs/HANDOFF.md` section 9). Update this section at the end of every phase.
+**Phase 4 — Automation: complete (2026-10-03).** Phase 5 — Extras is next; ask me which extra comes first (`docs/HANDOFF.md` section 9). Update this section at the end of every phase.
 
 **Starting a new session? Read `docs/HANDOFF.md` first.** It covers working style, environment quirks, the decisions log, open questions, and the next steps.
 
 Where things stand:
-- `python -m sleeper_dash.pipeline` runs a full refresh: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric invariant checks → save → re-check the saved files. Either group of checks stops the run before anything is saved. Weeks 1–3: every check passes, 23 API calls, ~6.5 seconds, and two consecutive runs give byte-identical outputs.
+- **Live at https://jonaht26.github.io/sleeper-dashboard/.** `.github/workflows/weekly.yml` runs every Tuesday and Thursday at 12:17 PM Eastern (and on demand): tests → pipeline → dashboard → page tests on the fresh tables → commit changed tables → publish to GitHub Pages. Any failure stops before publishing and GitHub emails me. Running it, failures, and the season-rollover checklist: `docs/HANDOFF.md` section 7a.
+- Python 3.14.7 and every package pinned (`.python-version`, `pyproject.toml`, `requirements-ci.txt`); tests check the installed versions match. Updating: `docs/CODEBASE.md` "Dependencies".
+- `python -m sleeper_dash.pipeline` runs a full refresh: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric invariant checks → save → re-check the saved files. Either group of checks stops the run before anything is saved. Weeks 1–3: every check passes, 23 API calls, ~7 seconds, and two consecutive runs give byte-identical outputs. A run with no new completed week succeeds and leaves every table unchanged unless Sleeper corrected a past score.
 - 11 tables in `data/processed/` (schemas in `docs/CODEBASE.md`): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule`, `lineups_optimal`, `lineups_optimal_players`, `metrics_team_weeks`, `metrics_season`, `power_rankings`, `awards`.
 - Every metric follows `docs/METRICS_SPEC.md` (owner-approved). Every weight and threshold is in `config.yaml` under `metrics:`.
 - `python -m sleeper_dash.dashboard` builds `site/index.html`: masthead with week selector, power rankings ladder (tap a row for its breakdown), weekly awards, five charts (luck, lineup efficiency, consistency, strength of schedule, rank history), and "How this works". Every completed week is in the page; no network calls except Google Fonts and the Plotly CDN; 27 KB compressed for weeks 1–3. Checked at 360, 390, 1024 and 1280px in light and dark mode.
-- 348 tests pass, including page-level tests (every number on the page equals the CSVs) and the UI_GUIDE quality floor. Notebooks: `01_data_check.ipynb`, `02_power_score_sensitivity.ipynb`.
+- 397 tests pass, locally and in GitHub Actions, including page-level tests (every number on the page equals the CSVs), the UI_GUIDE quality floor, and the whole pipeline run offline against a fake Sleeper league (season rollover, off-season, no new week, stat corrections). Notebooks: `01_data_check.ipynb`, `02_power_score_sensitivity.ipynb`.
 - To verify at week 15: whether Sleeper plays the median game in the playoffs, whether roster `wins`/`fpts`/`ppts` include playoff games, and how non-playoff teams appear in matchups.
 
 Roadmap:
@@ -92,7 +97,7 @@ Roadmap:
 - Phase 1: Data pull (raw extract, tidy tables, validation) — complete
 - Phase 2: Metrics (spec, optimal lineups, luck, consistency, schedule, power score, awards) — complete
 - Phase 3: Dashboard (static HTML per `docs/UI_GUIDE.md`) — complete
-- Phase 4: Automation (weekly GitHub Action, GitHub Pages)
+- Phase 4: Automation (weekly GitHub Action, GitHub Pages) — complete
 - Phase 5: Extras (playoff odds simulation, past seasons, posting to league chat)
 
 ## Decisions made
@@ -119,6 +124,8 @@ Roadmap:
 - **How this works** (owner, 2026-10-02): the draft was approved with no edits and is published; any wording change needs the owner's approval again.
 - **Phase 3 wrap-up** (owner, 2026-10-02): the guide's chalk-on-turf contrast corrected to 11.8:1; design-review fixes approved (ladder key "League average: 50"; rank-history team names cut to 14 characters on phones; reading text ~72 characters a line; compact award tiles on desktop; centred 1200px column). Details in `docs/UI_GUIDE.md` and `docs/HANDOFF.md` section 6.
 - **Hosting** (Claude, delegated by the owner, 2026-10-02): GitHub Pages publishes the built `site/` folder through a GitHub Actions workflow (Pages source: "GitHub Actions"), not from a branch or the `docs/` folder. `site/` is a build output and stays out of git; `docs/` stays internal.
+
+- **Automation** (owner, 2026-10-03): weekly runs Tuesday and Thursday 12:17 PM Eastern; the workflow commits refreshed tables back to the repo; Python 3.14.7 with every dependency pinned; failures email the owner (GitHub's default). Season start dates are stored per season in `config.yaml`, never taken from Sleeper's current-season state, so off-season runs and past seasons work. Details in `docs/HANDOFF.md` section 6.
 
 ## Open decisions
 

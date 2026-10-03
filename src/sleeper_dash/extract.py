@@ -9,11 +9,14 @@ leaves a half-updated season behind.
 
 import json
 import shutil
+import time
 
 from sleeper_dash import api
 from sleeper_dash.config import PROJECT_ROOT, load_config
 
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
+SWAP_ATTEMPTS = 5
+SWAP_WAIT_SECONDS = 0.2  # waits 0.2, 0.4, 0.6, 0.8 s between tries: 2 s at most
 
 
 class ExtractError(Exception):
@@ -49,6 +52,27 @@ def future_schedule_weeks(league, last_completed_week):
     Their matchups (0 points so far) give the remaining schedule for strength of schedule.
     """
     return list(range(last_completed_week + 1, league["settings"]["playoff_week_start"]))
+
+
+def _swap_in(staging_dir, season_dir):
+    """Replace data/raw/{season}/ with the finished staging folder.
+
+    On Windows a folder that was just deleted can stay locked for a moment (antivirus or
+    search indexing still has it open), so the rename is refused. Retry briefly before giving up.
+    """
+    for attempt in range(1, SWAP_ATTEMPTS + 1):
+        try:
+            if season_dir.exists():
+                shutil.rmtree(season_dir)
+            staging_dir.rename(season_dir)
+            return
+        except PermissionError as error:
+            if attempt == SWAP_ATTEMPTS:
+                raise ExtractError(
+                    f"Couldn't replace {season_dir} with the new download after {SWAP_ATTEMPTS} tries ({error}). "
+                    "Close anything using that folder and run again."
+                ) from error
+            time.sleep(SWAP_WAIT_SECONDS * attempt)
 
 
 def _record_count(data):
@@ -109,9 +133,7 @@ def extract(config):
     for week in future_schedule_weeks(league, last_week):
         fetch(f"{league_path}/matchups/{week}", f"schedule/week_{week:02d}.json")
 
-    if season_dir.exists():
-        shutil.rmtree(season_dir)
-    staging_dir.rename(season_dir)
+    _swap_in(staging_dir, season_dir)
 
     return {
         "season_dir": season_dir,

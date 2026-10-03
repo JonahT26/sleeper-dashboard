@@ -51,3 +51,45 @@ def test_missing_last_scored_leg_is_an_error():
 def test_future_schedule_covers_the_rest_of_the_regular_season(last_week, expected):
     league = {"settings": {"playoff_week_start": 15}}
     assert future_schedule_weeks(league, last_week) == expected
+
+
+# --- replacing data/raw/{season}/ (Windows can briefly refuse it) ------------------------------
+
+def _folders(tmp_path):
+    from sleeper_dash import extract
+
+    staging, season = tmp_path / "2026.partial", tmp_path / "2026"
+    for folder, text in ((staging, "new"), (season, "old")):
+        folder.mkdir()
+        (folder / "league.json").write_text(text, encoding="utf-8")
+    return extract, staging, season
+
+
+def test_swap_retries_when_windows_briefly_refuses(tmp_path, monkeypatch):
+    extract, staging, season = _folders(tmp_path)
+    real_rename, refusals, waits = type(staging).rename, [2], []
+
+    def flaky_rename(self, target):
+        if refusals[0]:
+            refusals[0] -= 1
+            raise PermissionError(5, "Access is denied")
+        return real_rename(self, target)
+
+    monkeypatch.setattr(type(staging), "rename", flaky_rename)
+    monkeypatch.setattr(extract.time, "sleep", waits.append)
+    extract._swap_in(staging, season)
+    assert (season / "league.json").read_text(encoding="utf-8") == "new" and not staging.exists()
+    assert waits == [0.2, 0.4]
+
+
+def test_swap_gives_up_with_a_clear_error(tmp_path, monkeypatch):
+    extract, staging, season = _folders(tmp_path)
+
+    def refuse(self, target):
+        raise PermissionError(5, "Access is denied")
+
+    monkeypatch.setattr(type(staging), "rename", refuse)
+    monkeypatch.setattr(extract.time, "sleep", lambda seconds: None)
+    with pytest.raises(ExtractError, match="after 5 tries"):
+        extract._swap_in(staging, season)
+    assert (staging / "league.json").exists()  # the new download is kept for a rerun to replace
