@@ -161,9 +161,7 @@ def test_css_tokens_are_the_guides_colours(token, light, dark):
 # Ratios stated in UI_GUIDE.md "Color" (the token table and the contrast notes under it), to the precision stated.
 STATED = [
     ("ink on chalk", "#15201A", "#F6F8F4", 15.7),
-    pytest.param("chalk on turf", "#F6F8F4", "#18392B", 11.9, id="chalk on turf", marks=pytest.mark.xfail(
-        strict=True, reason="The guide says 11.9:1; the true ratio is 11.85:1, which rounds to 11.8. Still far above AA. "
-                            "Pending the owner: correct the guide to 11.8:1 (2026-10-02).")),
+    ("chalk on turf", "#F6F8F4", "#18392B", 11.8),  # the guide said 11.9 until 2026-10-02; corrected (owner)
     ("muted on chalk", "#5B6B61", "#F6F8F4", 5.3),
     ("up on chalk", "#1D6FB8", "#F6F8F4", 4.9),
     ("down on chalk", "#B42318", "#F6F8F4", 6.2),
@@ -174,7 +172,7 @@ STATED = [
 ]
 
 
-@pytest.mark.parametrize("pair, foreground, background, stated", STATED, ids=[s[0] if isinstance(s, tuple) else s.id for s in STATED])
+@pytest.mark.parametrize("pair, foreground, background, stated", STATED, ids=[s[0] for s in STATED])
 def test_the_contrast_ratios_stated_in_the_guide_are_true(pair, foreground, background, stated):
     places = len(str(stated).split(".")[1])
     assert contrast(foreground, background) == pytest.approx(stated, abs=0.5 * 10 ** -places + 1e-9)

@@ -30,7 +30,7 @@ The look borrows from the physical game, not from SaaS dashboards: turf green, c
 | `--down` | `#B42318` | `#F07060` | Rank falling |
 | `--bar` | `#9AA79F` | `#5E7066` | Default bars and points for "all other teams" |
 
-Contrast notes, checked against WCAG: ink on chalk 15.7:1, chalk on turf 11.9:1, muted on chalk 5.3:1, up 4.9:1, down 6.2:1. **Light-mode pylon is 3.4:1, so use it only for large text (24px+ bold) and fills, never for small text.**
+Contrast notes, checked against WCAG: ink on chalk 15.7:1, chalk on turf 11.8:1, muted on chalk 5.3:1, up 4.9:1, down 6.2:1. **Light-mode pylon is 3.4:1, so use it only for large text (24px+ bold) and fills, never for small text.**
 
 Define colors as CSS custom properties on `:root`, with a `@media (prefers-color-scheme: dark)` override.
 

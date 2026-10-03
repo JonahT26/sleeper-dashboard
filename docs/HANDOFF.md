@@ -17,7 +17,7 @@ At the end of this session (NFL week 4 in progress, so weeks 1–3 are the compl
 
 - `python -m sleeper_dash.pipeline`: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric checks → save 11 tables → re-check the saved CSVs. 14 of 14 checks pass, 23 API calls, ~7 seconds, processed CSVs byte-identical across runs. A successful run also writes `data/cache/pipeline_run.json` (finish time, league name, season, weeks, and league facts: 12 teams, median game on, playoffs from week 15).
 - `python -m sleeper_dash.dashboard`: builds `site/index.html` from the saved CSVs and the run record. Sections, top to bottom: masthead with week selector, power rankings ladder (tap a row for its breakdown), weekly awards, five charts (Luck, Lineup efficiency, Consistency, Strength of schedule, Rank history), and "How this works". Every completed week is in the page; each week shows rankings, records, awards, and charts as of that week. 26 KB compressed (194 KB raw) for weeks 1–3.
-- **345 tests pass, plus 1 expected failure** (section 7). Git clean and in sync with `origin/main` at `a733794`.
+- **346 tests pass.** Git clean and in sync with `origin/main` at `a733794`.
 
 ## 2. Working with the owner
 
@@ -83,7 +83,7 @@ Dev/
 │       ├── explainer.py          "How this works" copy, numbers from config.yaml (owner-approved)
 │       └── templates/            index.html.j2, styles.css, page.js (week selector), charts.js (drawing,
 │                                 highlight, label placement); CSS and JS are inlined into the page
-├── tests/                        345 tests + 1 expected failure, one file per module, plus page-level
+├── tests/                        346 tests, one file per module, plus page-level
 │                                 test_page and test_quality_floor; conftest blocks the network
 ├── data/raw/, data/cache/        GITIGNORED
 ├── data/processed/               COMMITTED, public (owner decision)
@@ -139,6 +139,7 @@ Dev/
 | 2026-10-02 | Strength of schedule: when every remaining value is 0.0, one panel plus a subtitle note instead of empty bars | Claude | UI_GUIDE.md |
 | 2026-10-02 | Page-weight budget (1 MB) counts compressed bytes | Owner (option 1) | UI_GUIDE.md, CLAUDE.md |
 | 2026-10-02 | "How this works" generated from `config.yaml` at build time | Owner | explainer.py |
+| 2026-10-02 | UI_GUIDE.md contrast note corrected: chalk on turf is 11.8:1 (was stated as 11.9) | Owner | UI_GUIDE.md |
 | 2026-10-02 | "How this works" approved with no edits and published; boom/bust sentence kept for a future display; 2.4–97.6 range kept; awards not explained; future wording changes need approval | Owner | UI_GUIDE.md |
 
 ## 7. Open questions and assumptions to verify
@@ -148,8 +149,6 @@ Dev/
 **Verify at week 4 (first new data since the dashboard was built):** the Strength of schedule chart should switch to two panels (remaining no longer all 0.0); luck labels and the efficiency chart should still read cleanly at 390px with new values; the pipeline should commit four weeks of processed CSVs.
 
 **Known gaps:** Sleeper's `ppts` sits 0.02–4.00 points below our optimal lineups for 7 teams (soft check only); FAAB and picks traded inside trades aren't in `transactions`; player positions describe today, not past weeks; `winners_bracket` not pulled (Phase 5).
-
-**Waiting on the owner:** UI_GUIDE.md says chalk on turf is 11.9:1; it is 11.85:1, so 11.8 to one decimal (still far above AA). Recommended: correct the guide to 11.8:1 and remove the expected-failure mark in `tests/test_quality_floor.py`.
 
 **Open product questions:**
 - Where league members see updates: bookmark only, or also a group-chat post (Phase 5).
@@ -188,7 +187,7 @@ Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 r
 ## 11. First steps for the new session
 
 1. Read `CLAUDE.md`, this file, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`.
-2. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **345 passed, 1 xfailed**) and `git status` (expect clean, in sync with `origin/main`).
+2. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **346 passed**) and `git status` (expect clean, in sync with `origin/main`).
 3. Refresh: `.venv\Scripts\python.exe -m sleeper_dash.pipeline` (every check passes; 9 awards a week; week 4 appears once Sleeper has scored it), then `.venv\Scripts\python.exe -m sleeper_dash.dashboard`. Commit and push any changed processed CSVs.
 4. Start the `dashboard` preview server and check the page at 390px and 1280px (section 3), paying attention to the week-4 items in section 7.
 5. Then section 9: the owner's final Phase 3 review, and the Phase 4 plan.
