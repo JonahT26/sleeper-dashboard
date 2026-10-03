@@ -126,6 +126,7 @@ Dev/
 | 2026-10-02 | Season efficiency stored in `metrics_season` with season points left on the bench alongside it | Claude (spec §3 defines both) | CODEBASE.md |
 | 2026-10-02 | Prototype review of the masthead and ladder: mobile first; bars from the league average; breakdown with gap-from-average bars and a "Score" column; "Head-to-head wins" label; two-digit rank column; latest week in the HTML at build time; "Updated" = pipeline run time | Owner | UI_GUIDE.md, METRICS_SPEC.md §2 and §6, CLAUDE.md |
 | 2026-10-02 | Fixed bar axes for the season (largest gap so far, rounded up) so bars compare across weeks | Claude | UI_GUIDE.md |
+| 2026-10-02 | Page-weight budget (1 MB) counts compressed bytes, what a visitor downloads | Owner | UI_GUIDE.md, CLAUDE.md |
 
 ## 7. Open questions and assumptions to verify
 
@@ -172,7 +173,7 @@ Follow `docs/UI_GUIDE.md` for everything user-facing.
    - **Done 2026-10-02:** `theme.py` (shared Plotly theme, colours as CSS tokens), `charts.py`, and `templates/charts.js`: Luck and Lineup efficiency, following the week selector.
    - **Done 2026-10-02:** consistency, strength of schedule, and rank history charts; tapping a team name in any chart moves the highlight.
    - **Next:** "How this works" (the owner reviews the copy before it goes live).
-   - **Open question for the owner: page weight.** With all five charts a synthetic 17-week season is ~1.2 MB raw (the ladders are 518 KB of it) but ~115 KB as actually downloaded (compressed). `test_a_full_17_week_season_stays_under_1_mb_raw` is marked as an expected failure until the owner decides. Either count compressed bytes against the budget, or slim the earlier weeks.
+   - **Page weight (settled 2026-10-02):** the 1 MB budget counts compressed bytes. A synthetic 17-week season is ~1.2 MB raw, ~115 KB compressed.
 4. Draft the "How this works" copy and show it to the owner for review before it is published.
 5. Add `python -m sleeper_dash.dashboard`, tests (sections present, no external calls besides fonts and the Plotly CDN, page weight under 1 MB), and preview the page in the browser pane at phone and desktop widths.
 6. Phase 4 then adds the GitHub Actions workflow: run the pipeline, build `site/`, publish to Pages (fix risk 1 and pin dependencies first).

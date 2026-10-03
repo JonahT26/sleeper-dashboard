@@ -160,20 +160,13 @@ def test_only_google_fonts_and_plotly_are_loaded_from_outside_the_page():
     assert '<script src="https://cdn.plot.ly/plotly-basic-' in page() and " defer>" in page()
 
 
-@pytest.mark.xfail(strict=True, reason="OPEN QUESTION FOR THE OWNER (2026-10-02): with all five charts a 17-week season is "
-                   "~1.2 MB raw but ~115 KB compressed. Decide whether the 1 MB budget counts compressed bytes or the page "
-                   "must be slimmed; then update this test. See docs/HANDOFF.md section 9.")
-def test_a_full_17_week_season_stays_under_1_mb_raw():
-    html = page(weeks=17)
-    assert len(html.encode("utf-8")) < 1_000_000
-
-
-def test_a_full_17_week_season_downloads_well_under_1_mb():
+def test_a_full_17_week_season_downloads_under_1_mb():
+    """The page-weight budget counts compressed bytes, what a visitor downloads (owner decision 2026-10-02)."""
     import gzip
 
     html = page(weeks=17)
     assert len(split(html)[1]) == 16
-    assert len(gzip.compress(html.encode("utf-8"))) < 250_000  # what a visitor downloads; GitHub Pages compresses pages
+    assert len(gzip.compress(html.encode("utf-8"))) < 1_000_000
 
 
 # --- Formatting -----------------------------------------------------------------------------

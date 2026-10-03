@@ -81,7 +81,7 @@ Where things stand:
 - `python -m sleeper_dash.pipeline` runs a full refresh: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric invariant checks → save → re-check the saved files. Either group of checks stops the run before anything is saved. Weeks 1–3: every check passes, 23 API calls, ~6.5 seconds, and two consecutive runs give byte-identical outputs.
 - 11 tables in `data/processed/` (schemas in `docs/CODEBASE.md`): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule`, `lineups_optimal`, `lineups_optimal_players`, `metrics_team_weeks`, `metrics_season`, `power_rankings`, `awards`.
 - Every metric follows `docs/METRICS_SPEC.md` (owner-approved): all-play record, expected wins and luck, lineup efficiency, consistency, strength of schedule, power score, weekly awards. Every weight and threshold is in `config.yaml` under `metrics:`.
-- 270 tests pass (plus 1 expected failure marking the open page-weight question). Notebooks: `01_data_check.ipynb` (data eyeballing), `02_power_score_sensitivity.ipynb` (power weights ±25%: rankings robust; only near-tied teams move).
+- 270 tests pass. Notebooks: `01_data_check.ipynb` (data eyeballing), `02_power_score_sensitivity.ipynb` (power weights ±25%: rankings robust; only near-tied teams move).
 - Phase 3 step 1 done (2026-10-02): `metrics_season` has season-to-date lineup efficiency (Σ actual ÷ Σ optimal) and points left on the bench, with their own metric check.
 - Phase 3 step 3 under way (2026-10-02): `python -m sleeper_dash.dashboard` builds `site/index.html` with the masthead, the power rankings ladder, and weekly awards, and all five charts (luck, lineup efficiency, consistency, strength of schedule, rank history) for every completed week (week selector, no network calls; charts use the shared theme in `dashboard/theme.py`). "How this works" is next.
 - To verify at week 15: whether Sleeper plays the median game in the playoffs, whether roster `wins`/`fpts`/`ppts` include playoff games, and how non-playoff teams appear in matchups.
@@ -114,9 +114,9 @@ Roadmap:
   - The power score's results weight stays at 0.20 for now.
 - **Dark-mode masthead** (owner, 2026-10-02): a `--masthead` colour token, `#18392B` in both light and dark modes, so the masthead stands out from the dark-mode page (`docs/UI_GUIDE.md` Color).
 - **Ladder design** (owner, prototype review 2026-10-02; details in `docs/UI_GUIDE.md` Ladder row): build mobile first; power score bars run from the league average (50), not 0–100; the tap-to-expand breakdown shows each component's "Score" (contribution), then its gap from average as a small bar and signed number, totalling "Power score"; the results component is labelled "Head-to-head wins" with the head-to-head record, while the ladder keeps the overall record; the latest week is written into the HTML at build time, and "Updated" is the pipeline's run time.
+- **Page weight** (owner, 2026-10-02): the 1 MB budget counts compressed bytes, what a visitor downloads.
 - **Hosting** (Claude, delegated by the owner, 2026-10-02): GitHub Pages publishes the built `site/` folder through a GitHub Actions workflow (Pages source: "GitHub Actions"), not from a branch or the `docs/` folder. `site/` is a build output and stays out of git; `docs/` stays internal.
 
 ## Open decisions
 
 - Where league members see updates: bookmark only, or also an automatic post to a group chat (Phase 5).
-- Page-weight budget (raised 2026-10-02): count the 1 MB against compressed bytes (a full season is ~115 KB compressed, ~1.2 MB raw), or slim the page to stay under 1 MB raw. Recommended: compressed.

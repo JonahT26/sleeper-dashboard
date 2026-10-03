@@ -187,7 +187,7 @@ One deliberate moment: on first load, the ladder's power-score bars grow out fro
 - Visible keyboard focus on every interactive element.
 - WCAG AA contrast for all text.
 - Meaning never carried by color alone.
-- Page weight under 1 MB excluding the Plotly CDN script.
+- Page weight under 1 MB excluding the Plotly CDN script, counted as compressed bytes, i.e. what a visitor downloads (owner decision 2026-10-02; a full season is ~115 KB compressed, ~1.2 MB raw).
 
 ## Avoid
 
