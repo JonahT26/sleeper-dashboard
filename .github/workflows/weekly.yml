@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.14"
+          python-version-file: .python-version # exact version, the same as local (3.14.7)
           cache: pip
           cache-dependency-path: requirements-ci.txt
 

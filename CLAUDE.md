@@ -24,7 +24,7 @@ Scoring settings, roster slots, playoff start week, and whether the league plays
 
 ## Stack
 
-- Python 3.14, installed as a package from `src/sleeper_dash/` (editable install)
+- Python 3.14.7 (`.python-version`), installed as a package from `src/sleeper_dash/` (editable install)
 - pandas, requests, pyarrow, pyyaml, scipy; pytest and jupyterlab as the `dev` extra. Exact versions pinned in `pyproject.toml` and `requirements-ci.txt` (see `docs/CODEBASE.md`, "Dependencies")
 - Plotly for charts and Jinja2 for the HTML template (Phase 3)
 - GitHub for version control, GitHub Actions for the weekly schedule, GitHub Pages for hosting (Phase 4)
