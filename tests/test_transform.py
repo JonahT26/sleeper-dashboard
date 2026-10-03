@@ -263,13 +263,25 @@ def test_season_start_date_agrees_with_sleeper_in_season():
 
 
 def test_season_start_date_that_disagrees_with_sleeper_stops_the_run():
-    with pytest.raises(ValueError, match="Sleeper says season 2026 started 2026-09-09"):
+    with pytest.raises(ValueError, match="Sleeper says it started 2026-09-09"):
         season_start_date(state("2026", "2026-09-09"), LEAGUE, "2026-09-10")
 
 
 def test_season_start_date_survives_sleeper_moving_to_the_next_season():
-    # Off-season: /state/nfl describes 2027, so config.yaml's date is used without a check.
+    # /state/nfl describes 2027, so config.yaml's date is used without a check.
     assert season_start_date(state("2027", "2027-09-08"), LEAGUE, "2026-09-09") == "2026-09-09"
+
+
+@pytest.mark.parametrize("reported", [None, ""])
+def test_season_start_date_when_sleeper_gives_no_date(reported):
+    # Off-season shapes of /state/nfl may leave the date out; that is not a disagreement.
+    assert season_start_date(state("2026", reported), LEAGUE, "2026-09-09") == "2026-09-09"
+    assert season_start_date({"season": "2026", "season_type": "off"}, LEAGUE, "2026-09-09") == "2026-09-09"
+
+
+def test_past_season_uses_its_own_date():
+    # Phase 5: rebuilding 2025 while /state/nfl describes 2026.
+    assert season_start_date(state("2026", "2026-09-09"), {"season": "2025"}, "2025-09-04") == "2025-09-04"
 
 
 def test_leg_that_disagrees_with_file_week_stops_the_run():

@@ -3,10 +3,12 @@
 # Keep the quotes: without them YAML reads the ID as a number.
 league_id: "1369887235935059968"
 season: 2026
-# First day of the NFL season (Sleeper's /state/nfl season_start_date). Update it with
-# season. Transactions before it count as preseason. While Sleeper still describes this
-# season, every run checks the two agree; after Sleeper moves on, this value is used alone.
-season_start_date: 2026-09-09
+# First day of each NFL season (Sleeper's /state/nfl season_start_date); week 1 transactions
+# before it count as preseason. Stored here because /state/nfl only describes the current
+# season and rolls over in the off-season. While Sleeper still describes a season, every run
+# checks the two agree. Add a line for each new season, and for past seasons (Phase 5).
+season_start_dates:
+  2026: 2026-09-09
 
 # Metric parameters. Definitions and the reasoning behind each value are in
 # docs/METRICS_SPEC.md; change a value there first, with the owner's approval.

@@ -10,7 +10,7 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard). A new Claude session
 | 1 · Data pull (raw extract, tidy tables, validation, pipeline) | **Complete** |
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
-| 4 · Automation (weekly GitHub Action, GitHub Pages) | **In progress** (started 2026-10-03). Owner's answers in section 6; risks 1 and 2 fixed; next: the workflow (section 9, step 3) |
+| 4 · Automation (weekly GitHub Action, GitHub Pages) | **In progress** (started 2026-10-03). Owner's answers in section 6; risks 1 and 2 fixed; workflow live and first manual run succeeded; next: check the live page (section 9, step 5), then docs |
 | 5 · Extras | Not started |
 
 At the end of Phase 3 (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
@@ -162,6 +162,8 @@ Dev/
 | 2026-10-03 | Season start date lives in `config.yaml` (`season_start_date`), checked against `/state/nfl` while Sleeper still describes the season (risk 1 fixed) | Owner | config.yaml, CODEBASE.md |
 | 2026-10-03 | Claude switches the Pages source to "GitHub Actions" with `gh` | Owner | — |
 | 2026-10-03 | Phase 4 plan (section 9) approved; commit and push after each step | Owner | — |
+| 2026-10-03 | Season start dates stored per season (`season_start_dates`), never derived from `/state/nfl`, so rollover and past seasons (Phase 5) work; deriving from the NFL calendar rejected (Sleeper's 2026 date isn't kickoff Thursday) | Owner (requirement), Claude (design) | config.yaml, CODEBASE.md |
+| 2026-10-03 | A run with no new completed week is a normal full refresh that succeeds; numbers change only through stat corrections; the summary reports whether the week moved and which tables changed, compared with the saved tables | Owner (requirement), Claude (reporting) | pipeline.py, CODEBASE.md |
 
 ## 7. Open questions and assumptions to verify
 
@@ -186,11 +188,12 @@ Dev/
 
 Ordered by impact on an unattended weekly job.
 
-1. **Off-season breakage: fixed 2026-10-03.** The season start date now comes from `config.yaml` and is only checked against `/state/nfl` while that still describes the league's season, so Sleeper's rollover to 2027 no longer stops transform. **Each new season, update `season` and `season_start_date` together** (config refuses a date outside the season).
+1. **Off-season breakage: fixed 2026-10-03.** Season start dates live in `config.yaml` `season_start_dates`, one per season, and never come from `/state/nfl`, which is only a cross-check while it describes the league's season and gives a date. Proven offline (`test_pipeline_offline`: Sleeper in 2026, the off-season, 2027's preseason, 2027 under way, no date) and on the real league (four `/state/nfl` variants, 14 of 14 checks, all 11 tables identical to the committed CSVs). **Each new season, change `season` and add its line to `season_start_dates`** (config refuses a season without one). Phase 5 needs a line for each past season; `/state/nfl` can't supply them, and Sleeper's 2026 date (2026-09-09) falls on a Wednesday, so confirm what Sleeper's date marks before filling in 2025.
 2. **Unpinned dependencies: fixed 2026-10-03.** Exact versions in `pyproject.toml`; `requirements-ci.txt` pins everything Actions installs; jupyterlab and pytest are the `dev` extra. Upgrades follow `docs/CODEBASE.md` "Dependencies" (a fresh install would otherwise have picked up newer MarkupSafe and tzdata releases already).
 3. **GitHub switches off scheduled workflows in public repos after 60 days with no repository activity.** A quiet stretch from mid-November would stop the weekly run without any error. Committing the refreshed CSVs from the workflow (section 7, question 3) prevents this.
 4. **Week 15 untested on real data** (section 7). A wrong assumption fails "Records match Sleeper" and stops the run: safe, but the page stops updating until fixed.
 5. **The tests in the workflow check the committed tables, not this run's.** `test_page` builds the page from `data/processed/` as committed. Run `pytest tests/test_page.py` again after the pipeline and dashboard steps, so the numbers about to be published are checked too.
+5a. **Windows: extract's raw-folder swap can be refused (found 2026-10-03, not fixed; awaiting the owner).** `extract.extract` deletes `data/raw/{season}/` and immediately renames the staging folder into its place. In the offline tests (temp folder, back-to-back runs) Windows refused the rename ("Access is denied", WinError 5) in about 1 of 14 runs, most likely because antivirus or indexing still held the just-deleted folder. Never seen in real local runs, and it can't happen on GitHub's Linux runners. The run fails safely (nothing saved). Proposed fix: retry the rename a few times with short waits, or move the old folder aside before the swap. The offline tests give each run its own raw folder in the meantime.
 6. **Sleeper's API is unofficial.** Shape changes surface as failed checks, without notice.
 7. **Label placement is a heuristic** (`charts.js`): crowded luck charts could still overlap in some weeks. Check new weeks at 390px.
 8. **The page depends on two CDNs** (Google Fonts, cdn.plot.ly). If Plotly fails to load, each chart shows its one-sentence text summary instead. Loading fonts from Google also tells Google each visitor's IP address; self-hosting the fonts would remove both.

@@ -76,13 +76,14 @@ def get(path):
         time.sleep(wait)
 
 
-def get_players(cache_path=PLAYERS_CACHE_PATH, max_age_hours=PLAYERS_MAX_AGE_HOURS):
+def get_players(cache_path=None, max_age_hours=PLAYERS_MAX_AGE_HOURS):
     """Return every NFL player from /players/nfl as a dict keyed by player_id.
 
     The response is large and Sleeper asks that it be fetched at most once a day,
     so it is cached to disk and only re-downloaded once the cache is older than
     max_age_hours.
     """
+    cache_path = cache_path or PLAYERS_CACHE_PATH
     if cache_path.exists():
         age_hours = (time.time() - cache_path.stat().st_mtime) / 3600
         if age_hours < max_age_hours:

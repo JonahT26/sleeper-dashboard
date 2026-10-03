@@ -18,12 +18,20 @@ in data/processed/. Exits with code 1 on any failure.
 A successful run also writes data/cache/pipeline_run.json (gitignored): when it finished,
 the league name, season, weeks, and the league facts the "How this works" copy quotes (number
 of teams, whether there's a median game, playoff start). The dashboard reads it.
+
+When there is no new completed week, the run is the same full refresh and succeeds. If Sleeper's
+data hasn't changed either, every saved table comes out byte-identical; only a stat correction
+to a past week changes numbers. The summary says which: whether the latest completed week moved
+since the tables already in data/processed/, and which tables changed.
 """
 
+import hashlib
 import json
 import sys
 import time
 from datetime import datetime, timezone
+
+import pandas as pd
 
 from sleeper_dash import extract, lineup, metrics, transform, validate
 from sleeper_dash.api import SleeperAPIError
@@ -51,6 +59,24 @@ def write_run_record(league, season, weeks, path=None):
     return record
 
 
+def saved_snapshot(season, names):
+    """What data/processed/ holds right now: {table: SHA-256 of its CSV} and the latest week saved for this season.
+
+    Read before and after saving, so a run can say whether anything changed. It compares with the
+    saved tables (committed to git) rather than an earlier run record, so it works on a fresh
+    GitHub Actions machine too.
+    """
+    folder = transform.PROCESSED_DIR
+    hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest()
+              for name in names if (path := folder / f"{name}.csv").exists()}
+    latest_week = None
+    if (folder / "team_weeks.csv").exists():
+        saved = pd.read_csv(folder / "team_weeks.csv", usecols=["season", "week"], encoding="utf-8-sig")
+        weeks = saved.loc[saved["season"] == season, "week"]
+        latest_week = int(weeks.max()) if len(weeks) else None
+    return hashes, latest_week
+
+
 def run():
     """Run every step and return a summary dict. Raises on any failure."""
     started = time.perf_counter()
@@ -65,7 +91,9 @@ def run():
     tables.update(metrics.build_metric_tables(tables, config.metrics))
     metric_results = validate.validate(tables, league, rosters, validate.run_metric_checks, "Metric checks")
 
+    before, previous_week = saved_snapshot(config.season, tables)
     transform.save_tables(tables)
+    after, _ = saved_snapshot(config.season, tables)
     saved = validate.load_tables()
     saved_results = validate.validate(saved, league, rosters, stage="Saved-file checks")  # the CSVs themselves pass
 
@@ -77,6 +105,8 @@ def run():
     return {
         "season": config.season,
         "weeks": weeks,
+        "previous_week": previous_week,  # latest week in data/processed/ before this run; None if none for this season
+        "changed_tables": None if not before else [name for name in tables if before.get(name) != after.get(name)],
         "api_calls": extracted["calls"],
         "rows": {name: len(table) for name, table in saved.items()},
         "data_checks": [(r.name, r.passed, r.detail) for r in data_results],
@@ -85,6 +115,26 @@ def run():
         "warnings": [f"roster {r.roster_id}: optimal points {r.warning}" for r in sleeper_check.dropna(subset=["warning"]).itertuples()],
         "seconds": time.perf_counter() - started,
     }
+
+
+def _week_change(latest, previous):
+    if latest is None:
+        return "none yet"
+    if previous is None:
+        return f"{latest} (no saved tables for this season before this run)"
+    if latest == previous:
+        return f"{latest} (no new completed week since the last run)"
+    if latest > previous:
+        return f"{latest} (new: the last run ended at week {previous})"
+    return f"{latest} (fewer weeks than the last run, which ended at week {previous})"
+
+
+def _table_change(changed, total):
+    if changed is None:
+        return "first save"
+    if not changed:
+        return "unchanged (every file identical)"
+    return f"{len(changed)} of {total} changed: {', '.join(changed)}"
 
 
 def _check_lines(checks):
@@ -105,6 +155,8 @@ def main():
     weeks = summary["weeks"]
     week_text = f"{weeks[0]}–{weeks[-1]}" if weeks else "none completed yet"
     print(f"Pipeline complete: season {summary['season']}, weeks {week_text}")
+    print(f"  Latest completed week:  {_week_change(weeks[-1] if weeks else None, summary['previous_week'])}")
+    print(f"  Tables vs the last run: {_table_change(summary['changed_tables'], len(summary['rows']))}")
     print(f"  API calls:  {summary['api_calls']}")
     print("  Tables saved:")
     for name, rows in summary["rows"].items():

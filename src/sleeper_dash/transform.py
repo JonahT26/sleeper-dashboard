@@ -12,7 +12,7 @@ from collections import defaultdict
 
 import pandas as pd
 
-from sleeper_dash.api import PLAYERS_CACHE_PATH
+from sleeper_dash import api
 from sleeper_dash.config import PROJECT_ROOT, load_config
 from sleeper_dash.validate import ValidationError, format_results, validate
 
@@ -37,22 +37,22 @@ EMPTY_SLOT = "0"
 EASTERN = "America/New_York"
 
 
-def read_raw(season, filename, raw_dir=RAW_DIR):
-    path = raw_dir / str(season) / filename
+def read_raw(season, filename, raw_dir=None):
+    path = (raw_dir or RAW_DIR) / str(season) / filename
     if not path.exists():
         raise FileNotFoundError(f"{path} is missing. Run `python -m sleeper_dash.extract` first.")
     with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
-def read_weekly(season, kind, raw_dir=RAW_DIR, required=True):
+def read_weekly(season, kind, raw_dir=None, required=True):
     """Return {week: records} from data/raw/{season}/{kind}/week_XX.json.
 
     kind is "matchups" or "transactions" (completed weeks only), or "schedule" (future
     regular-season weeks; the folder is absent once the regular season is over, so
     pass required=False).
     """
-    folder = raw_dir / str(season) / kind
+    folder = (raw_dir or RAW_DIR) / str(season) / kind
     if not folder.exists():
         if not required:
             return {}
@@ -64,12 +64,13 @@ def read_weekly(season, kind, raw_dir=RAW_DIR, required=True):
     return weeks
 
 
-def read_matchups(season, raw_dir=RAW_DIR):
+def read_matchups(season, raw_dir=None):
     return read_weekly(season, "matchups", raw_dir)
 
 
-def read_players(path=PLAYERS_CACHE_PATH):
+def read_players(path=None):
     """Load the cached /players/nfl file that extract keeps up to date."""
+    path = path or api.PLAYERS_CACHE_PATH
     if not path.exists():
         raise FileNotFoundError(f"{path} is missing. Run `python -m sleeper_dash.extract` first.")
     with open(path, encoding="utf-8") as f:
@@ -373,15 +374,18 @@ def build_transactions(league, transactions_by_week, players, season_start_date)
 
 
 def season_start_date(state, league, configured):
-    """The season's start date: config.yaml's value, checked against /state/nfl while that describes this season.
+    """The season's start date: config.yaml's value, cross-checked against /state/nfl when it can be.
 
-    /state/nfl only describes the current NFL season, so after Sleeper moves on to the next
-    season (the off-season) the configured date is used alone.
+    The date never comes from /state/nfl, which only describes the current NFL season: after
+    Sleeper moves on (off-season, next season, or a past season being rebuilt) the configured
+    date is used alone. While /state/nfl describes the league's season and gives a date, the
+    two must agree, which catches a typo in config.yaml.
     """
-    if str(state["season"]) == str(league["season"]) and state["season_start_date"] != configured:
+    reported = state.get("season_start_date")
+    if str(state.get("season")) == str(league["season"]) and reported and reported != configured:
         raise ValueError(
-            f"config.yaml season_start_date is {configured}, but Sleeper says season {league['season']} "
-            f"started {state['season_start_date']}. Correct config.yaml."
+            f"config.yaml says season {league['season']} started {configured}, but Sleeper says it "
+            f"started {reported}. Correct season_start_dates in config.yaml."
         )
     return configured
 
@@ -407,7 +411,7 @@ def _standings(team_weeks, teams):
     return table.reset_index()
 
 
-def save_table(df, name, processed_dir=PROCESSED_DIR):
+def save_table(df, name, processed_dir=None):
     """Write a table to data/processed/{name}.csv. List columns are stored as JSON text.
 
     Saved with a byte-order mark (utf-8-sig) so Excel shows non-English characters correctly.
@@ -416,6 +420,7 @@ def save_table(df, name, processed_dir=PROCESSED_DIR):
     for column in out.columns:
         if out[column].map(lambda v: isinstance(v, list)).any():
             out[column] = out[column].map(json.dumps)
+    processed_dir = processed_dir or PROCESSED_DIR
     processed_dir.mkdir(parents=True, exist_ok=True)
     path = processed_dir / f"{name}.csv"
     out.to_csv(path, index=False, encoding="utf-8-sig")
@@ -441,7 +446,7 @@ def build_tables(season, configured_start_date):
     return tables, league, rosters, start_date
 
 
-def save_tables(tables, processed_dir=PROCESSED_DIR):
+def save_tables(tables, processed_dir=None):
     """Save every table to data/processed/; returns {name: path}."""
     return {name: save_table(table, name, processed_dir) for name, table in tables.items()}
 
