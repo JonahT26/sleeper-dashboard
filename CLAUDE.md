@@ -111,7 +111,7 @@ Roadmap:
   - Nail-biter is enabled (nine weekly awards).
   - The power score's results weight stays at 0.20 for now.
 - **Dark-mode masthead** (owner, 2026-10-02): a `--masthead` colour token, `#18392B` in both light and dark modes, so the masthead stands out from the dark-mode page (`docs/UI_GUIDE.md` Color).
-- **Ladder design** (owner, prototype review 2026-10-02; details in `docs/UI_GUIDE.md` Ladder row): build mobile first; power score bars run from the league average (50), not 0–100; the tap-to-expand breakdown shows each component's gap from average as a small bar plus its "Score" (contribution), totalling "Power score"; the results component is labelled "Head-to-head wins" with the head-to-head record, while the ladder keeps the overall record; the latest week is written into the HTML at build time, and "Updated" is the pipeline's run time.
+- **Ladder design** (owner, prototype review 2026-10-02; details in `docs/UI_GUIDE.md` Ladder row): build mobile first; power score bars run from the league average (50), not 0–100; the tap-to-expand breakdown shows each component's "Score" (contribution), then its gap from average as a small bar and signed number, totalling "Power score"; the results component is labelled "Head-to-head wins" with the head-to-head record, while the ladder keeps the overall record; the latest week is written into the HTML at build time, and "Updated" is the pipeline's run time.
 - **Hosting** (Claude, delegated by the owner, 2026-10-02): GitHub Pages publishes the built `site/` folder through a GitHub Actions workflow (Pages source: "GitHub Actions"), not from a branch or the `docs/` folder. `site/` is a build output and stays out of git; `docs/` stays internal.
 
 ## Open decisions

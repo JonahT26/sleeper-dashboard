@@ -118,13 +118,15 @@ Settled in the prototype review with the owner, 2026-10-02.
 - **Power score bar measured from the league average** (owner decision 2026-10-02, replacing a 0–100 bar on which every team looked about half full): a thin bar running right (above average) or left (below average) from a centre line at 50, plus the value to 1 decimal place. `--bar`, with the #1 team in `--pylon`. One fixed axis for every week of the season: the largest gap from 50 in any week so far, rounded up to 5, 10, 15, 20, 25, 30, 40 or 50 points (±15 through week 3). A one-line key above the ladder says that 50 is the league average. Two teams can show the same value (e.g. both 57.8); the order still follows the unrounded score, and no tie marker is shown (owner decision 2026-10-02).
 - **Tapping a row expands its breakdown** (the one place an expand animation is used), a small table so anyone can see why a team ranks where it does:
 
-  | Component (weight) | vs average | Score |
+  | Component (weight) | Score | vs average |
   |---|---|---|
-  | Season scoring (35%), "141.9 points a week" | small bar from zero, then +2.6 | 20.1 |
-  | Recent form (25%), "141.9 points a week, last 3 weeks" | +1.8 | 14.3 |
-  | Roster strength (20%), "156.5 points a week with the best lineup" | +1.6 | 11.6 |
-  | Head-to-head wins (20%), "Won 1 of 3" | −0.7 | 9.3 |
-  | **Power score** | **+5.3** | **55.3** |
+  | Season scoring (35%), "141.9 points a week" | 20.1 | small bar from zero, then +2.6 |
+  | Recent form (25%), "141.9 points a week, last 3 weeks" | 14.3 | +1.8 |
+  | Roster strength (20%), "156.5 points a week with the best lineup" | 11.6 | +1.6 |
+  | Head-to-head wins (20%), "Won 1 of 3" | 9.3 | −0.7 |
+  | **Power score** | **55.3** | **+5.3** |
+
+  Column order is fixed: Score comes before vs average (owner decision 2026-10-02).
 
   - "Score" is each component's contribution (weight × component score); the four add up to the power score. The owner keeps it as the transparent part of the scoring (decision 2026-10-02).
   - "vs average" is the contribution minus an average team's (50 × weight), with a sign, plus a small bar running left or right from zero. All components and teams share one fixed axis for the season (rounded up to 1, 2, 3, 4, 5, 6, 8, 10, 12, 15 or 20; ±6 through week 3), so bars compare across rows. The four add up to the power score minus 50. These replace the stacked bar first specified, whose segments were dominated by the weights and looked the same for every team (owner decision 2026-10-02).
