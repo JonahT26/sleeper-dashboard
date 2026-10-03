@@ -18,7 +18,7 @@ The look borrows from the physical game, not from SaaS dashboards: turf green, c
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `--turf` | `#18392B` | `#0F1F17` | Masthead band; dark-mode page background |
+| `--turf` | `#18392B` | `#0F1F17` | Masthead band; dark-mode page background. **Pending owner approval (2026-10-02):** a `--masthead` token, `#18392B` in both modes, so the dark-mode masthead stands out from the `#0F1F17` page (1.35:1 step; chalk text 10.7:1, muted text 5.4:1) |
 | `--chalk` | `#F6F8F4` | `#E8EDE9` | Light-mode page background; dark-mode text |
 | `--ink` | `#15201A` | `#E8EDE9` | Body text |
 | `--muted` | `#5B6B61` | `#9DADA3` | Secondary text, captions, axis labels |
@@ -61,7 +61,7 @@ Section order, top to bottom:
 6. **Consistency:** weekly score spread per team
 7. **Strength of schedule:** played and remaining
 8. **Rank history:** bump chart across weeks
-9. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section.
+9. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section. **The owner reviews this copy before it is published** (decision 2026-10-02).
 
 Phase 5 adds a **Playoff odds** section after the ladder.
 
@@ -108,16 +108,16 @@ Max content width 1200px, left-aligned text throughout. Numbers right-aligned in
 ### Ladder row
 
 - Rank numeral: Barlow Condensed 700, 48px, `--ink`. The #1 numeral alone uses `--pylon`.
-- Team name (600 weight) with the manager's display name below it in `--muted`.
+- Team name (600 weight) with the manager's display name (Sleeper username) below it in `--muted`. Owner confirmed 2026-10-02: usernames stay on the public page.
 - Movement: `▲2` in `--up`, `▼1` in `--down`, `–` in `--muted` for no change. Always arrow plus number; never color alone.
 - Record and all-play record on one line, separated by a comma.
-- Power score as a thin horizontal bar (`--bar`, with the #1 team in `--pylon`) plus the value.
+- Power score as a thin horizontal bar (`--bar`, with the #1 team in `--pylon`) plus the value, to 1 decimal place. Two teams can show the same value (e.g. both 57.8); the order still follows the unrounded score, and no tie marker is shown (owner decision 2026-10-02).
 - Tapping a row expands it to show each power score component's contribution as a small stacked bar, so anyone can see why a team ranks where it does. This is the one place an expand animation is used.
 - Built as a semantic `<table>` or `<ol>` so screen readers announce ranks correctly.
 
 ### Award tile
 
-Award name, team name, the number, and a one-line caption, e.g. "Left 38.4 points on the bench." Captions are where personality is allowed. Keep them factual and specific; the number does the joking.
+Award name, team name, the number, and a one-line caption, e.g. "Left 38.4 points on the bench." Captions are where personality is allowed. Keep them factual and specific; the number does the joking. Nine awards are enabled (2026-10-02), so in the 2-column mobile grid the last tile sits alone on its row.
 
 ### Week selector
 
@@ -154,6 +154,7 @@ Specific charts:
 - Sentence case everywhere. No all-caps labels or tracked-out eyebrow text above headings.
 - Name things by what managers understand ("Points left on the bench"), not by how the code works ("bench_points_lost").
 - Empty or missing data says what happened and when it'll resolve: "Week 6 results post Tuesday morning."
+- **Sections whose metric isn't available yet are hidden entirely**, with no placeholder (owner decision 2026-10-02). With the current settings, Consistency and Strength of schedule appear from week 3 (`metrics.consistency.min_weeks`, `metrics.schedule.min_weeks`).
 
 ## Motion
 

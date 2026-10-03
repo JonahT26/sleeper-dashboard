@@ -33,6 +33,7 @@ metrics:
       - heartbreaker
       - robbery
       - blowout
+      - nail_biter
       - bench_blunder
       - mvp
       - pickup_of_the_week

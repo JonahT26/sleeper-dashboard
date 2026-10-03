@@ -32,7 +32,7 @@ data/processed/*.csv                                  all 11 tables saved only n
 dashboard/  (Phase 3) ► site/index.html               static page
     │
     ▼
-GitHub Pages (Phase 4)                                rebuilt every Tuesday by GitHub Actions
+GitHub Pages (Phase 4)                                GitHub Actions builds site/ and publishes it (not committed)
 ```
 
 `python -m sleeper_dash.pipeline` runs every step in order as a full refresh: extract → transform → data checks → metrics (optimal lineups and every metric table) → metric checks → save → re-read and re-check the saved CSVs. Data checks and metric checks each stop the run on any failure, before anything is saved. The summary lists tables and row counts, every data and metric check with PASS/FAIL, the saved-file re-check, soft-check warnings (e.g. optimal points vs Sleeper's max points) that never stop the run, API calls, and run time (~6.5 seconds). Nothing is appended incrementally. Two back-to-back runs produce byte-identical raw and processed files (verified 2026-10-02 with every metric table in place: 35 of 35 files, SHA-256). Exit code 1 on any failure, leaving the last good tables in place.
@@ -79,7 +79,7 @@ sleeper-dashboard/
 ├── tests/
 │   ├── fixtures/                saved API responses for offline tests
 │   └── test_*.py
-├── site/                        Phase 3 build output
+├── site/                        Phase 3 build output (gitignored; GitHub Actions builds and publishes it to Pages)
 └── .github/workflows/weekly.yml Phase 4 schedule
 ```
 
@@ -373,6 +373,6 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 2: extract pulls the future regular-season schedule; transform builds the `schedule` table; `metrics/consistency.py` and `metrics/schedule.py` add consistency and strength-of-schedule columns; `metrics/__init__.py` combines all metric modules; two new validation checks (10 in total). Tests in `tests/test_consistency.py` and `tests/test_schedule.py`. Pipeline now makes 23 API calls through week 3.
 - Phase 2: `metrics/power.py` builds `power_rankings` (power score, rank, rank_change, raw components, one contribution column per component) as of every completed week; eleventh validation check. Tests in `tests/test_power.py`, including a hand-worked example and the spec's ranking invariances (zero weight, any `shrink_weeks`).
 - Phase 2: pipeline reordered to extract → transform → data checks → metrics → metric checks → save, so metric invariants stop a run before anything is saved; the summary lists every check by group. Two consecutive full runs gave byte-identical outputs (35 of 35 files).
-- Phase 2: `metrics/awards.py` builds the `awards` table (8 enabled awards per week; all 11 defined); twelfth validation check. Tests in `tests/test_awards.py`: every award's winner and caption, pickup history rules (trades, drafted players, waiver-then-traded, preseason, mid-week adds), ties, head-to-head ties, playoff weeks, config errors, and copy rules.
+- Phase 2: `metrics/awards.py` builds the `awards` table (8 enabled awards per week at first, 9 once Nail-biter was switched on; all 11 defined); twelfth validation check. Tests in `tests/test_awards.py`: every award's winner and caption, pickup history rules (trades, drafted players, waiver-then-traded, preseason, mid-week adds), ties, head-to-head ties, playoff weeks, config errors, and copy rules.
 - Phase 2: `notebooks/02_power_score_sensitivity.ipynb`: each power weight perturbed by ±25% (others rescaled proportionally); teams changing rank, Spearman correlation, and per-team rank ranges. As of week 3, rho >= 0.979 in every scenario; only the two near-tied pairs (#1/#2, #7/#8) move. Committed without outputs.
 - **Phase 2 complete (2026-10-02).** Pipeline: extract → transform → 7 data checks → optimal lineups and metrics → 6 metric checks → save 11 tables → re-check. 211 tests pass; two consecutive runs give byte-identical outputs. Known gap: season-to-date lineup efficiency is not yet a `metrics_season` column. Next: Phase 3, the dashboard.

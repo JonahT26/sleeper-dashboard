@@ -103,6 +103,16 @@ Roadmap:
   - Preseason transactions (week 1, created before `season_start_date`) are kept separate from week 1.
 - **Metric definitions** (Phase 2, 2026-10-02): all seven in `docs/METRICS_SPEC.md`, each confirmed by the owner. Notable choices: the displayed record includes median games; luck uses all-play expected wins; the power score blends season scoring 0.35, recent form 0.25, roster strength 0.20, head-to-head results 0.20; every past week is recomputed on each run (no frozen rankings).
 
+- **Before Phase 3** (owner, 2026-10-02):
+  - The dashboard is public and indexable (no `noindex`); usernames stay on the ladder.
+  - Power scores show 1 decimal place; near-ties may show identical numbers.
+  - Metric sections that aren't available yet (consistency and strength of schedule before week 3) are hidden entirely.
+  - The owner reviews the "How this works" copy before it goes live.
+  - Nail-biter is enabled (nine weekly awards).
+  - The power score's results weight stays at 0.20 for now.
+- **Hosting** (Claude, delegated by the owner, 2026-10-02): GitHub Pages publishes the built `site/` folder through a GitHub Actions workflow (Pages source: "GitHub Actions"), not from a branch or the `docs/` folder. `site/` is a build output and stays out of git; `docs/` stays internal.
+
 ## Open decisions
 
 - Where league members see updates: bookmark only, or also an automatic post to a group chat (Phase 5).
+- Dark-mode masthead colour: Claude proposed `#18392B` in both modes (see `docs/UI_GUIDE.md` Color); awaiting the owner's approval.

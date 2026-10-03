@@ -413,14 +413,14 @@ The weights must be ≥ 0 and sum to 1 (±0.000001), or the run stops. They are 
 | `heartbreaker` | Heartbreaker | with a game | highest `points` among teams whose `result` is L | points | co-winners | "Scored 141.2, 3rd-best of the week, and still lost." | yes |
 | `robbery` | Robbery | with a game | lowest `points` among teams whose `result` is W | points | co-winners | "Won with 101.3, the 10th-best score." | yes |
 | `blowout` | Blowout | with a game | largest `margin` among winners | margin | co-winners | "Beat ‹opponent› by 72.4." | yes |
-| `nail_biter` | Nail-Biter | with a game | smallest `margin` among winners | margin | co-winners | "Edged ‹opponent› by 0.4." | no |
+| `nail_biter` | Nail-Biter | with a game | smallest `margin` among winners | margin | co-winners | "Edged ‹opponent› by 0.4." | yes (added 2026-10-02) |
 | `bench_blunder` | Bench Blunder | all | largest points left on the bench *B* (metric 3) | *B* | lower efficiency, then co-winners | "Left 38.4 points on the bench." | yes |
 | `perfect_lineup` | Perfect Lineup | all | highest efficiency *E* (metric 3) | *E* | higher points, then co-winners | "Started the best possible lineup: 100%." | no |
 | `mvp` | MVP | all | team of the week's highest-scoring starter | that player's points | co-winners | "‹Player› scored 42.3." | yes |
 | `pickup_of_the_week` | Pickup of the Week | all | team of the highest-scoring starter whose **most recent acquisition by that team, in that week or earlier this season, was a `waiver` or `free_agent` add** | that player's points | co-winners | "‹Player›, added off waivers in week 2, scored 24.1." | yes |
 | `asleep_at_the_wheel` | Asleep at the Wheel | all | most starters with exactly 0 points, empty slots included; **awarded only when at least one exists** | count | higher points left on the bench, then co-winners | "Started 2 players who scored 0." | no |
 
-The owner chose the eight enabled awards. The other three are defined so they can be switched on in `config.yaml` without a spec change.
+The owner chose the enabled awards: eight at first, then Nail-biter was switched on before Phase 3 (2026-10-02), making nine. The other two are defined so they can be switched on in `config.yaml` without a spec change.
 
 Rules shared by every award:
 - **Co-winners** means each tied team gets its own row with the same value. Exact ties are rare, except at 100% efficiency, which is why `perfect_lineup` has a tiebreak.
@@ -436,7 +436,7 @@ Rules shared by every award:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `metrics.awards.enabled` | `top_score`, `lowest_score`, `heartbreaker`, `robbery`, `blowout`, `bench_blunder`, `mvp`, `pickup_of_the_week` | Awards shown each week, in display order. An unknown key stops the run |
+| `metrics.awards.enabled` | `top_score`, `lowest_score`, `heartbreaker`, `robbery`, `blowout`, `nail_biter`, `bench_blunder`, `mvp`, `pickup_of_the_week` | Awards shown each week, in display order. An unknown key stops the run |
 
 Pickup of the Week has **no recency limit** (owner decision): any waiver or free-agent pickup this season qualifies.
 
