@@ -72,20 +72,22 @@ Keep this list current as commands are added.
 
 ## Current status
 
-**Phase 1 — Data pull: complete (2026-10-02). Next: Phase 2 — Metrics**, starting with drafting `docs/METRICS_SPEC.md` with the owner (owner approves each definition before it is built). Update this section at the end of every phase.
+**Phase 2 — Metrics: complete (2026-10-02). Next: Phase 3 — Dashboard** (static HTML per `docs/UI_GUIDE.md`). Update this section at the end of every phase.
 
-**Starting a new session? Read `docs/HANDOFF.md` first.** It covers working style, environment quirks, the decisions log, open questions, and the Phase 2 plan.
+**Starting a new session? Read `docs/HANDOFF.md` first.** It covers working style, environment quirks, the decisions log, open questions, and the next steps.
 
 Where things stand:
-- `python -m sleeper_dash.pipeline` runs extract → transform → validate as a full refresh; all 6 checks pass on weeks 1–3, and two consecutive runs give identical outputs.
-- Tables in `data/processed/`: `teams`, `team_weeks`, `player_weeks`, `transactions` (see `docs/CODEBASE.md`). Raw field notes and the IR, median-tie, and preseason decisions are in `docs/DATA_DICTIONARY.md`.
-- `notebooks/01_data_check.ipynb`: standings and score distributions for eyeballing the data.
-- To verify at week 15: whether Sleeper plays the median game in the playoffs, and whether roster `wins`/`fpts` include playoff games.
+- `python -m sleeper_dash.pipeline` runs a full refresh: extract → transform → 7 data checks → optimal lineups and metrics → 6 metric invariant checks → save → re-check the saved files. Either group of checks stops the run before anything is saved. Weeks 1–3: every check passes, 23 API calls, ~6.5 seconds, and two consecutive runs give byte-identical outputs.
+- 11 tables in `data/processed/` (schemas in `docs/CODEBASE.md`): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule`, `lineups_optimal`, `lineups_optimal_players`, `metrics_team_weeks`, `metrics_season`, `power_rankings`, `awards`.
+- Every metric follows `docs/METRICS_SPEC.md` (owner-approved): all-play record, expected wins and luck, lineup efficiency, consistency, strength of schedule, power score, weekly awards. Every weight and threshold is in `config.yaml` under `metrics:`.
+- 211 tests pass. Notebooks: `01_data_check.ipynb` (data eyeballing), `02_power_score_sensitivity.ipynb` (power weights ±25%: rankings robust; only near-tied teams move).
+- Known gap: season-to-date lineup efficiency (Σ actual ÷ Σ optimal) is not yet a column in `metrics_season`.
+- To verify at week 15: whether Sleeper plays the median game in the playoffs, whether roster `wins`/`fpts`/`ppts` include playoff games, and how non-playoff teams appear in matchups.
 
 Roadmap:
 - Phase 0: Setup (environment, repo, API smoke test) — complete
 - Phase 1: Data pull (raw extract, tidy tables, validation) — complete
-- Phase 2: Metrics (spec, optimal lineups, luck, consistency, schedule, power score, awards)
+- Phase 2: Metrics (spec, optimal lineups, luck, consistency, schedule, power score, awards) — complete
 - Phase 3: Dashboard (static HTML per `docs/UI_GUIDE.md`)
 - Phase 4: Automation (weekly GitHub Action, GitHub Pages)
 - Phase 5: Extras (playoff odds simulation, past seasons, posting to league chat)
@@ -95,10 +97,11 @@ Roadmap:
 - **Public GitHub repo** (`sleeper-dashboard`), decided 2026-10-02 in Phase 0, so the dashboard can use free GitHub Pages hosting. Everything committed is visible to anyone, so never commit anything that isn't safe to share.
 - **Raw data stays off GitHub** (2026-10-02). `data/raw/` is gitignored because it holds managers' personal settings; the pipeline re-downloads it every run. Test fixtures are anonymised (fake `owner_id`s, nicknames replaced).
 - **Processed tables are committed publicly** (2026-10-02, owner's explicit choice). `data/processed/*.csv`, including usernames, team names, and Sleeper owner IDs in `teams.csv`, go to GitHub.
-- **Metric data rules** (2026-10-02; details and evidence in `docs/DATA_DICTIONARY.md`, to be carried into `docs/METRICS_SPEC.md`):
+- **Metric data rules** (2026-10-02; details and evidence in `docs/DATA_DICTIONARY.md`, carried into `docs/METRICS_SPEC.md`):
   - Injured-reserve players count as bench in past weeks (Claude's call, delegated by the owner).
   - Median ties are not handled; validation stops the run if one ever happens.
   - Preseason transactions (week 1, created before `season_start_date`) are kept separate from week 1.
+- **Metric definitions** (Phase 2, 2026-10-02): all seven in `docs/METRICS_SPEC.md`, each confirmed by the owner. Notable choices: the displayed record includes median games; luck uses all-play expected wins; the power score blends season scoring 0.35, recent form 0.25, roster strength 0.20, head-to-head results 0.20; every past week is recomputed on each run (no frozen rankings).
 
 ## Open decisions
 

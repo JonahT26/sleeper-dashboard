@@ -1,6 +1,6 @@
 # Codebase guide
 
-What lives where, how data moves, and the shape of every table. This file describes the **planned** design. As modules get built, change their status from `planned` to `built`.
+What lives where, how data moves, and the shape of every table. Phases 0–2 are built (data pull and metrics, 2026-10-02); the dashboard (Phase 3) and automation (Phase 4) are still planned. As modules get built, change their status from `planned` to `built`.
 
 > Claude: keep this file current. When you add or change a module, table, or column, update this file in the same commit.
 
@@ -19,13 +19,14 @@ transform.py                                          tidy tables in memory: tea
 validate.py: data checks                              7 checks (reconciliation with Sleeper, integrity);
     │                                                 any failure stops the run
     ▼
-lineup.py + metrics/                                  optimal lineups, then every metric table, in memory
-    │
+lineup.py + metrics/                                  optimal lineups, then every metric table, in memory:
+    │                                                 lineups_optimal(_players), metrics_team_weeks, metrics_season,
+    │                                                 power_rankings, awards
     ▼
 validate.py: metric checks                            6 checks (the spec's invariants); any failure stops the run
     │
     ▼
-data/processed/*.csv                                  saved only now, then re-read and all 13 checks run again
+data/processed/*.csv                                  all 11 tables saved only now, then re-read and all 13 checks run again
     │
     ▼
 dashboard/  (Phase 3) ► site/index.html               static page
@@ -55,12 +56,11 @@ sleeper-dashboard/
 │   ├── api.py                   Sleeper HTTP client: retries, pacing, players cache
 │   ├── extract.py               API → data/raw/
 │   ├── transform.py             data/raw/ → data/processed/ tidy tables
-│   ├── validate.py              reconciliation and integrity checks
-│   ├── lineup.py                optimal lineup solver (assignment problem)
+│   ├── validate.py              data checks and metric invariant checks
+│   ├── lineup.py                optimal lineup solver (assignment problem); lineup efficiency, points left on the bench
 │   ├── metrics/
-│   │   ├── __init__.py
+│   │   ├── __init__.py          combines the modules into the metric tables
 │   │   ├── allplay.py           all-play record, expected wins, luck
-│   │   ├── efficiency.py        lineup efficiency, bench points
 │   │   ├── consistency.py       volatility, floor/ceiling, boom/bust
 │   │   ├── schedule.py          strength of schedule
 │   │   ├── power.py             power score and weekly rankings
@@ -73,7 +73,9 @@ sleeper-dashboard/
 │   ├── raw/{season}/            gitignored: the season's raw JSON (personal settings; re-downloaded every run)
 │   ├── cache/                   gitignored: players_nfl.json
 │   └── processed/               committed: tidy CSVs
-├── notebooks/                   validation and model-exploration notebooks
+├── notebooks/                   committed without outputs
+│   ├── 01_data_check.ipynb      standings and score distributions (Phase 1)
+│   └── 02_power_score_sensitivity.ipynb   power weights perturbed ±25% (Phase 2)
 ├── tests/
 │   ├── fixtures/                saved API responses for offline tests
 │   └── test_*.py
@@ -89,7 +91,7 @@ sleeper-dashboard/
 | `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
 | `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`, plus the published pairings for the rest of the regular season (`schedule/week_XX.json`: matchups for future weeks, 0 points; about 11 extra calls early in the season, none after it). Writes to a `.partial` staging folder and swaps it in only when every call succeeds. Also refreshes the players cache via `api.get_players()` (at most once a day) | 1 | built |
 | `transform.py` | Build the tidy tables below from saved files only (raw JSON plus the players cache): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule` | 1–2 | built |
-| `validate.py` | Thirteen checks in two groups: `run_data_checks` (on the transform tables) and `run_metric_checks` (on the lineup and metric tables); `run_checks` runs both, and `validate(..., checks, stage)` raises `ValidationError` naming the stage. The checks: one row per team per completed week (and no missing weeks); each `matchup_id` has exactly 2 teams; starter points equal team points (±0.01); regular-season W–L–T matches Sleeper's roster settings, counting median games when the league has them; regular-season points for/against match `fpts`/`fpts_against` (±0.01); optimal lineups are consistent (one per team-week, actual = team score, optimal ≥ actual, optimal = sum of chosen players, no player used twice; only when the lineup tables are present); all-play and luck are consistent (all-play W + L + T = teams − 1, league all-play wins = n(n − 1)/2 per week, expected wins = actual wins and luck sums to 0 in every regular-season week where all teams played, `median_result` = W exactly when all-play wins ≥ n/2, season totals = weekly sums, season record = Sleeper's official record; only when the metric tables are present); the schedule is complete and matches games played (one row per team in every regular-season week, symmetric pairings, `is_completed` right, completed pairings = `team_weeks`); consistency and schedule metrics are consistent (no week both boom and bust, floor ≤ ceiling, volatility ≥ 0, booms + busts ≤ weeks, SOS games played + remaining = regular-season weeks); power rankings are consistent (one row per team-week, contributions sum to the power score, league mean 50 every week, scores within 0–100, ranks 1…N without duplicates, rank_change = previous rank − rank); weekly awards are consistent (each score or margin award's value equals the winner's own score or margin and the week's best among eligible teams, Heartbreaker winners lost and Robbery winners won, Bench blunder equals points left on the bench, no empty captions); no duplicate keys, checked once for the data tables and once for the metric tables. `transform` runs them **before saving** and stops with a pass/fail table if any fail; `python -m sleeper_dash.validate` re-checks the saved CSVs | 1 | built |
+| `validate.py` | Thirteen checks in two groups: `run_data_checks` (on the transform tables) and `run_metric_checks` (on the lineup and metric tables); `run_checks` runs both, and `validate(..., checks, stage)` raises `ValidationError` naming the stage. The checks: one row per team per completed week (and no missing weeks); each `matchup_id` has exactly 2 teams; starter points equal team points (±0.01); regular-season W–L–T matches Sleeper's roster settings, counting median games when the league has them; regular-season points for/against match `fpts`/`fpts_against` (±0.01); optimal lineups are consistent (one per team-week, actual = team score, optimal ≥ actual, optimal = sum of chosen players, no player used twice; only when the lineup tables are present); all-play and luck are consistent (all-play W + L + T = teams − 1, league all-play wins = n(n − 1)/2 per week, expected wins = actual wins and luck sums to 0 in every regular-season week where all teams played, `median_result` = W exactly when all-play wins ≥ n/2, season totals = weekly sums, season record = Sleeper's official record; only when the metric tables are present); the schedule is complete and matches games played (one row per team in every regular-season week, symmetric pairings, `is_completed` right, completed pairings = `team_weeks`); consistency and schedule metrics are consistent (no week both boom and bust, floor ≤ ceiling, volatility ≥ 0, booms + busts ≤ weeks, SOS games played + remaining = regular-season weeks); power rankings are consistent (one row per team-week, contributions sum to the power score, league mean 50 every week, scores within 0–100, ranks 1…N without duplicates, rank_change = previous rank − rank); weekly awards are consistent (each score or margin award's value equals the winner's own score or margin and the week's best among eligible teams, Heartbreaker winners lost and Robbery winners won, Bench blunder equals points left on the bench, no empty captions); no duplicate keys, checked once for the data tables and once for the metric tables. `python -m sleeper_dash.transform` runs the data checks before saving its tables; the pipeline runs both groups (see Data flow); `python -m sleeper_dash.validate` re-checks the saved CSVs and prints both groups | 1–2 | built |
 | `pipeline.py` | Orchestrates extract → transform → data checks → metrics → metric checks → save → re-check the saved CSVs; either group of checks failing stops the run before saving. Prints a run summary listing every check, plus soft-check warnings; exit code 1 on failure | 1–2 | built |
 | `lineup.py` | Optimal lineup per team-week (METRICS_SPEC.md section 3), solved exactly as an assignment problem with `scipy.optimize.linear_sum_assignment`: slots × players, cost −points where eligible and 10⁶ where not, so every fillable slot is filled before points are maximised; tiny bonuses (< 0.01 in total) break exact ties toward the manager's own starters and slots. Eligibility from the players cache `fantasy_positions` (fallback: `position`; neither stops the run). `compare_to_sleeper_max` is the `ppts` soft check. `python -m sleeper_dash.lineup` rebuilds from the saved CSVs, validates, saves, and prints the latest week, season totals, and the soft check | 2 | built |
 | `metrics/allplay.py` | All-play record, expected wins, and luck (METRICS_SPEC.md sections 1–2): `build_metrics_team_weeks`, `build_metrics_season`. All-play by within-week ranking of points (2 dp); expected wins = weekly all-play % + median result; actual wins = head-to-head + median result; luck = actual − expected, regular season only. `python -m sleeper_dash.metrics.allplay` rebuilds every metric table from the saved CSVs, validates, saves, and prints the season table sorted by luck | 2 | built |
@@ -205,7 +207,7 @@ Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`)
 | actual_points | float | `team_weeks.points` |
 | optimal_points | float | Best possible score from that week's matchup `players` (starters, bench, IR) with hindsight, 2 dp |
 | bench_points_lost | float | optimal − actual, ≥ 0, 2 dp (the spec's "points left on the bench") |
-| efficiency | float | actual ÷ optimal as a fraction (0.8761, 4 dp); null if optimal ≤ 0. Season efficiency is Σ actual ÷ Σ optimal, never the mean of this column |
+| efficiency | float | actual ÷ optimal as a fraction (0.8761, 4 dp); null if optimal ≤ 0. Season efficiency is Σ actual ÷ Σ optimal, never the mean of this column. **Not yet stored as a season-to-date column in `metrics_season`**; compute it from this table until it is |
 
 ### `lineups_optimal_players` (built)
 Grain: one row per starting slot of each team's optimal lineup per week. Key: (`season`, `week`, `roster_id`, `slot_order`).
@@ -235,7 +237,6 @@ Grain: one row per team per completed week. Key: (`season`, `week`, `roster_id`)
 | actual_wins | float | h2h_actual_wins + median_wins (0–2), the scale of Sleeper's standings |
 | expected_wins | float | allplay_win_pct + median_wins |
 | luck | float | actual_wins − expected_wins (= h2h_actual_wins − allplay_win_pct) |
-
 | points_vs_median | float | points − that week's league median, 3 dp (consistency's *d*) |
 | is_boom, is_bust | bool | points_vs_median ≥ `boom_margin` / ≤ −`bust_margin` |
 
@@ -325,14 +326,15 @@ Field-by-field detail, example records, and the evidence behind each point are i
 
 - `pytest` runs everything; tests never call the network.
 - Fixtures in `tests/fixtures/` are real responses saved during Phase 1, anonymised before committing (`rosters.json`: fake `owner_id`s `1000000000000000NN` where NN is the roster ID, player nicknames replaced with `"nickname"`).
-- Every metric has invariant tests (e.g. all-play wins + losses + ties = 11 per team-week in a 12-team league).
+- Every metric has invariant tests (e.g. all-play wins + losses + ties = 11 per team-week in a 12-team league), and the same invariants run as validation checks on every pipeline run.
+- 211 tests at the end of Phase 2: `test_api`, `test_extract`, `test_transform`, `test_validate`, `test_pipeline` (step order and stop-on-failure with every step faked), `test_lineup` (including brute-force comparison), `test_allplay`, `test_consistency`, `test_schedule`, `test_power`, `test_awards`. Metric tests mostly use hand-built or synthetic 17-week seasons, so playoff-week behaviour is tested even though no real playoff data exists yet.
 
 ## Adding a new metric
 
-1. Write the definition in `docs/METRICS_SPEC.md` and get the owner's approval.
-2. Implement it as a pure function in `metrics/`.
+1. Write the definition in `docs/METRICS_SPEC.md` and get the owner's approval. Put any tunable parameter in `config.yaml` under `metrics:`.
+2. Implement it as a pure function in `metrics/`, with a `check_params` for its config values.
 3. Add invariant and edge-case tests.
-4. Wire it into `pipeline.py` and its output table.
+4. Wire it into `metrics.build_metric_tables` (new columns on `metrics_team_weeks` / `metrics_season`, or a new table added to `validate.KEYS`), and add its invariants to `validate.run_metric_checks`. The pipeline picks it up automatically.
 5. Update this file.
 
 ## League settings snapshot
@@ -373,3 +375,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 2: pipeline reordered to extract → transform → data checks → metrics → metric checks → save, so metric invariants stop a run before anything is saved; the summary lists every check by group. Two consecutive full runs gave byte-identical outputs (35 of 35 files).
 - Phase 2: `metrics/awards.py` builds the `awards` table (8 enabled awards per week; all 11 defined); twelfth validation check. Tests in `tests/test_awards.py`: every award's winner and caption, pickup history rules (trades, drafted players, waiver-then-traded, preseason, mid-week adds), ties, head-to-head ties, playoff weeks, config errors, and copy rules.
 - Phase 2: `notebooks/02_power_score_sensitivity.ipynb`: each power weight perturbed by ±25% (others rescaled proportionally); teams changing rank, Spearman correlation, and per-team rank ranges. As of week 3, rho >= 0.979 in every scenario; only the two near-tied pairs (#1/#2, #7/#8) move. Committed without outputs.
+- **Phase 2 complete (2026-10-02).** Pipeline: extract → transform → 7 data checks → optimal lineups and metrics → 6 metric checks → save 11 tables → re-check. 211 tests pass; two consecutive runs give byte-identical outputs. Known gap: season-to-date lineup efficiency is not yet a `metrics_season` column. Next: Phase 3, the dashboard.

@@ -8,10 +8,13 @@ Written 2026-10-02 at the end of the first working session (Phases 0 and 1). A n
 |---|---|
 | 0 · Setup (environment, repo, API smoke test) | **Complete** |
 | 1 · Data pull (raw extract, tidy tables, validation, pipeline) | **Complete** |
-| 2 · Metrics | **Next.** Start by drafting `docs/METRICS_SPEC.md` *with* the owner |
-| 3 · Dashboard, 4 · Automation, 5 · Extras | Not started |
+| 2 · Metrics | **Complete** (2026-10-02): spec written with the owner, all seven metrics built and validated |
+| 3 · Dashboard | **Next** |
+| 4 · Automation, 5 · Extras | Not started |
 
-As of 2026-10-02 (NFL week 4 in progress): weeks 1–3 are complete and processed, `python -m sleeper_dash.pipeline` passes all 6 validation checks in ~3 seconds with 12 API calls, two consecutive runs give byte-identical outputs, and 63 tests pass.
+**Update at the end of Phase 2 (2026-10-02):** the pipeline now runs extract → transform → 7 data checks → optimal lineups and metrics → 6 metric checks → save 11 tables, with 23 API calls in about 6.5 seconds; 211 tests pass; outputs are byte-identical across runs. `CLAUDE.md` "Current status" and `docs/CODEBASE.md` describe the current state; the Phase 1 notes below are kept for history. Phase 2 decisions are in section 6 and in `docs/METRICS_SPEC.md`.
+
+At the end of Phase 1 (NFL week 4 in progress): weeks 1–3 were complete and processed, `python -m sleeper_dash.pipeline` passes all 6 validation checks in ~3 seconds with 12 API calls, two consecutive runs give byte-identical outputs, and 63 tests pass.
 
 | Table (`data/processed/`) | Rows | Grain |
 |---|---|---|
