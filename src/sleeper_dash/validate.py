@@ -23,6 +23,7 @@ KEYS = {
     "lineups_optimal_players": ["season", "week", "roster_id", "slot_order"],
     "metrics_team_weeks": ["season", "week", "roster_id"],
     "metrics_season": ["season", "through_week", "roster_id"],
+    "power_rankings": ["season", "week", "roster_id"],
 }
 LUCK_TOLERANCE = 1e-6  # wins
 BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "schedule"]  # built by transform; the rest by lineup and metrics
@@ -191,6 +192,40 @@ def check_consistency_and_sos(weekly, season, league):
                    f"{len(season)} team-season rows; every team has {len(regular)} regular-season games")
 
 
+def check_power_rankings(rankings, team_weeks):
+    """Power score invariants (METRICS_SPEC.md section 6, sanity checks 1, 2, and 6).
+
+    One row per team per completed week; contributions sum to the power score; the league
+    mean is 50 every week; scores lie in 0-100; ranks are 1..N with no duplicates; rank_change
+    = previous week's rank − this week's rank.
+    """
+    problems = []
+    key = ["season", "week", "roster_id"]
+    merged = team_weeks[key].merge(rankings[key], on=key, how="outer", indicator="source")
+    problems += [f"week {r.week}, roster {r.roster_id}: in only one of team_weeks and power_rankings"
+                 for r in merged[merged["source"] != "both"].itertuples()]
+
+    contributions = rankings[[c for c in rankings.columns if c.startswith("contrib_")]].sum(axis=1)
+    problems += [f"week {r.week}, roster {r.roster_id}: contributions don't sum to the power score"
+                 for r in rankings[(contributions - rankings["power_score"]).abs() > LUCK_TOLERANCE].itertuples()]
+    problems += [f"week {r.week}, roster {r.roster_id}: power score {r.power_score:.2f} outside 0-100"
+                 for r in rankings[~rankings["power_score"].between(0, 100)].itertuples()]
+    for (season, week), g in rankings.groupby(["season", "week"]):
+        if abs(g["power_score"].mean() - 50) > LUCK_TOLERANCE:
+            problems.append(f"week {week}: league mean power score {g['power_score'].mean():.6f}, not 50")
+        if sorted(g["rank"]) != list(range(1, len(g) + 1)):
+            problems.append(f"week {week}: ranks are not 1..{len(g)} without duplicates")
+
+    ordered = rankings.sort_values(key)
+    previous = ordered.groupby(["season", "roster_id"])["rank"].shift(1)
+    expected = (previous - ordered["rank"]).astype("Int64")
+    actual = ordered["rank_change"].astype("Int64")
+    wrong = ordered[(expected != actual).fillna(expected.isna() != actual.isna())]
+    problems += [f"week {r.week}, roster {r.roster_id}: rank_change {r.rank_change} is wrong" for r in wrong.itertuples()]
+    return _result("Power rankings are consistent", problems,
+                   f"{rankings['week'].nunique()} weeks; mean 50, contributions add up, ranks 1-{rankings['roster_id'].nunique()}")
+
+
 def check_optimal_lineups(lineups, chosen, team_weeks):
     """Optimal lineups are complete and consistent (METRICS_SPEC.md section 3, sanity checks 1 and 4).
 
@@ -297,6 +332,8 @@ def run_checks(tables, league, rosters):
         results.append(check_allplay_and_luck(tables["metrics_team_weeks"], tables["metrics_season"], team_weeks, rosters))
         if "is_boom" in tables["metrics_team_weeks"]:
             results.append(check_consistency_and_sos(tables["metrics_team_weeks"], tables["metrics_season"], league))
+    if "power_rankings" in tables:
+        results.append(check_power_rankings(tables["power_rankings"], team_weeks))
     results.append(check_unique_keys(tables))
     return results
 

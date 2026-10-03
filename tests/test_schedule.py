@@ -129,8 +129,12 @@ def test_output_columns():
 def test_metric_tables_combine_every_module_and_pass_validation():
     team_weeks, schedule = tables_through(3)
     params = {"consistency": {"min_weeks": 2, "floor_pct": 0.1, "ceiling_pct": 0.9, "boom_margin": 20, "bust_margin": 20},
-              "schedule": {"min_weeks": 1}}
-    tables = build_metric_tables({"team_weeks": team_weeks, "schedule": schedule}, params)
+              "schedule": {"min_weeks": 1},
+              "power": {"weights": {"season_scoring": 0.35, "recent_form": 0.25, "roster_strength": 0.2, "results": 0.2},
+                        "recent_weeks": 3, "scale": 15, "shrink_weeks": 3}}
+    lineups = team_weeks[["season", "week", "roster_id"]].assign(optimal_points=team_weeks["points"] + 5)
+    tables = build_metric_tables({"team_weeks": team_weeks, "schedule": schedule, "lineups_optimal": lineups}, params)
+    assert len(tables["power_rankings"]) == 3 * 4
     weekly, season = tables["metrics_team_weeks"], tables["metrics_season"]
     assert len(weekly) == len(team_weeks) and len(season) == 3 * 4
     assert {"luck", "is_boom", "points_vs_median"} <= set(weekly.columns)

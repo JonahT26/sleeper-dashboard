@@ -1,8 +1,9 @@
 """Metric modules (docs/METRICS_SPEC.md). Each is a set of pure functions; this file combines them.
 
-Every module adds columns to the same two tables:
+Most modules add columns to the same two tables:
 - metrics_team_weeks: one row per team per completed week (key: season, week, roster_id)
 - metrics_season: one row per team as of every completed week (key: season, through_week, roster_id)
+The power score has its own table, power_rankings (key: season, week, roster_id).
 """
 
 TEAM_WEEK_KEY = ["season", "week", "roster_id"]
@@ -10,8 +11,11 @@ SEASON_KEY = ["season", "through_week", "roster_id"]
 
 
 def build_metric_tables(tables, params):
-    """Build metrics_team_weeks and metrics_season from the tidy tables. params = config.yaml metrics section."""
-    from sleeper_dash.metrics import allplay, consistency, schedule
+    """Build metrics_team_weeks, metrics_season, and power_rankings from the tidy and lineup tables.
+
+    params = config.yaml metrics section.
+    """
+    from sleeper_dash.metrics import allplay, consistency, power, schedule
 
     team_weeks = tables["team_weeks"]
     allplay_weekly = allplay.build_metrics_team_weeks(team_weeks)
@@ -27,19 +31,20 @@ def build_metric_tables(tables, params):
     )
     if len(weekly) != len(team_weeks) or len(season) != len(allplay_season):
         raise ValueError("Metric tables lost rows while combining; check that every module covers the same team-weeks.")
-    return {"metrics_team_weeks": weekly, "metrics_season": season}
+    rankings = power.build_power_rankings(team_weeks, tables["lineups_optimal"], params["power"])
+    return {"metrics_team_weeks": weekly, "metrics_season": season, "power_rankings": rankings}
 
 
 def rebuild_from_saved():
     """For the metric modules' command-line reports: rebuild every metric table from the saved
-    tidy tables, validate, and save. Returns (tidy tables, metric tables, config)."""
+    tidy and lineup tables, validate, and save. Returns (input tables, metric tables, config)."""
     from sleeper_dash.config import PROJECT_ROOT, load_config
     from sleeper_dash.transform import read_raw, save_tables
     from sleeper_dash.validate import BASE_TABLES, ValidationError, load_tables, validate
 
     config = load_config()
     league, rosters = read_raw(config.season, "league.json"), read_raw(config.season, "rosters.json")
-    tables = load_tables(names=BASE_TABLES)
+    tables = load_tables(names=BASE_TABLES + ["lineups_optimal", "lineups_optimal_players"])
     metric_tables = build_metric_tables(tables, config.metrics)
     try:
         validate({**tables, **metric_tables}, league, rosters)
