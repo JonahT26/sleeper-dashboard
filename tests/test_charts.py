@@ -142,9 +142,80 @@ def test_a_week_without_lineups_has_no_efficiency_chart():
     tables["lineups_optimal"] = tables["lineups_optimal"][tables["lineups_optimal"]["week"] > 1]
     v = build_view(tables, RUN, POWER)
     assert [c["key"] for c in v["earlier"][0]["charts"]] == ["luck"]
-    assert [c["key"] for c in v["latest"]["charts"]] == ["luck", "efficiency"]
+    assert [c["key"] for c in v["latest"]["charts"]][:2] == ["luck", "efficiency"]
 
 
 @pytest.mark.parametrize("value, text", [(3.0, "3 wins"), (1.0, "1 win"), (2.5, "2.5 wins")])
 def test_win_counts_read_naturally(value, text):
     assert charts._wins(value) == text
+
+
+# --- Which charts each week shows ------------------------------------------------------------
+
+def test_charts_appear_once_their_data_exists_in_guide_order():
+    v = view()
+    keys = {w["week"]: [c["key"] for c in w["charts"]] for w in [*v["earlier"], v["latest"]]}
+    assert keys[1] == ["luck", "efficiency"]                                  # no rank history from one week
+    assert keys[2] == ["luck", "efficiency", "rank_history"]                  # consistency and schedule need 3 weeks
+    assert keys[3] == ["luck", "efficiency", "consistency", "schedule", "rank_history"]
+    shown, templates = split(render(v))
+    assert "Consistency:" in shown and "Consistency:" not in templates[2]     # hidden entirely, no placeholder
+
+
+# --- Consistency -----------------------------------------------------------------------------
+
+def test_consistency_shows_every_weekly_score_steadiest_first_with_the_league_median():
+    c = chart(view()["latest"], "consistency")["figure"]
+    band, dots = c["data"]
+    assert len(dots["x"]) == 12 * 3 and dots["meta"]["rosters"].count(1) == 3
+    names = [a["text"] for a in c["layout"]["annotations"] if a.get("name")]
+    assert names[0] == "Team 1" and names[-1] == "Team 12"                    # volatility 11 … 22: steadiest on top
+    values = [a["text"] for a in c["layout"]["annotations"] if a.get("xanchor") == "right"]
+    assert values[0] == "±11.0"
+    median_line = c["layout"]["shapes"][0]
+    assert median_line["x0"] == median_line["x1"] and any(a["text"].startswith("League median") for a in c["layout"]["annotations"])
+    assert band["x"][:2] == [119.0, 141.0]                                    # team 1's floor to ceiling
+
+
+# --- Strength of schedule --------------------------------------------------------------------
+
+def test_schedule_has_played_and_remaining_panels_with_bars_from_the_average():
+    c = chart(view()["latest"], "schedule")["figure"]
+    played, remaining = c["data"]
+    assert played["xaxis"] == "x" and remaining["xaxis"] == "x2" and played["orientation"] == "h"
+    assert played["x"][0] == 11.0 and played["text"][0] == "+11.0"           # toughest schedule first (team 12)
+    assert c["layout"]["xaxis"]["ticktext"] == ["−10", "0", "+10"]          # whole-number ticks
+    assert c["layout"]["xaxis2"]["title"]["font"]["size"] == 13               # second panel styled by the theme too
+    assert {s["xref"] for s in c["layout"]["shapes"]} == {"x", "x2"}          # a zero line in each panel
+
+
+def test_schedule_with_every_remaining_schedule_average_says_so_instead_of_drawing_empty_bars():
+    s = chart(build_view(make_tables(flat_remaining=True), RUN, POWER)["latest"], "schedule")
+    assert len(s["figure"]["data"]) == 1 and "xaxis2" not in s["figure"]["layout"]
+    assert s["subtitle"].endswith("Still to come: every team's remaining opponents are exactly average (0.0).")
+
+
+def test_schedule_after_the_regular_season_shows_played_only():
+    s = chart(view(weeks=15)["latest"], "schedule")
+    assert len(s["figure"]["data"]) == 1 and "Regular-season games, through week 15." in s["subtitle"]
+
+
+# --- Rank history ----------------------------------------------------------------------------
+
+def test_rank_history_draws_one_grey_line_per_team_with_the_top_team_highlighted():
+    c = chart(view()["latest"], "rank_history")
+    fig = c["figure"]
+    assert len(fig["data"]) == 12 and c["wide"] is True
+    colours = {t["meta"]["roster"]: t["line"]["color"] for t in fig["data"]}
+    assert colours[1] == "@pylon" and set(colours.values()) == {"@pylon", "@bar"} and list(colours.values()).count("@pylon") == 1
+    assert fig["layout"]["yaxis"]["range"] == [12.5, 0.5]                     # rank 1 at the top
+    labels = [a for a in fig["layout"]["annotations"] if a.get("captureevents")]
+    assert len(labels) == 12 and all(a["x"] == 3 for a in labels)             # names at the end of each line, tappable
+
+
+def test_team_name_labels_can_be_tapped_to_highlight():
+    v = view()
+    for c in v["latest"]["charts"]:
+        for a in c["figure"]["layout"].get("annotations", []):
+            if a.get("name"):
+                assert a["captureevents"] is True and a["name"].isdigit()

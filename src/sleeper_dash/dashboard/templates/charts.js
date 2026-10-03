@@ -41,6 +41,14 @@
       var colour = function (r) { return r === roster ? "@pylon" : "@bar"; };
       meta.paint.forEach(function (path) { setPath(trace, path, meta.rosters ? meta.rosters.map(colour) : colour(meta.roster)); });
     });
+    // A team drawn as its own trace (a line) goes last, so the highlight sits on top of the grey lines.
+    figure.data.sort(function (a, b) {
+      return (a.meta && a.meta.roster === roster ? 1 : 0) - (b.meta && b.meta.roster === roster ? 1 : 0);
+    });
+    // Its name label turns bold (never pylon: small pylon text fails contrast in light mode).
+    (figure.layout.annotations || []).forEach(function (a) {
+      if (a.name === String(roster)) a.text = "<b>" + a.text + "</b>";
+    });
   }
   function escapeText(text) {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -100,6 +108,7 @@
       if (best.far) leaders.push([p.x, p.y, best.cx, best.cy]);
       var text = escapeText(p.label.text);
       return {
+        name: String(p.label.roster), captureevents: true,
         x: p.label.x, y: p.label.y, xref: "x", yref: "y", ax: best.cx - p.x, ay: best.cy - p.y, axref: "pixel", ayref: "pixel",
         text: bold ? "<b>" + text + "</b>" : text, xanchor: "center", yanchor: "middle",
         font: {size: 12, color: colours.ink}, showarrow: true, arrowhead: 0, arrowwidth: 1, standoff: 6,
@@ -123,6 +132,9 @@
       div.on("plotly_click", function (event) {
         var point = event.points && event.points[0];
         if (point && point.customdata !== undefined) highlight(point.customdata);
+      });
+      div.on("plotly_clickannotation", function (event) {  // a tapped team name
+        if (event.annotation && event.annotation.name) highlight(event.annotation.name);
       });
     }
   }

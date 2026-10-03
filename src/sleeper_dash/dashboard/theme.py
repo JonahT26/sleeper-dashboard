@@ -27,7 +27,8 @@ LABEL_SIZE = 12
 CONFIG = {"displayModeBar": False, "responsive": True, "scrollZoom": False, "doubleClick": False, "showTips": False}
 
 
-def _axis(gridlines):
+def axis(gridlines):
+    """Axis style for every chart axis (a second panel's axis uses it too)."""
     return {
         "showgrid": gridlines, "gridcolor": "@hash", "gridwidth": 1, "zeroline": False, "showline": False,
         "ticks": "", "tickfont": {"color": "@muted", "size": 13}, "title": {"font": {"color": "@muted", "size": 13}, "standoff": 8},
@@ -43,8 +44,8 @@ def base_layout():
         "margin": {"l": 8, "r": 8, "t": 8, "b": 8, "pad": 0},
         "showlegend": False, "dragmode": False, "hovermode": "closest",
         "hoverlabel": {"bgcolor": "@page", "bordercolor": "@hash", "font": {"family": BODY_FONT, "size": 13, "color": "@ink"}},
-        "xaxis": _axis(gridlines=False),
-        "yaxis": _axis(gridlines=True),
+        "xaxis": axis(gridlines=False),
+        "yaxis": axis(gridlines=True),
     }
 
 

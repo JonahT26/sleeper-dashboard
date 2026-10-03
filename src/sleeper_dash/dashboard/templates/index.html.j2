@@ -73,7 +73,7 @@
 {% if v.charts %}
 <div class="charts">
 {% for c in v.charts %}
-<section class="chart-section" aria-labelledby="{{ c.id }}-title">
+<section class="chart-section{% if c.wide %} wide{% endif %}" aria-labelledby="{{ c.id }}-title">
   <h2 class="section-title display" id="{{ c.id }}-title">{{ c.title }}</h2>
   <p class="sub">{{ c.subtitle }}</p>
   <div class="chart" data-figure="{{ c.id }}" role="img" aria-label="{{ c.summary }}"

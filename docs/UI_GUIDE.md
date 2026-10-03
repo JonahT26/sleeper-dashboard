@@ -153,7 +153,7 @@ All charts use Plotly with one shared theme defined in `dashboard/theme.py`. Nev
 - Tooltips show team name and the formatted value only.
 - Hide the Plotly mode bar (`displayModeBar: false`) and make charts responsive.
 - Load Plotly from its CDN rather than embedding it, to keep the page small (`cdn.plot.ly`, the basic bundle, version matched to the Python `plotly` package).
-- **Highlighted team** (Claude, 2026-10-02): each week's #1 by default, matching the pylon #1 on the ladder. Tapping a chart point or opening a ladder row moves the highlight to that team in every chart, and it stays through week changes. A highlighted label is bold `--ink`, never pylon text (pylon fails contrast for small text in light mode).
+- **Highlighted team** (Claude, 2026-10-02): each week's #1 by default, matching the pylon #1 on the ladder. Tapping a chart point, a team name in any chart, or opening a ladder row moves the highlight to that team in every chart, and it stays through week changes. A highlighted label is bold `--ink`, never pylon text (pylon fails contrast for small text in light mode).
 - Every chart section has a text summary ("Luckiest: …, unluckiest: …") for screen readers, which also shows if Plotly can't load.
 - Chart colours are design tokens (`@pylon`, `@bar`, …) filled in from the CSS custom properties, so charts follow light and dark mode.
 
@@ -163,9 +163,9 @@ Specific charts:
 |---|---|---|
 | Luck | Scatter: expected wins (x) vs actual wins (y) | 45° reference line; label every point with team name. Equal scales on a square plot (0 to the most wins so far + 0.5). Labels are placed by the page so they don't collide, with a leader line when a label has to sit away from its point. Regular season only; from the playoffs on, the subtitle says so |
 | Efficiency | Dot plot: actual and optimal points per team, connected by a line | Points per week through the selected week; solid dot = scored, open dot = best possible. Sorted by season-to-date efficiency (best on top), team name above each row and the efficiency % at its right. Taller than 320px (30px a row) so 12 rows stay readable on a phone |
-| Consistency | Strip or box plot of weekly scores per team | League median as a reference line |
-| Schedule | Diverging bar: opponents' average points vs league average | Played and remaining as two panels |
-| Rank history | Bump chart, rank by week | All lines grey; tap a team to highlight |
+| Consistency | Strip or box plot of weekly scores per team | League median as a reference line. Built as a strip plot: one row per team, each week's score a dot, a shaded bar from floor to ceiling, steadiest (lowest volatility) on top, ± volatility at the right; dotted line at the median of every score so far. Appears from `metrics.consistency.min_weeks` |
+| Schedule | Diverging bar: opponents' average points vs league average | Played and remaining as two panels, side by side with one row per team (toughest played schedule on top), whole-number ticks. When every remaining value is 0.0 (this league's round-robin makes that happen in week 3), the remaining panel is replaced by one line in the subtitle; after the regular season only the played panel shows. Appears from `metrics.schedule.min_weeks` |
+| Rank history | Bump chart, rank by week | All lines grey; tap a team to highlight. Full width; rank 1 at the top; team names at the end of each line; the highlighted line is drawn on top. Appears from week 2 |
 
 ## Numbers and copy
 

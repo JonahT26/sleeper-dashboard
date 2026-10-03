@@ -156,6 +156,11 @@ def build_view(tables, run, power_params):
         so_far = lineups[lineups["week"] <= week]
         if not so_far.empty:
             sections.append(charts.efficiency_chart(so_far, standings["efficiency"], names, highlight, week))
+        scores = team_weeks.loc[team_weeks["week"] <= week, ["roster_id", "week", "points"]]
+        later = [charts.consistency_chart(scores, standings, names, highlight, week),
+                 charts.schedule_chart(standings, names, highlight, week),
+                 charts.rank_history_chart(power.loc[power["week"] <= week, ["week", "roster_id", "rank"]], names, highlight, week)]
+        sections += [section for section in later if section]  # a chart without data yet is left out
         for section in sections:
             section["figure_json"] = theme.to_script_json(section["figure"])
         views.append({"week": week, "title": f"Week {week} power rankings", "ladder": ladder,

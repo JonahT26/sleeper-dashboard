@@ -131,6 +131,7 @@ details[open]::details-content { block-size: auto; }
   .awards .section-title { margin-top: 0; }
   .charts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; align-items: start; }
   .chart { height: var(--h-desktop); }
+  .chart-section.wide { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .div .fill, details::details-content { transition: none; }
