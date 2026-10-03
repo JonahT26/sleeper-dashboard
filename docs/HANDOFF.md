@@ -1,6 +1,6 @@
 # Session handoff
 
-Written 2026-10-02 at the end of the first working session (Phases 0 and 1). A new Claude session should read this file, then `CLAUDE.md`, `docs/CODEBASE.md`, and `docs/DATA_DICTIONARY.md`, before doing anything. Those three docs are the source of truth for design and data; this file covers everything else: how the owner likes to work, environment quirks, the reasoning behind decisions, open questions, and the plan for Phase 2.
+Rewritten 2026-10-02 at the end of the second working session (Phase 3, the dashboard). A new Claude session should read this file first, then `CLAUDE.md`, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`, before doing anything. Those docs are the source of truth for design, data, metrics, and the page; this file covers everything else: how the owner works, environment quirks, decisions and their reasons, open questions, risks, and the plan for Phase 4.
 
 ## 1. Where things stand
 
@@ -8,90 +8,103 @@ Written 2026-10-02 at the end of the first working session (Phases 0 and 1). A n
 |---|---|
 | 0 · Setup (environment, repo, API smoke test) | **Complete** |
 | 1 · Data pull (raw extract, tidy tables, validation, pipeline) | **Complete** |
-| 2 · Metrics | **Complete** (2026-10-02): spec written with the owner, all seven metrics built and validated |
-| 3 · Dashboard | **In progress**: plan steps 1–2 done (2026-10-02) |
-| 4 · Automation, 5 · Extras | Not started |
+| 2 · Metrics (seven owner-approved metrics) | **Complete** |
+| 3 · Dashboard | **Functionally complete** (2026-10-02). Remaining: the owner's final look-through |
+| 4 · Automation (weekly GitHub Action, GitHub Pages) | **Next**. Fix risks 1 and 4 first (section 8) |
+| 5 · Extras | Not started |
 
-**Update at the end of Phase 2 (2026-10-02):** the pipeline now runs extract → transform → 7 data checks → optimal lineups and metrics → 6 metric checks → save 11 tables, with 23 API calls in about 6.5 seconds; 211 tests pass; outputs are byte-identical across runs. `CLAUDE.md` "Current status" and `docs/CODEBASE.md` describe the current state; the Phase 1 notes below are kept for history. Phase 2 decisions are in section 6 and in `docs/METRICS_SPEC.md`.
+At the end of this session (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
 
-At the end of Phase 1 (NFL week 4 in progress): weeks 1–3 were complete and processed, `python -m sleeper_dash.pipeline` passes all 6 validation checks in ~3 seconds with 12 API calls, two consecutive runs give byte-identical outputs, and 63 tests pass.
-
-| Table (`data/processed/`) | Rows | Grain |
-|---|---|---|
-| `teams.csv` | 12 | team × season |
-| `team_weeks.csv` | 36 | team × completed week |
-| `player_weeks.csv` | 603 | lineup slot or bench spot × team × week |
-| `transactions.csv` | 189 | player move in a completed transaction (114 transactions) |
+- `python -m sleeper_dash.pipeline`: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric checks → save 11 tables → re-check the saved CSVs. 14 of 14 checks pass, 23 API calls, ~7 seconds, processed CSVs byte-identical across runs. A successful run also writes `data/cache/pipeline_run.json` (finish time, league name, season, weeks, and league facts: 12 teams, median game on, playoffs from week 15).
+- `python -m sleeper_dash.dashboard`: builds `site/index.html` from the saved CSVs and the run record. Sections, top to bottom: masthead with week selector, power rankings ladder (tap a row for its breakdown), weekly awards, five charts (Luck, Lineup efficiency, Consistency, Strength of schedule, Rank history), and "How this works". Every completed week is in the page; each week shows rankings, records, awards, and charts as of that week. 26 KB compressed (194 KB raw) for weeks 1–3.
+- **274 tests pass.** Git clean and in sync with `origin/main` at `a733794`.
 
 ## 2. Working with the owner
 
-`CLAUDE.md` "About the owner" applies. Patterns from this session that matter just as much:
+`CLAUDE.md` "About the owner" applies. Patterns that matter just as much:
 
-- **Plain language, no syntax lessons.** End every step with: what changed, what the data shows, how it was verified. Use tables for results.
-- **Show the data.** After any data step, print a sample table and summary stats, and run a reconciliation against Sleeper's own numbers where one exists. The owner responds well to "here is the check, here is why it passes or fails."
-- **Commands:** one command per fenced `bash` block (the app adds a Run button), with no `$` prompt. The owner uses PowerShell.
-- **Decisions:** surface metric and data-interpretation choices as short numbered questions with options and a recommendation. The owner sometimes delegates ("use your judgement; just notify me"); when they do, decide, record the decision and evidence in the docs, and report it clearly.
-- **When a check fails, explain why before changing code.** The owner asked for this explicitly. Example: the FAAB check failed for 4 teams; investigation showed the in-progress week and a FAAB trade explained every dollar, so the check was relabelled rather than "fixed."
-- **Commit and push after every working step.** This is standing approval, recorded in `CLAUDE.md` rule 10. Stage specific files or review `git status --short` first.
-- **Privacy before publishing.** The repo is public. Before committing, check that nothing personal is staged. This session scanned staged files for real user IDs, usernames, and team names taken from `data/raw/2026/users.json`. Claude Code's auto-mode safety check once blocked a push of raw data containing managers' personal settings; the owner then chose to keep `data/raw/` off GitHub. Never route around such a block. Explain it and let the owner decide.
-- **Confirm ambiguous instructions that publish something.** "commit then" could have meant either option, so it was confirmed before publishing `teams.csv`.
+- **Plain language, no syntax lessons.** End every step with what changed, what the data shows, and how it was verified. Tables for results.
+- **Show the data.** After any data or metric step, print a sample table and summary stats and reconcile with Sleeper where possible. Example this session: season efficiency shown next to the mean of weekly efficiencies, with the largest gap (0.68 points) and the one rank swap.
+- **Commands:** one command per fenced `bash` block (the app adds a Run button), no `$` prompt. The owner uses PowerShell.
+- **Decisions:** ask short numbered questions with options and a recommendation. The owner answers tersely ("1. agree 2. agree 3. rename it Score…") and sometimes overrides the recommendation (kept the "Score" column for transparency; wanted Score before "vs average"). Record every answer in the docs (section 6) in the same commit.
+- **Mobile first** is a standing priority (owner, 2026-10-02): design and check every component at 390px first.
+- **Show drafts before publishing anything user-facing.** The owner reviews copy as plain text first; the "How this works" text needs the owner's approval again for any wording change.
+- **Never quietly change a rule or a test to make something pass.** Example: when the page outgrew the 1 MB budget, the raw-size test was marked as an expected failure with the reason written on it, and the owner was asked; the owner chose "compressed bytes" (option 1).
+- **When a check fails, explain why before changing code** (standing instruction).
+- **Small steps; plan before touching more than ~3 files.** When the owner explicitly asks for a larger piece of work ("build the dashboard…"), proceed, and list the files touched in the report.
+- **Commit and push after every working step** (standing approval, `CLAUDE.md` rule 10). Stage specific files; check `git status --short` first.
+- **Privacy:** the repo is public. Never commit `data/raw/` (managers' personal settings) or `data/cache/`. Never route around a safety block; explain it and let the owner decide.
 
 ## 3. Environment and gotchas
 
 | Item | Detail |
 |---|---|
-| OS / shells | Windows 11. PowerShell **5.1** is primary (no `&&`, `?:`, or `??`); Bash is also available |
-| Project root | `C:\Personal Projects\FF\Dev`. **Sessions should open here**, not in the parent `FF` folder |
-| Python | 3.14.7 (`C:\Python314`). Project venv: `.venv`, package installed editable (`pip install -e .`). In tool calls, use `.venv\Scripts\python.exe` directly |
-| git | 2.55. This repo's **local** `user.email` is `jonahtersol@gmail.com`; the global git email is a work address and must not be used here |
-| GitHub | `gh` 2.102, logged in as **JonahT26**. Remote `https://github.com/JonahT26/sleeper-dashboard` (public), branch `main`. Fresh tool shells may not see `gh` on PATH; prefix with `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')` |
-| Unicode output | Team names include curly quotes. Set `$env:PYTHONIOENCODING='utf-8'` before running Python that prints them |
-| BOM trap | PowerShell 5.1 `Set-Content -Encoding utf8` writes a byte-order mark into source files. Prefer the Edit/Write tools; if a BOM appears, strip the first 3 bytes |
-| Harmless noise | "LF will be replaced by CRLF" git warnings. Exit code −1 when Python output is piped to `Select-Object -First N` (truncation, not failure). Jupyter's "running over TCP without encryption" warning |
-| Excel | Opening CSVs directly corrupts 18-digit IDs (Excel keeps 15 significant digits). CSVs are written `utf-8-sig` so special characters display correctly |
-| Sleeper politeness | Tests block the network (`tests/conftest.py`). `api.get` paces calls at 0.25s or more apart. `/players/nfl` is cached in `data/cache/` for 24h |
+| OS / shells | Windows 11. PowerShell **5.1** is primary (no `&&`, `?:`, `??`); Bash (Git Bash) also available |
+| Project root | `C:\Personal Projects\FF\Dev`. Sessions may open in the parent `FF`; work in `Dev` |
+| Python | 3.14.7. Venv `.venv`, package installed editable. In tool calls use `.venv\Scripts\python.exe` directly |
+| git / GitHub | Repo-local `user.email` is `jonahtersol@gmail.com` (never the global work address). `gh` logged in as **JonahT26**; remote `https://github.com/JonahT26/sleeper-dashboard` (public), branch `main`. Fresh shells may not see `gh`; prefix with `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')` |
+| Unicode output | Set `$env:PYTHONIOENCODING='utf-8'` before Python that prints team names (curly quotes) |
+| Editing files | Prefer the Edit/Write tools. For multi-file edits, write a small Python script to the scratchpad with the Write tool and run it; each replacement asserts its target appears exactly once. **Bash heredocs break on some content** (apostrophes, backslashes): don't pipe Python through heredocs when the code contains them. **PowerShell `[IO.File]` methods use the .NET working directory, not the PowerShell location**: always pass absolute paths |
+| BOM trap | PowerShell 5.1 `Set-Content -Encoding utf8` writes a byte-order mark. Don't use it on source files |
+| Harmless noise | "LF will be replaced by CRLF" git warnings; exit code −1 when output is piped to `Select-Object -First N` |
+| Excel | Opening CSVs directly corrupts 18-digit IDs. CSVs are `utf-8-sig` |
+| Sleeper politeness | Tests block the network. `api.get` paces calls ≥0.25 s apart; `/players/nfl` cached for 24 h |
+| Plotly version | Python `plotly` 7.1.0 pairs with plotly.js **4.1.1**, loaded from `cdn.plot.ly` (basic bundle). `theme.PLOTLY_JS_VERSION` must match `plotly.offline.get_plotlyjs_version()` (a test checks). `charts.js` uses Plotly internals (`_fullLayout`, axis `_offset`, `l2p`) for label placement; re-check it after any Plotly upgrade |
 
-## 4. Repository map (built)
+### Previewing the page (browser pane)
+
+- Preview servers are defined in **`C:\Personal Projects\FF\.claude\launch.json`** (outside the repo; the preview tool looks in the parent `FF` folder). `dashboard` serves `Dev\site` on port 8766: start it with the preview tool's `preview_start` and name `dashboard`. (Last session's throwaway prototype lived in a session scratchpad and is gone; its decisions are in section 6.)
+- Use a server, not `file://`: local documents always render light, so dark mode can't be checked.
+- Set the viewport with `resize_window` (390×844 phone, 1280×900 desktop) and set it again whenever the pane changes width; the app clears it.
+- **Screenshots are unreliable** in this pane: they often show the frame before a scroll, or a magnified view after a resize. Verify layout with JavaScript measurements (element widths, `scrollWidth`, Plotly's `_fullLayout`), reload the page, then take a fresh screenshot.
+- The ladder's grow-in animation runs very slowly in the pane, so screenshots catch bars mid-animation. For screenshots only, inject `*{transition:none!important}` and remove the `preload` class through the browser's JavaScript tool. Never change the page itself for this.
+- Use `form_input` on the week selector (combobox "Week N") to switch weeks like a user would.
+
+## 4. Repository map
 
 ```
 Dev/
-├── CLAUDE.md                     project rules, commands, decisions, current status
-├── config.yaml                   league_id (quoted string), season 2026
-├── pyproject.toml                package + dependencies (unpinned)
+├── CLAUDE.md                     rules, commands, current status, decisions, open decisions
+├── config.yaml                   league_id (quoted), season, every metric weight and threshold
+├── pyproject.toml                package + dependencies (UNPINNED: risk 4); dashboard templates as package data
 ├── docs/
-│   ├── CODEBASE.md               data flow, module status, table schemas, quirks, changelog
-│   ├── DATA_DICTIONARY.md        every raw field, examples (anonymised), findings, decisions
-│   ├── UI_GUIDE.md               design system for Phase 3 (unchanged from the start)
+│   ├── CODEBASE.md               data flow, modules, table schemas, Sleeper quirks, changelog
+│   ├── METRICS_SPEC.md           owner-approved metric definitions (code follows the spec)
+│   ├── UI_GUIDE.md               design system and every dashboard decision (ladder, charts, copy)
+│   ├── DATA_DICTIONARY.md        raw Sleeper fields and findings
 │   └── HANDOFF.md                this file
 ├── src/sleeper_dash/
-│   ├── config.py                 load_config() → Config(league_id: str, season: int)
-│   ├── api.py                    get(path): 10s timeout, 3 retries (1/2/4s), 0.25s pacing; get_players() 24h cache
-│   ├── extract.py                raw JSON → data/raw/{season}/ via .partial staging; latest_completed_week()
-│   ├── transform.py              build_teams / build_team_weeks / build_player_weeks / build_transactions;
-│   │                             build_tables(season), save_tables(); main() prints detailed reports
-│   ├── validate.py               14 checks (7 data, 7 metric); validate() raises ValidationError; load_tables() reads CSVs with IDs as text
-│   ├── pipeline.py               extract → transform → data checks → metrics → metric checks → save → re-check; exit 1 on failure
-│   ├── lineup.py                 optimal lineups (assignment problem); weekly and season-to-date efficiency
-│   ├── metrics/                  allplay, consistency, schedule, power, awards; __init__ combines them
-│   └── dashboard/                empty (Phase 3)
-├── scripts/smoke_test.py         Phase 0 one-off API check
-├── notebooks/                    01_data_check, 02_power_score_sensitivity (committed without outputs)
-├── tests/                        263 tests (one file per module); conftest blocks network
-│   └── fixtures/                 matchups_week_01.json, rosters.json (owner IDs and nicknames anonymised)
-├── data/raw/                     GITIGNORED (personal settings); re-downloaded every run
-├── data/cache/                   GITIGNORED players cache
-└── data/processed/               COMMITTED, public (owner decision)
+│   ├── config.py, api.py, extract.py, transform.py, validate.py (14 checks), lineup.py, metrics/
+│   ├── pipeline.py               full refresh; writes data/cache/pipeline_run.json on success
+│   └── dashboard/
+│       ├── build.py              tables → view (every number formatted once) → HTML; `python -m sleeper_dash.dashboard`
+│       ├── theme.py              the one shared Plotly theme; colours as CSS tokens ("@pylon"); CDN URL
+│       ├── charts.py             five chart sections as Plotly figure dicts (pure functions)
+│       ├── explainer.py          "How this works" copy, numbers from config.yaml (owner-approved)
+│       └── templates/            index.html.j2, styles.css, page.js (week selector), charts.js (drawing,
+│                                 highlight, label placement); CSS and JS are inlined into the page
+├── tests/                        274 tests, one file per module; conftest blocks the network
+├── data/raw/, data/cache/        GITIGNORED
+├── data/processed/               COMMITTED, public (owner decision)
+└── site/                         GITIGNORED build output (index.html)
 ```
+
+### How the page works (read before changing it)
+
+- **One renderer.** Python formats every number (`build.view`); one Jinja2 macro draws a week. The latest week is drawn into the page; each earlier week sits in a `<template id="week-N">` block that `page.js` swaps in. No JavaScript copy of the drawing code exists, so nothing can drift. Chart figures are embedded per week as JSON in `<script type="application/json">` (every `<` escaped as `\u003c`).
+- **Charts** are plain dicts built from `theme.py`; colours are token names that `charts.js` fills from the CSS custom properties, so dark mode follows the page. A team's `roster_id` rides in trace `meta` and in name-label `name`; tapping a point, a team name, or opening a ladder row highlights that team in every chart (the week's #1 by default).
+- **Hidden sections:** a chart or the awards are left out entirely when their data doesn't exist yet (consistency and schedule from week 3, rank history from week 2). No placeholders.
+- **"How this works"** is generated by `explainer.sections(params, league)`; a test proves every number changes with `config.yaml`.
 
 ## 5. League facts that drive the code
 
 - **League:** 12-team redraft, season 2026, league ID `1369887235935059968` (always a string).
-- **Lineup:** QB, RB, RB, WR, WR, FLEX, REC_FLEX, SUPER_FLEX, K, DEF + 6 bench + 1 IR slot. **No TE slot**: TEs start only via FLEX (RB/WR/TE), REC_FLEX (WR/TE), or SUPER_FLEX (QB/RB/WR/TE).
-- **Scoring:** half PPR, TE premium (+0.5 per TE catch), 4-point passing TDs. Sleeper's `players_points` already applies scoring; never recompute it.
-- **Weekly median game is on.** Sleeper's `wins`/`losses` include median results; roster `metadata.record` gives two letters per week (head-to-head, then median). The comparison is against the median, not the mean (verified).
-- **Calendar:** playoffs start week 15 with 6 teams (likely weeks 15–17). FAAB budget $100, $0 bids allowed. Waivers run early Wednesday ET.
-- **Previous season** league ID `1243747994637963265` (for Phase 5).
-- **Completed-week rule:** the smaller of league `settings.last_scored_leg` and (during this league's NFL regular season) `/state/nfl` week − 1.
+- **Lineup:** QB, RB, RB, WR, WR, FLEX, REC_FLEX, SUPER_FLEX, K, DEF + 6 bench + 1 IR. No TE slot.
+- **Scoring:** half PPR, TE premium, 4-point passing TDs. Never recompute Sleeper's points.
+- **Weekly median game is on**; records include it.
+- **Calendar:** playoffs from week 15 (6 teams). The 14-week schedule is an 11-week round robin plus weeks 1–3 repeated, so **remaining strength of schedule is exactly 0.0 for everyone after week 3** (the chart shows one panel and says so in its subtitle); from week 4 the second panel appears.
+- **Completed-week rule:** the smaller of league `last_scored_leg` and `/state/nfl` week − 1. Week 4 becomes available after Monday night's game is scored (likely Tuesday Oct 6).
+- **Previous season** league ID `1243747994637963265` (Phase 5).
 
 ## 6. Decisions log
 
@@ -100,94 +113,79 @@ Dev/
 | 2026-10-02 | Project root is `FF\Dev`; `CLAUDE.md` moved there from `docs/` | Claude (default) | — |
 | 2026-10-02 | Public GitHub repo `sleeper-dashboard` (free GitHub Pages) | Owner | CLAUDE.md |
 | 2026-10-02 | Commits use `jonahtersol@gmail.com` (repo-local config) | Owner | git config |
-| 2026-10-02 | The unreferenced spreadsheet in `docs/` was moved to the Recycle Bin, never committed | Owner | — |
 | 2026-10-02 | Push after every commit | Owner | CLAUDE.md rule 10 |
 | 2026-10-02 | `data/raw/` kept off GitHub; test fixtures anonymised | Owner | CLAUDE.md, .gitignore |
-| 2026-10-02 | Processed tables committed publicly, including usernames and owner IDs in `teams.csv` | Owner (confirmed explicitly) | CLAUDE.md |
-| 2026-10-02 | Injured-reserve players count as bench in past weeks (past IR status is unknowable; evidence from `ppts`) | Claude, delegated by owner | DATA_DICTIONARY.md |
+| 2026-10-02 | Processed tables committed publicly, including usernames and owner IDs | Owner (confirmed explicitly) | CLAUDE.md |
+| 2026-10-02 | Injured-reserve players count as bench in past weeks | Claude, delegated by owner | DATA_DICTIONARY.md |
 | 2026-10-02 | Median ties not handled; transform raises if one occurs | Owner | DATA_DICTIONARY.md |
-| 2026-10-02 | Preseason transactions kept separate: `is_preseason` flag (week 1, created before `season_start_date`); `week` stays 1 | Owner (rule), Claude (column design) | CODEBASE.md |
-| 2026-10-02 | `waiver_bid` only on the add rows of waiver claims (no double counting) | Claude | CODEBASE.md |
-| 2026-10-02 | `slot_order` is 0-based; bench follows starters in Sleeper's `players` order | Claude (per spec wording) | CODEBASE.md |
-| 2026-10-02 | CSVs written `utf-8-sig`; list columns as JSON text | Claude | CODEBASE.md |
-| 2026-10-02 | Validation runs before saving; the pipeline re-validates the saved CSVs | Claude | CODEBASE.md |
-| 2026-10-02 | All seven metric definitions confirmed in the Phase 2 interview | Owner | METRICS_SPEC.md |
-| 2026-10-02 | Past weeks are recomputed every run (no freezing of posted rankings) | Owner | METRICS_SPEC.md §6 |
-| 2026-10-02 | Displayed record = overall (head-to-head + median games), with no split shown; expected and actual wins on the same scale. First chosen as head-to-head only, changed by the owner after seeing the luck table | Owner | METRICS_SPEC.md §2 |
-| 2026-10-02 | Power score's results component stays head-to-head only (median wins excluded to avoid double-counting scoring) | Owner | METRICS_SPEC.md §6 |
-| 2026-10-02 | Dashboard stays public and indexable; usernames stay on the ladder | Owner | CLAUDE.md, UI_GUIDE.md |
-| 2026-10-02 | Power scores at 1 decimal; near-ties may show identical numbers, no tie marker | Owner | UI_GUIDE.md |
-| 2026-10-02 | Metric sections not available yet are hidden entirely (no placeholder) | Owner | UI_GUIDE.md |
-| 2026-10-02 | Owner reviews the "How this works" copy before it goes live | Owner | UI_GUIDE.md |
-| 2026-10-02 | Nail-biter award enabled (nine awards) | Owner | config.yaml, METRICS_SPEC.md §7 |
-| 2026-10-02 | Results weight in the power score kept at 0.20 for now, despite penalising unlucky teams | Owner | — |
+| 2026-10-02 | Preseason transactions kept separate (`is_preseason`) | Owner (rule), Claude (column design) | CODEBASE.md |
+| 2026-10-02 | All seven metric definitions confirmed | Owner | METRICS_SPEC.md |
+| 2026-10-02 | Past weeks recomputed every run (no frozen rankings) | Owner | METRICS_SPEC.md §6 |
+| 2026-10-02 | Displayed record = overall (head-to-head + median) | Owner | METRICS_SPEC.md §2 |
+| 2026-10-02 | Power score's results component is head-to-head only | Owner | METRICS_SPEC.md §6 |
+| 2026-10-02 | Dashboard public and indexable; usernames on the ladder | Owner | CLAUDE.md, UI_GUIDE.md |
+| 2026-10-02 | Power scores at 1 decimal; near-ties may show identical numbers | Owner | UI_GUIDE.md |
+| 2026-10-02 | Sections without data yet are hidden entirely | Owner | UI_GUIDE.md |
+| 2026-10-02 | Nail-biter enabled (nine awards); results weight stays 0.20 | Owner | config.yaml |
 | 2026-10-02 | Site published from `site/` by a GitHub Actions workflow; `site/` gitignored | Claude, delegated by owner | CLAUDE.md, .gitignore |
-| 2026-10-02 | Dark-mode masthead: `--masthead` `#18392B` in both modes | Owner | CLAUDE.md, UI_GUIDE.md |
-| 2026-10-02 | Season efficiency stored in `metrics_season` with season points left on the bench alongside it | Claude (spec §3 defines both) | CODEBASE.md |
-| 2026-10-02 | Prototype review of the masthead and ladder: mobile first; bars from the league average; breakdown with gap-from-average bars and a "Score" column; "Head-to-head wins" label; two-digit rank column; latest week in the HTML at build time; "Updated" = pipeline run time | Owner | UI_GUIDE.md, METRICS_SPEC.md §2 and §6, CLAUDE.md |
-| 2026-10-02 | Fixed bar axes for the season (largest gap so far, rounded up) so bars compare across weeks | Claude | UI_GUIDE.md |
-| 2026-10-02 | Page-weight budget (1 MB) counts compressed bytes, what a visitor downloads | Owner | UI_GUIDE.md, CLAUDE.md |
-| 2026-10-02 | "How this works" copy is generated from `config.yaml` at build time so it can't drift from the model | Owner | dashboard/explainer.py, tests/test_explainer.py |
-| 2026-10-02 | "How this works" draft approved with no edits and published as the last section; boom/bust sentence kept for a future display; the 2.4–97.6 range kept; awards not explained | Owner | UI_GUIDE.md |
+| 2026-10-02 | Season efficiency (Σ actual ÷ Σ optimal) and season points left on the bench stored in `metrics_season`, with a metric check | Owner (request), Claude (bench column) | CODEBASE.md |
+| 2026-10-02 | Dark-mode masthead `#18392B` in both modes | Owner | UI_GUIDE.md |
+| 2026-10-02 | Prototype review of the ladder: mobile first; bars from the league average (50); breakdown with a "Score" column (contribution) then "vs average" bars; bottom row "Power score"; results labelled "Head-to-head wins" with the head-to-head record; 52px rank column; latest week drawn at build time; "Updated" = pipeline run time | Owner | UI_GUIDE.md, METRICS_SPEC.md §2 and §6 |
+| 2026-10-02 | Fixed bar axes for the season (largest gap so far, rounded up) | Claude | UI_GUIDE.md |
+| 2026-10-02 | Earlier weeks pre-drawn into `<template>` blocks (one renderer) rather than JSON + a JavaScript renderer; chart data embedded as JSON | Claude (reported to owner) | CODEBASE.md |
+| 2026-10-02 | Charts: the week's #1 highlighted by default; tapping a point, team name, or ladder row moves the highlight; highlighted labels bold, never pylon text | Claude | UI_GUIDE.md |
+| 2026-10-02 | Efficiency and one-row-per-team charts taller than 320px (≈30px a row) so 12 rows stay readable | Claude | UI_GUIDE.md |
+| 2026-10-02 | Strength of schedule: when every remaining value is 0.0, one panel plus a subtitle note instead of empty bars | Claude | UI_GUIDE.md |
+| 2026-10-02 | Page-weight budget (1 MB) counts compressed bytes | Owner (option 1) | UI_GUIDE.md, CLAUDE.md |
+| 2026-10-02 | "How this works" generated from `config.yaml` at build time | Owner | explainer.py |
+| 2026-10-02 | "How this works" approved with no edits and published; boom/bust sentence kept for a future display; 2.4–97.6 range kept; awards not explained; future wording changes need approval | Owner | UI_GUIDE.md |
 
 ## 7. Open questions and assumptions to verify
 
-**Verify at week 15 (first playoff week):**
-1. Whether Sleeper plays the median game in the playoffs (code assumes not: `median_result` is null in playoff weeks).
-2. Whether roster `wins`/`losses`/`fpts` include playoff games (validation assumes regular season only).
-3. Whether non-playoff teams get null `matchup_id` (code handles it either way).
+**Verify at week 15 (first playoff week):** whether Sleeper plays the median game in the playoffs (code assumes not); whether roster `wins`/`losses`/`fpts` include playoff games (validation assumes not); how non-playoff teams appear in matchups (null `matchup_id` handled either way).
 
-**Known gaps:**
-- **Sleeper's `ppts` does not match our optimal lineups exactly.** Including IR players matches `ppts` for 5 teams; the other 7 are 0.02–4.00 points above, including a team that never had an IR player. No single bench player explains any gap; possibly stat-correction timing or eligibility rules. Investigate in `lineup.py`, and treat `ppts` as a soft check.
-- **Not in `transactions`:** FAAB and draft picks traded inside trades (`waiver_budget`, `draft_picks`). Roster `waiver_budget_used` is a current figure that includes the in-progress week. If FAAB metrics are wanted, add a small table.
-- **Current, not historical:** `player_weeks.position`, `full_name`, and `nfl_team` describe each player today. Draft pick metadata has team-at-draft-time if history is needed.
-- **Past seasons:** `season_start_date` comes from current `/state/nfl`. Transform stops with a clear error if the league's season is no longer current; revisit for Phase 5.
-- **No playoff bracket:** `winners_bracket` is not pulled yet (Phase 5).
-- **Dependencies are unpinned** in `pyproject.toml`. Pin them before Phase 4 so GitHub Actions matches local; local is Python 3.14.
+**Verify at week 4 (first new data since the dashboard was built):** the Strength of schedule chart should switch to two panels (remaining no longer all 0.0); luck labels and the efficiency chart should still read cleanly at 390px with new values; the pipeline should commit four weeks of processed CSVs.
 
-**Open product questions (raised early, not yet decided):**
-- ~~**Ladder record:**~~ Settled 2026-10-02: overall record including median games (see decisions log).
-- ~~**Retroactive changes:**~~ Settled 2026-10-02: recompute everything every run (see decisions log).
-- **Where league members see updates:** bookmark only, or also a group-chat post (CLAUDE.md open decision, Phase 5).
-- **Phase 4 scheduling:** GitHub Actions cron runs in UTC, so 9 AM ET shifts by an hour with daylight saving.
+**Known gaps:** Sleeper's `ppts` sits 0.02–4.00 points below our optimal lineups for 7 teams (soft check only); FAAB and picks traded inside trades aren't in `transactions`; player positions describe today, not past weeks; `winners_bracket` not pulled (Phase 5).
 
-## 8. Known risks (end of Phase 2)
+**Open product questions:**
+- Where league members see updates: bookmark only, or also a group-chat post (Phase 5).
+- Phase 4 schedule: GitHub Actions cron runs in UTC, so a 9 AM ET run shifts an hour with daylight saving. Decide the run time and whether the workflow commits the refreshed processed CSVs back to the repo (today they are committed by hand after each run).
+- Boom/bust weeks are explained in "How this works" but not displayed yet (owner wants them kept for a future display).
 
-Ordered by impact. None of these are bugs today; each is a place where something outside our control could break the pipeline or the numbers.
+## 8. Known risks
 
-1. **Off-season breakage.** Transform needs `/state/nfl` to describe the league's season (for `season_start_date`). When Sleeper rolls over to 2027, transform stops with an error, so an always-on dashboard would start failing. Fix before Phase 4 automation (for example, store the season start date with the season's raw data, or derive it from the league).
-2. **Week 15 is untested on real data.** Median game in the playoffs, roster `wins`/`fpts`/`ppts` including playoff games, and how eliminated teams appear in matchups. A wrong assumption fails "Records match Sleeper" and stops the run (safe, but the dashboard stops updating).
-3. **Sleeper's API is unofficial and undocumented.** Shape changes would surface as failed checks, not silently wrong numbers, but with no notice.
-4. **Unpinned dependencies** (local Python 3.14). Pin before GitHub Actions runs unattended.
-5. **Player positions are today's, not historical.** A mid-season position change would alter past optimal lineups.
-6. **Unexplained `ppts` gaps** (0.02–4.00 points, below the warning threshold).
-7. **Posted numbers can change** after stat corrections (deliberate: full recompute), including last week's ranks and awards.
-8. **Near-ties at the top** of the power rankings (#1 and #2 are 0.004 apart through week 3); the order there is effectively arbitrary.
+Ordered by impact.
 
-## 9. Plan for Phase 3 (dashboard)
+1. **Off-season breakage (fix before Phase 4).** Transform needs `/state/nfl` to describe the league's season (`season_start_date`). When Sleeper rolls over to 2027, transform stops with an error, so an unattended job would start failing. Store the season start date with the season's raw data, or derive it from the league.
+2. **Week 15 untested on real data** (section 7). A wrong assumption fails "Records match Sleeper" and stops the run: safe, but the page stops updating.
+3. **Sleeper's API is unofficial.** Shape changes surface as failed checks, without notice.
+4. **Unpinned dependencies (fix before Phase 4)**, local Python 3.14. Pin them so GitHub Actions matches local. Plotly in particular: the CDN version is tied to the Python package (section 3).
+5. **Label placement is a heuristic** (`charts.js`): crowded luck charts could still overlap in some weeks. Check new weeks at 390px.
+6. **The page depends on two CDNs** (Google Fonts, cdn.plot.ly). If Plotly fails to load, each chart shows its one-sentence text summary instead.
+7. **Player positions are today's**, so a mid-season position change alters past optimal lineups.
+8. **Posted numbers can change** after stat corrections (deliberate full recompute; explained in "How this works").
+9. **Near-ties at the top** of the power rankings (#1 and #2 both show 57.8 through week 3).
 
-Follow `docs/UI_GUIDE.md` for everything user-facing.
+## 9. Plan
 
-1. ~~Add season-to-date lineup efficiency to `metrics_season`, with a metric check.~~ Done 2026-10-02 (`efficiency`, `bench_points_lost`; check "Season lineup efficiency is consistent").
-2. ~~Get the owner's answer on the dark-mode masthead proposal.~~ Approved 2026-10-02: `--masthead` `#18392B` in both modes.
-3. A throwaway prototype of the masthead and ladder was reviewed with the owner on 2026-10-02 (decisions in section 6 and `UI_GUIDE.md` Ladder row). Build `src/sleeper_dash/dashboard/`: `theme.py` (the one shared Plotly theme), a Jinja2 template, and a page builder that writes `site/index.html` from the saved CSVs. Embed every week's data as JSON so the week selector needs no network call, but write the latest week into the HTML at build time so it shows without JavaScript. The pipeline must record its run time for the "Updated" line. Section order as in UI_GUIDE.md; hide metric sections that aren't available yet.
-   - **Done 2026-10-02:** `dashboard/build.py`, the template, and `python -m sleeper_dash.dashboard`: masthead, ladder, weekly awards, every week as of that week. Earlier weeks are pre-drawn into `<template>` blocks rather than embedded as JSON and drawn by JavaScript: one renderer (Python and Jinja2) instead of two that could drift. Chart data will be embedded as JSON when the chart sections arrive. The pipeline writes `data/cache/pipeline_run.json` for the "Updated" line.
-   - **Done 2026-10-02:** `theme.py` (shared Plotly theme, colours as CSS tokens), `charts.py`, and `templates/charts.js`: Luck and Lineup efficiency, following the week selector.
-   - **Done 2026-10-02:** consistency, strength of schedule, and rank history charts; tapping a team name in any chart moves the highlight.
-   - **Done 2026-10-02:** "How this works" copy (`dashboard/explainer.py`), approved by the owner with no edits, is the page's last section. Every weight and threshold is filled in from `config.yaml`, and league facts (teams, median game, playoff start) from the pipeline run record. Any change to the wording needs the owner's approval again.
-   - **Phase 3 is functionally complete.** Remaining before Phase 4: a final review pass with the owner, then the plan's step 6 (GitHub Actions; fix risk 1 and pin dependencies first).
-   - **Page weight (settled 2026-10-02):** the 1 MB budget counts compressed bytes. A synthetic 17-week season is ~1.2 MB raw, ~115 KB compressed.
-4. Draft the "How this works" copy and show it to the owner for review before it is published.
-5. Add `python -m sleeper_dash.dashboard`, tests (sections present, no external calls besides fonts and the Plotly CDN, page weight under 1 MB), and preview the page in the browser pane at phone and desktop widths.
-6. Phase 4 then adds the GitHub Actions workflow: run the pipeline, build `site/`, publish to Pages (fix risk 1 and pin dependencies first).
+**Finish Phase 3:** walk the owner through the finished page at phone and desktop widths (light and dark), collect any last changes, then mark Phase 3 complete in `CLAUDE.md` and `docs/CODEBASE.md`.
+
+**Phase 4 (automation), in order; propose this plan to the owner before starting:**
+1. Fix risk 1 (season start date) with tests.
+2. Pin dependencies (risk 4); choose the Python version for Actions to match local.
+3. Add `.github/workflows/weekly.yml`: scheduled run (time agreed with the owner, section 7) plus manual trigger → install → `pytest` → `python -m sleeper_dash.pipeline` → `python -m sleeper_dash.dashboard` → upload `site/` as the Pages artifact → deploy. A failed check must stop the job before anything is published (rule 8). Permissions: `contents: read` (or write, if the workflow commits processed CSVs), `pages: write`, `id-token: write`.
+4. The owner must switch the repo's Pages source to "GitHub Actions" in the repository settings (an account-settings change; ask the owner to do it, or ask before doing it).
+5. Watch the first run, then share the URL with the owner.
 
 ## 10. Commit history
 
-Phase 1 commits are listed in `git log` up to `1ad16d1`; Phase 2 ran from `efaa869` (session handoff guide) to `38eba07 Phase 2: metrics`. Use `git log --oneline` for the full list.
+Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 runs from `487e76c` (season-to-date lineup efficiency) to `a733794` (publish the approved How this works section). Use `git log --oneline` for the full list.
 
 ## 11. First steps for the new session
 
-1. Read `CLAUDE.md` (Current status, Decisions made, Open decisions), this file, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`.
-2. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect 221 passed) and `git status` (expect clean, in sync with `origin/main`).
-3. Refresh the data with `.venv\Scripts\python.exe -m sleeper_dash.pipeline`: expect every data and metric check to pass and 9 awards per week. Commit the updated processed CSVs.
-4. Continue Phase 3 at step 3 of the plan above (steps 1 and 2 are done).
+1. Read `CLAUDE.md`, this file, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`.
+2. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **274 passed**) and `git status` (expect clean, in sync with `origin/main`).
+3. Refresh: `.venv\Scripts\python.exe -m sleeper_dash.pipeline` (every check passes; 9 awards a week; week 4 appears once Sleeper has scored it), then `.venv\Scripts\python.exe -m sleeper_dash.dashboard`. Commit and push any changed processed CSVs.
+4. Start the `dashboard` preview server and check the page at 390px and 1280px (section 3), paying attention to the week-4 items in section 7.
+5. Then section 9: the owner's final Phase 3 review, and the Phase 4 plan.
