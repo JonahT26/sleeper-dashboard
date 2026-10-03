@@ -12,7 +12,9 @@ The source of truth for every metric. Code follows this file, not the other way 
 | 4 | Consistency | **Confirmed** 2026-10-02 |
 | 5 | Strength of schedule | **Confirmed** 2026-10-02 |
 | 6 | Power score | **Confirmed** 2026-10-02 |
-| 7 | Weekly awards | In interview |
+| 7 | Weekly awards | **Confirmed** 2026-10-02 |
+
+All seven definitions are confirmed. Next: build them in the order of `docs/CODEBASE.md` "Adding a new metric" (pure function, invariant tests, pipeline wiring, docs update).
 
 ## Conventions that apply to every metric
 
@@ -385,3 +387,69 @@ The weights must be ≥ 0 and sum to 1 (±0.000001), or the run stops. They are 
 5. Setting a weight to 0 leaves that component with no effect on the ranking.
 6. Ranks are 1…*N* with no duplicates, every week.
 7. The ranking is identical for any `shrink_weeks` value.
+
+---
+
+## 7. Weekly awards
+
+**Status:** confirmed by the owner, 2026-10-02.
+
+**Meaning.** A handful of awards each week, where the dashboard's trash talk lives (`UI_GUIDE.md`). Each names a team, a number, and a one-line caption. Captions are factual and specific; the number does the joking.
+
+**Formula.** Each award picks its winner from one week's data. A team can win several awards in the same week.
+
+| Key | Award | Eligible teams | Winner | Value | Tiebreak | Caption pattern | Enabled |
+|---|---|---|---|---|---|---|---|
+| `top_score` | Top Score | all | highest `points` | points | co-winners | "Put up 168.4, the best of the week." | yes |
+| `lowest_score` | Lowest Score | all | lowest `points` | points | co-winners | "Managed 84.1. Everyone else did better." | yes |
+| `heartbreaker` | Heartbreaker | with a game | highest `points` among teams whose `result` is L | points | co-winners | "Scored 141.2, 3rd-best of the week, and still lost." | yes |
+| `robbery` | Robbery | with a game | lowest `points` among teams whose `result` is W | points | co-winners | "Won with 101.3, the 10th-best score." | yes |
+| `blowout` | Blowout | with a game | largest `margin` among winners | margin | co-winners | "Beat ‹opponent› by 72.4." | yes |
+| `nail_biter` | Nail-Biter | with a game | smallest `margin` among winners | margin | co-winners | "Edged ‹opponent› by 0.4." | no |
+| `bench_blunder` | Bench Blunder | all | largest points left on the bench *B* (metric 3) | *B* | lower efficiency, then co-winners | "Left 38.4 points on the bench." | yes |
+| `perfect_lineup` | Perfect Lineup | all | highest efficiency *E* (metric 3) | *E* | higher points, then co-winners | "Started the best possible lineup: 100%." | no |
+| `mvp` | MVP | all | team of the week's highest-scoring starter | that player's points | co-winners | "‹Player› scored 42.3." | yes |
+| `pickup_of_the_week` | Pickup of the Week | all | team of the highest-scoring starter whose **most recent acquisition by that team, in that week or earlier this season, was a `waiver` or `free_agent` add** | that player's points | co-winners | "‹Player›, added off waivers in week 2, scored 24.1." | yes |
+| `asleep_at_the_wheel` | Asleep at the Wheel | all | most starters with exactly 0 points, empty slots included; **awarded only when at least one exists** | count | higher points left on the bench, then co-winners | "Started 2 players who scored 0." | no |
+
+The owner chose the eight enabled awards. The other three are defined so they can be switched on in `config.yaml` without a spec change.
+
+Rules shared by every award:
+- **Co-winners** means each tied team gets its own row with the same value. Exact ties are rare, except at 100% efficiency, which is why `perfect_lineup` has a tiebreak.
+- If no team is eligible (e.g. no losing team in a week with no games), the award is skipped that week.
+- Rankings in captions ("3rd-best") are by points among all teams that week.
+- Numbers in captions use the display rules: points to 1 decimal place, percentages as whole numbers.
+
+**Inputs.** `team_weeks`: `week`, `roster_id`, `points`, `opponent_roster_id`, `margin`, `result`. `player_weeks`: `player_id`, `full_name`, `is_starter`, `is_empty_slot`, `points`. `transactions`: `roster_id`, `player_id`, `action`, `type`, `week`, `created_at`. `teams`: `team_name`. Metric 3: *B* and *E* per team-week.
+
+**Parameters** (`config.yaml`):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `metrics.awards.enabled` | `top_score`, `lowest_score`, `heartbreaker`, `robbery`, `blowout`, `bench_blunder`, `mvp`, `pickup_of_the_week` | Awards shown each week, in display order. An unknown key stops the run |
+
+Pickup of the Week has **no recency limit** (owner decision): any waiver or free-agent pickup this season qualifies.
+
+**Edge cases.**
+
+| Case | Rule |
+|---|---|
+| Ties | Co-winners by default; tiebreaks as listed in the table (owner decision) |
+| Playoff weeks | **Every week** (owner decision). Score and lineup awards consider every team; matchup awards (`heartbreaker`, `robbery`, `blowout`, `nail_biter`) consider only teams with a game that week |
+| Median game | Ignored. Heartbreaker and Robbery are head-to-head only |
+| Empty starting slots | Their lost points show up in Bench Blunder through metric 3, and in Asleep at the Wheel if enabled |
+| Players added mid-week | Count for Pickup of the Week: a player added on Saturday and started on Sunday qualifies, because the add is in that week's transactions. Preseason adds count too |
+| Pickup history | Only the team's most recent acquisition of the player counts. A player added off waivers and later traded away and back counts as a trade, so he does not qualify. Drafted players never qualify |
+| Head-to-head tie | A tied game is neither a win nor a loss, so neither team is eligible for Heartbreaker, Robbery, Blowout, or Nail-Biter that week |
+| Small early-season samples | Not applicable: every award uses a single week. Season-long awards are a possible Phase 5 extra |
+
+**Expected range.** One row per enabled award per week, more with co-winners and fewer when an award is skipped. Values lie within the ranges of their source metrics.
+
+**Sanity checks.**
+1. `top_score` value = that week's maximum `points`; `lowest_score` value = the minimum.
+2. Every `heartbreaker` winner lost and every `robbery` winner won that week; the Heartbreaker's score ≥ every other loser's, and the Robbery winner's score ≤ every other winner's.
+3. `blowout` value = the week's largest positive margin.
+4. `bench_blunder` value equals metric 3's *B* for the winner.
+5. The `mvp` player was a starter for the winning team that week, and no starter that week scored more.
+6. The `pickup_of_the_week` player was a starter for the winning team, and that team's most recent add of him (at or before that week) was a `waiver` or `free_agent` transaction.
+7. Every key in `metrics.awards.enabled` is one of the keys above.
