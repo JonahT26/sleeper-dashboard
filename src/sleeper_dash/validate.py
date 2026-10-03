@@ -299,6 +299,42 @@ def check_optimal_lineups(lineups, chosen, team_weeks):
     return _result("Optimal lineups are consistent", problems, f"{len(both)} team-weeks; optimal >= actual")
 
 
+def check_season_efficiency(season, lineups):
+    """Season-to-date lineup efficiency (METRICS_SPEC.md section 3).
+
+    For every team and through_week: efficiency = Σ actual ÷ Σ optimal over weeks 1…through_week
+    (to the stored 4 dp), between 0 and 1, and null only when Σ optimal <= 0; points left on the
+    bench = Σ (optimal − actual), within 0.01 and never negative. Every team-week of
+    lineups_optimal needs a metrics_season row and vice versa.
+    """
+    problems = []
+    frames = []
+    for through_week in sorted(lineups["week"].unique()):
+        totals = lineups[lineups["week"] <= through_week].groupby(["season", "roster_id"])[["actual_points", "optimal_points"]].sum()
+        frames.append(totals.reset_index().assign(through_week=through_week))
+    expected = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=["season", "roster_id", "through_week"])
+    key = ["season", "through_week", "roster_id"]
+    merged = season[key + ["efficiency", "bench_points_lost"]].merge(expected, on=key, how="outer", indicator="source")
+    where = lambda r: f"through week {r.through_week}, roster {r.roster_id}"
+    problems += [f"{where(r)}: missing from {'metrics_season' if r.source == 'right_only' else 'lineups_optimal'}"
+                 for r in merged[merged["source"] != "both"].itertuples()]
+    for r in merged[merged["source"] == "both"].itertuples():
+        if r.optimal_points <= 0:
+            if pd.notna(r.efficiency):
+                problems.append(f"{where(r)}: efficiency {r.efficiency} with no optimal points")
+            continue
+        ratio = r.actual_points / r.optimal_points
+        if pd.isna(r.efficiency) or abs(r.efficiency - ratio) > 0.00005 + 1e-9:
+            problems.append(f"{where(r)}: efficiency {r.efficiency} vs total actual / total optimal {ratio:.4f}")
+        elif not 0 <= r.efficiency <= 1:
+            problems.append(f"{where(r)}: efficiency {r.efficiency} outside 0–1")
+        bench = r.optimal_points - r.actual_points
+        if abs(r.bench_points_lost - bench) > TOLERANCE or r.bench_points_lost < 0:
+            problems.append(f"{where(r)}: points left on the bench {r.bench_points_lost} vs {bench:.2f}")
+    return _result("Season lineup efficiency is consistent", problems,
+                   f"{(merged['source'] == 'both').sum()} team-season rows = total actual / total optimal")
+
+
 def check_allplay_and_luck(weekly, season, team_weeks, rosters):
     """All-play and luck invariants (METRICS_SPEC.md sections 1 and 2).
 
@@ -386,6 +422,8 @@ def run_metric_checks(tables, league, rosters):
         results.append(check_allplay_and_luck(tables["metrics_team_weeks"], tables["metrics_season"], team_weeks, rosters))
         if "is_boom" in tables["metrics_team_weeks"]:
             results.append(check_consistency_and_sos(tables["metrics_team_weeks"], tables["metrics_season"], league))
+        if "efficiency" in tables["metrics_season"] and "lineups_optimal" in tables:
+            results.append(check_season_efficiency(tables["metrics_season"], tables["lineups_optimal"]))
     if "power_rankings" in tables:
         results.append(check_power_rankings(tables["power_rankings"], team_weeks))
     if "awards" in tables:

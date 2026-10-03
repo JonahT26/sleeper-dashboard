@@ -16,6 +16,7 @@ def build_metric_tables(tables, params):
 
     params = config.yaml metrics section.
     """
+    from sleeper_dash.lineup import efficiency_season
     from sleeper_dash.metrics import allplay, awards, consistency, power, schedule
 
     team_weeks = tables["team_weeks"]
@@ -29,6 +30,7 @@ def build_metric_tables(tables, params):
         allplay_season
         .merge(consistency.consistency_season(team_weeks, consistency_weekly, params["consistency"]), on=SEASON_KEY, validate="one_to_one")
         .merge(schedule.strength_of_schedule(team_weeks, tables["schedule"], params["schedule"]), on=SEASON_KEY, validate="one_to_one")
+        .merge(efficiency_season(tables["lineups_optimal"]), on=SEASON_KEY, validate="one_to_one")
     )
     if len(weekly) != len(team_weeks) or len(season) != len(allplay_season):
         raise ValueError("Metric tables lost rows while combining; check that every module covers the same team-weeks.")

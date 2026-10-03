@@ -9,7 +9,7 @@ Written 2026-10-02 at the end of the first working session (Phases 0 and 1). A n
 | 0 · Setup (environment, repo, API smoke test) | **Complete** |
 | 1 · Data pull (raw extract, tidy tables, validation, pipeline) | **Complete** |
 | 2 · Metrics | **Complete** (2026-10-02): spec written with the owner, all seven metrics built and validated |
-| 3 · Dashboard | **Next** |
+| 3 · Dashboard | **In progress**: plan steps 1–2 done (2026-10-02) |
 | 4 · Automation, 5 · Extras | Not started |
 
 **Update at the end of Phase 2 (2026-10-02):** the pipeline now runs extract → transform → 7 data checks → optimal lineups and metrics → 6 metric checks → save 11 tables, with 23 API calls in about 6.5 seconds; 211 tests pass; outputs are byte-identical across runs. `CLAUDE.md` "Current status" and `docs/CODEBASE.md` describe the current state; the Phase 1 notes below are kept for history. Phase 2 decisions are in section 6 and in `docs/METRICS_SPEC.md`.
@@ -69,13 +69,14 @@ Dev/
 │   ├── extract.py                raw JSON → data/raw/{season}/ via .partial staging; latest_completed_week()
 │   ├── transform.py              build_teams / build_team_weeks / build_player_weeks / build_transactions;
 │   │                             build_tables(season), save_tables(); main() prints detailed reports
-│   ├── validate.py               6 checks; validate() raises ValidationError; load_tables() reads CSVs with IDs as text
-│   ├── pipeline.py               extract → build → validate → save → re-validate saved CSVs; exit 1 on failure
-│   ├── metrics/__init__.py       empty (Phase 2)
+│   ├── validate.py               14 checks (7 data, 7 metric); validate() raises ValidationError; load_tables() reads CSVs with IDs as text
+│   ├── pipeline.py               extract → transform → data checks → metrics → metric checks → save → re-check; exit 1 on failure
+│   ├── lineup.py                 optimal lineups (assignment problem); weekly and season-to-date efficiency
+│   ├── metrics/                  allplay, consistency, schedule, power, awards; __init__ combines them
 │   └── dashboard/                empty (Phase 3)
 ├── scripts/smoke_test.py         Phase 0 one-off API check
-├── notebooks/01_data_check.ipynb standings, box plot, histogram, heatmap (committed without outputs)
-├── tests/                        63 tests: api, extract, transform, validate, pipeline; conftest blocks network
+├── notebooks/                    01_data_check, 02_power_score_sensitivity (committed without outputs)
+├── tests/                        221 tests (one file per module); conftest blocks network
 │   └── fixtures/                 matchups_week_01.json, rosters.json (owner IDs and nicknames anonymised)
 ├── data/raw/                     GITIGNORED (personal settings); re-downloaded every run
 ├── data/cache/                   GITIGNORED players cache
@@ -121,6 +122,8 @@ Dev/
 | 2026-10-02 | Nail-biter award enabled (nine awards) | Owner | config.yaml, METRICS_SPEC.md §7 |
 | 2026-10-02 | Results weight in the power score kept at 0.20 for now, despite penalising unlucky teams | Owner | — |
 | 2026-10-02 | Site published from `site/` by a GitHub Actions workflow; `site/` gitignored | Claude, delegated by owner | CLAUDE.md, .gitignore |
+| 2026-10-02 | Dark-mode masthead: `--masthead` `#18392B` in both modes | Owner | CLAUDE.md, UI_GUIDE.md |
+| 2026-10-02 | Season efficiency stored in `metrics_season` with season points left on the bench alongside it | Claude (spec §3 defines both) | CODEBASE.md |
 
 ## 7. Open questions and assumptions to verify
 
@@ -141,7 +144,6 @@ Dev/
 - ~~**Ladder record:**~~ Settled 2026-10-02: overall record including median games (see decisions log).
 - ~~**Retroactive changes:**~~ Settled 2026-10-02: recompute everything every run (see decisions log).
 - **Where league members see updates:** bookmark only, or also a group-chat post (CLAUDE.md open decision, Phase 5).
-- **Dark-mode masthead:** Claude proposed `#18392B` in both modes (UI_GUIDE.md Color); awaiting the owner's approval.
 - **Phase 4 scheduling:** GitHub Actions cron runs in UTC, so 9 AM ET shifts by an hour with daylight saving.
 
 ## 8. Known risks (end of Phase 2)
@@ -156,14 +158,13 @@ Ordered by impact. None of these are bugs today; each is a place where something
 6. **Unexplained `ppts` gaps** (0.02–4.00 points, below the warning threshold).
 7. **Posted numbers can change** after stat corrections (deliberate: full recompute), including last week's ranks and awards.
 8. **Near-ties at the top** of the power rankings (#1 and #2 are 0.004 apart through week 3); the order there is effectively arbitrary.
-9. **Season-to-date lineup efficiency** is not yet a `metrics_season` column (needed by the efficiency chart).
 
 ## 9. Plan for Phase 3 (dashboard)
 
 Follow `docs/UI_GUIDE.md` for everything user-facing.
 
-1. Add season-to-date lineup efficiency (Σ actual ÷ Σ optimal, already defined in METRICS_SPEC.md §3) to `metrics_season`, with a metric check.
-2. Get the owner's answer on the dark-mode masthead proposal.
+1. ~~Add season-to-date lineup efficiency to `metrics_season`, with a metric check.~~ Done 2026-10-02 (`efficiency`, `bench_points_lost`; check "Season lineup efficiency is consistent").
+2. ~~Get the owner's answer on the dark-mode masthead proposal.~~ Approved 2026-10-02: `--masthead` `#18392B` in both modes.
 3. Build `src/sleeper_dash/dashboard/`: `theme.py` (the one shared Plotly theme), a Jinja2 template, and a page builder that writes `site/index.html` from the saved CSVs. Embed every week's data as JSON so the week selector needs no network call. Section order as in UI_GUIDE.md; hide metric sections that aren't available yet.
 4. Draft the "How this works" copy and show it to the owner for review before it is published.
 5. Add `python -m sleeper_dash.dashboard`, tests (sections present, no external calls besides fonts and the Plotly CDN, page weight under 1 MB), and preview the page in the browser pane at phone and desktop widths.
@@ -176,6 +177,6 @@ Phase 1 commits are listed in `git log` up to `1ad16d1`; Phase 2 ran from `efaa8
 ## 11. First steps for the new session
 
 1. Read `CLAUDE.md` (Current status, Decisions made, Open decisions), this file, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`.
-2. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect 211 passed) and `git status` (expect clean, in sync with `origin/main`).
+2. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect 221 passed) and `git status` (expect clean, in sync with `origin/main`).
 3. Refresh the data with `.venv\Scripts\python.exe -m sleeper_dash.pipeline`: expect every data and metric check to pass and 9 awards per week. Commit the updated processed CSVs.
-4. Start Phase 3 with step 1 of the plan above.
+4. Continue Phase 3 at step 3 of the plan above (steps 1 and 2 are done).

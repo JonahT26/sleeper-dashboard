@@ -44,6 +44,7 @@ LINEUPS_OPTIMAL_PLAYERS_COLUMNS = [
     "season", "week", "roster_id", "slot_order", "lineup_slot", "player_id", "full_name", "position",
     "points", "is_empty_slot", "was_started",
 ]
+EFFICIENCY_SEASON_COLUMNS = ["season", "through_week", "roster_id", "efficiency", "bench_points_lost"]
 
 
 def starting_slots(roster_positions):
@@ -158,6 +159,30 @@ def build_optimal_lineups(player_weeks, team_weeks, roster_positions, positions_
          "is_empty_slot": "bool", "was_started": "bool"}
     )
     return lineups.reset_index(drop=True), players
+
+
+def efficiency_season(lineups):
+    """Season-to-date lineup efficiency for every team as of every completed week (METRICS_SPEC.md section 3).
+
+    efficiency = Σ actual ÷ Σ optimal over weeks 1…through_week (4 dp), weighting each week by its
+    optimal points; never the mean of the weekly ratios (owner decision). Null if Σ optimal <= 0.
+    bench_points_lost = Σ (optimal − actual), 2 dp. Every week counts, playoffs included.
+    """
+    frames = []
+    for season, through_week in lineups[["season", "week"]].drop_duplicates().sort_values(["season", "week"]).itertuples(index=False):
+        so_far = lineups[(lineups["season"] == season) & (lineups["week"] <= through_week)]
+        totals = so_far.groupby("roster_id")[["actual_points", "optimal_points"]].sum()
+        table = pd.DataFrame({
+            "efficiency": (totals["actual_points"] / totals["optimal_points"]).where(totals["optimal_points"] > 0).round(4),
+            "bench_points_lost": (totals["optimal_points"] - totals["actual_points"]).round(2),
+        }).reset_index()
+        table.insert(0, "season", season)
+        table.insert(1, "through_week", through_week)
+        frames.append(table)
+    table = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=EFFICIENCY_SEASON_COLUMNS)
+    return table[EFFICIENCY_SEASON_COLUMNS].astype(
+        {"season": "int64", "through_week": "int64", "roster_id": "int64", "efficiency": "float64", "bench_points_lost": "float64"}
+    ).sort_values(["season", "through_week", "roster_id"]).reset_index(drop=True)
 
 
 def build_lineup_tables(tables, league, players):

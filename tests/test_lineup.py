@@ -8,16 +8,18 @@ import pandas as pd
 import pytest
 
 from sleeper_dash.lineup import (
+    EFFICIENCY_SEASON_COLUMNS,
     LINEUPS_OPTIMAL_COLUMNS,
     LINEUPS_OPTIMAL_PLAYERS_COLUMNS,
     SLOT_ELIGIBILITY,
     build_optimal_lineups,
     compare_to_sleeper_max,
+    efficiency_season,
     eligible_positions,
     solve_lineup,
     starting_slots,
 )
-from sleeper_dash.validate import check_optimal_lineups
+from sleeper_dash.validate import check_optimal_lineups, check_season_efficiency
 
 ROSTER_POSITIONS = ["QB", "RB", "RB", "WR", "WR", "FLEX", "REC_FLEX", "SUPER_FLEX", "K", "DEF"] + ["BN"] * 6
 SLOTS = starting_slots(ROSTER_POSITIONS)
@@ -250,3 +252,75 @@ def test_duplicate_lineup_keys_fail_validation(name):
     tables[name] = pd.concat([tables[name], tables[name].iloc[[0]]])
     result = check_unique_keys(tables)
     assert not result.passed and result.detail.startswith(name)
+
+
+def weekly_lineups(rows):
+    """lineups_optimal rows from (week, roster_id, actual, optimal) tuples."""
+    table = pd.DataFrame(rows, columns=["week", "roster_id", "actual_points", "optimal_points"]).assign(season=2026)
+    table["bench_points_lost"] = (table["optimal_points"] - table["actual_points"]).round(2)
+    table["efficiency"] = (table["actual_points"] / table["optimal_points"]).where(table["optimal_points"] > 0).round(4)
+    return table[LINEUPS_OPTIMAL_COLUMNS]
+
+
+# Team 1: 90 of 100, then 150 of 200. Team 2: perfect both weeks.
+TWO_WEEKS = weekly_lineups([(1, 1, 90.0, 100.0), (1, 2, 120.0, 120.0), (2, 1, 150.0, 200.0), (2, 2, 80.0, 80.0)])
+
+
+def test_season_efficiency_is_total_actual_over_total_optimal_not_the_mean_of_weekly_ratios():
+    season = efficiency_season(TWO_WEEKS).set_index(["through_week", "roster_id"])
+    assert season.loc[(1, 1), "efficiency"] == 0.9
+    assert season.loc[(2, 1), "efficiency"] == 0.8          # 240 / 300; the mean of 90% and 75% would be 82.5%
+    assert season.loc[(1, 1), "bench_points_lost"] == 10.0
+    assert season.loc[(2, 1), "bench_points_lost"] == 60.0
+    assert season.loc[(2, 2), "efficiency"] == 1.0 and season.loc[(2, 2), "bench_points_lost"] == 0.0
+
+
+def test_season_efficiency_has_one_row_per_team_per_week_and_spec_columns():
+    season = efficiency_season(TWO_WEEKS)
+    assert list(season.columns) == EFFICIENCY_SEASON_COLUMNS
+    assert season[["through_week", "roster_id"]].values.tolist() == [[1, 1], [1, 2], [2, 1], [2, 2]]
+
+
+def test_season_efficiency_is_null_only_without_optimal_points():
+    season = efficiency_season(weekly_lineups([(1, 1, 0.0, 0.0), (2, 1, 50.0, 100.0)])).set_index("through_week")
+    assert math.isnan(season.loc[1, "efficiency"])
+    assert season.loc[2, "efficiency"] == 0.5
+
+
+def test_season_efficiency_counts_playoff_weeks():
+    season = efficiency_season(weekly_lineups([(14, 1, 100.0, 100.0), (15, 1, 50.0, 100.0)])).set_index("through_week")
+    assert season.loc[15, "efficiency"] == 0.75
+
+
+@pytest.mark.parametrize("seed", range(5))
+def test_season_efficiency_lies_between_the_best_and_worst_week(seed):
+    rng = random.Random(seed)
+    rows = []
+    for week in range(1, 18):
+        for roster_id in range(1, 13):
+            optimal = round(rng.uniform(80, 200), 2)
+            rows.append((week, roster_id, round(optimal - rng.uniform(0, 50), 2), optimal))
+    lineups = weekly_lineups(rows)
+    season = efficiency_season(lineups)
+    assert check_season_efficiency(season, lineups).passed
+    for r in season.itertuples():
+        weeks = lineups[(lineups["roster_id"] == r.roster_id) & (lineups["week"] <= r.through_week)]["efficiency"]
+        assert weeks.min() - 0.0001 <= r.efficiency <= weeks.max() + 0.0001
+
+
+def test_validation_flags_wrong_season_efficiency():
+    season = efficiency_season(TWO_WEEKS)
+    assert check_season_efficiency(season, TWO_WEEKS).passed
+
+    mean_of_ratios = season.copy()
+    mean_of_ratios.loc[(season["through_week"] == 2) & (season["roster_id"] == 1), "efficiency"] = 0.825
+    assert "total actual / total optimal 0.8000" in check_season_efficiency(mean_of_ratios, TWO_WEEKS).detail
+
+    bench = season.assign(bench_points_lost=season["bench_points_lost"] + 1)
+    assert "points left on the bench" in check_season_efficiency(bench, TWO_WEEKS).detail
+
+    missing = season.iloc[1:]
+    assert "missing from metrics_season" in check_season_efficiency(missing, TWO_WEEKS).detail
+
+    blank = season.assign(efficiency=float("nan"))
+    assert not check_season_efficiency(blank, TWO_WEEKS).passed

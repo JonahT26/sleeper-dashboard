@@ -18,7 +18,8 @@ The look borrows from the physical game, not from SaaS dashboards: turf green, c
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `--turf` | `#18392B` | `#0F1F17` | Masthead band; dark-mode page background. **Pending owner approval (2026-10-02):** a `--masthead` token, `#18392B` in both modes, so the dark-mode masthead stands out from the `#0F1F17` page (1.35:1 step; chalk text 10.7:1, muted text 5.4:1) |
+| `--turf` | `#18392B` | `#0F1F17` | Dark-mode page background (and the turf green in light mode) |
+| `--masthead` | `#18392B` | `#18392B` | Masthead band. The same in both modes, so in dark mode it stands out from the `#0F1F17` page (1.35:1 step; chalk text 10.7:1, muted text 5.4:1). Approved by the owner 2026-10-02 |
 | `--chalk` | `#F6F8F4` | `#E8EDE9` | Light-mode page background; dark-mode text |
 | `--ink` | `#15201A` | `#E8EDE9` | Body text |
 | `--muted` | `#5B6B61` | `#9DADA3` | Secondary text, captions, axis labels |

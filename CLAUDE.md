@@ -72,16 +72,16 @@ Keep this list current as commands are added.
 
 ## Current status
 
-**Phase 2 — Metrics: complete (2026-10-02). Next: Phase 3 — Dashboard** (static HTML per `docs/UI_GUIDE.md`). Update this section at the end of every phase.
+**Phase 3 — Dashboard: in progress** (static HTML per `docs/UI_GUIDE.md`; plan in `docs/HANDOFF.md` section 9). Phase 2 — Metrics: complete (2026-10-02). Update this section at the end of every phase.
 
 **Starting a new session? Read `docs/HANDOFF.md` first.** It covers working style, environment quirks, the decisions log, open questions, and the next steps.
 
 Where things stand:
-- `python -m sleeper_dash.pipeline` runs a full refresh: extract → transform → 7 data checks → optimal lineups and metrics → 6 metric invariant checks → save → re-check the saved files. Either group of checks stops the run before anything is saved. Weeks 1–3: every check passes, 23 API calls, ~6.5 seconds, and two consecutive runs give byte-identical outputs.
+- `python -m sleeper_dash.pipeline` runs a full refresh: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric invariant checks → save → re-check the saved files. Either group of checks stops the run before anything is saved. Weeks 1–3: every check passes, 23 API calls, ~6.5 seconds, and two consecutive runs give byte-identical outputs.
 - 11 tables in `data/processed/` (schemas in `docs/CODEBASE.md`): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule`, `lineups_optimal`, `lineups_optimal_players`, `metrics_team_weeks`, `metrics_season`, `power_rankings`, `awards`.
 - Every metric follows `docs/METRICS_SPEC.md` (owner-approved): all-play record, expected wins and luck, lineup efficiency, consistency, strength of schedule, power score, weekly awards. Every weight and threshold is in `config.yaml` under `metrics:`.
-- 211 tests pass. Notebooks: `01_data_check.ipynb` (data eyeballing), `02_power_score_sensitivity.ipynb` (power weights ±25%: rankings robust; only near-tied teams move).
-- Known gap: season-to-date lineup efficiency (Σ actual ÷ Σ optimal) is not yet a column in `metrics_season`.
+- 221 tests pass. Notebooks: `01_data_check.ipynb` (data eyeballing), `02_power_score_sensitivity.ipynb` (power weights ±25%: rankings robust; only near-tied teams move).
+- Phase 3 step 1 done (2026-10-02): `metrics_season` has season-to-date lineup efficiency (Σ actual ÷ Σ optimal) and points left on the bench, with their own metric check.
 - To verify at week 15: whether Sleeper plays the median game in the playoffs, whether roster `wins`/`fpts`/`ppts` include playoff games, and how non-playoff teams appear in matchups.
 
 Roadmap:
@@ -110,9 +110,9 @@ Roadmap:
   - The owner reviews the "How this works" copy before it goes live.
   - Nail-biter is enabled (nine weekly awards).
   - The power score's results weight stays at 0.20 for now.
+- **Dark-mode masthead** (owner, 2026-10-02): a `--masthead` colour token, `#18392B` in both light and dark modes, so the masthead stands out from the dark-mode page (`docs/UI_GUIDE.md` Color).
 - **Hosting** (Claude, delegated by the owner, 2026-10-02): GitHub Pages publishes the built `site/` folder through a GitHub Actions workflow (Pages source: "GitHub Actions"), not from a branch or the `docs/` folder. `site/` is a build output and stays out of git; `docs/` stays internal.
 
 ## Open decisions
 
 - Where league members see updates: bookmark only, or also an automatic post to a group chat (Phase 5).
-- Dark-mode masthead colour: Claude proposed `#18392B` in both modes (see `docs/UI_GUIDE.md` Color); awaiting the owner's approval.

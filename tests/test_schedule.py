@@ -6,7 +6,7 @@ import pytest
 from sleeper_dash.metrics import build_metric_tables
 from sleeper_dash.metrics.schedule import SEASON_COLUMNS, strength_of_schedule
 from sleeper_dash.transform import build_schedule, build_team_weeks
-from sleeper_dash.validate import check_consistency_and_sos, check_schedule
+from sleeper_dash.validate import check_consistency_and_sos, check_schedule, check_season_efficiency
 
 # A 4-team league with a 4-week regular season (playoffs from week 5).
 LEAGUE = {"season": "2026", "settings": {"num_teams": 4, "start_week": 1, "playoff_week_start": 5, "league_average_match": 0}}
@@ -134,7 +134,7 @@ def test_metric_tables_combine_every_module_and_pass_validation():
                         "recent_weeks": 3, "scale": 15, "shrink_weeks": 3}}
     params["awards"] = {"enabled": ["top_score", "blowout"]}
     lineups = team_weeks[["season", "week", "roster_id"]].assign(
-        optimal_points=team_weeks["points"] + 5, bench_points_lost=5.0, efficiency=team_weeks["points"] / (team_weeks["points"] + 5))
+        actual_points=team_weeks["points"], optimal_points=team_weeks["points"] + 5, bench_points_lost=5.0, efficiency=team_weeks["points"] / (team_weeks["points"] + 5))
     players = team_weeks[["season", "week", "roster_id", "points"]].assign(
         player_id=team_weeks["roster_id"].astype(str), full_name="Player", is_starter=True, is_empty_slot=False)
     moves = pd.DataFrame(columns=["transaction_id", "season", "week", "type", "roster_id", "player_id", "action", "created_at", "is_preseason"])
@@ -147,8 +147,9 @@ def test_metric_tables_combine_every_module_and_pass_validation():
     weekly, season = tables["metrics_team_weeks"], tables["metrics_season"]
     assert len(weekly) == len(team_weeks) and len(season) == 3 * 4
     assert {"luck", "is_boom", "points_vs_median"} <= set(weekly.columns)
-    assert {"luck", "volatility", "sos_played", "sos_remaining"} <= set(season.columns)
+    assert {"luck", "volatility", "sos_played", "sos_remaining", "efficiency", "bench_points_lost"} <= set(season.columns)
     assert check_consistency_and_sos(weekly, season, LEAGUE).passed
+    assert check_season_efficiency(season, lineups).passed
 
     broken = season.assign(sos_games_remaining=season["sos_games_remaining"] + 1)
     assert "expected 4" in check_consistency_and_sos(weekly, broken, LEAGUE).detail
