@@ -76,7 +76,7 @@ Dev/
 │   └── dashboard/                empty (Phase 3)
 ├── scripts/smoke_test.py         Phase 0 one-off API check
 ├── notebooks/                    01_data_check, 02_power_score_sensitivity (committed without outputs)
-├── tests/                        221 tests (one file per module); conftest blocks network
+├── tests/                        245 tests (one file per module); conftest blocks network
 │   └── fixtures/                 matchups_week_01.json, rosters.json (owner IDs and nicknames anonymised)
 ├── data/raw/                     GITIGNORED (personal settings); re-downloaded every run
 ├── data/cache/                   GITIGNORED players cache
@@ -168,6 +168,8 @@ Follow `docs/UI_GUIDE.md` for everything user-facing.
 1. ~~Add season-to-date lineup efficiency to `metrics_season`, with a metric check.~~ Done 2026-10-02 (`efficiency`, `bench_points_lost`; check "Season lineup efficiency is consistent").
 2. ~~Get the owner's answer on the dark-mode masthead proposal.~~ Approved 2026-10-02: `--masthead` `#18392B` in both modes.
 3. A throwaway prototype of the masthead and ladder was reviewed with the owner on 2026-10-02 (decisions in section 6 and `UI_GUIDE.md` Ladder row). Build `src/sleeper_dash/dashboard/`: `theme.py` (the one shared Plotly theme), a Jinja2 template, and a page builder that writes `site/index.html` from the saved CSVs. Embed every week's data as JSON so the week selector needs no network call, but write the latest week into the HTML at build time so it shows without JavaScript. The pipeline must record its run time for the "Updated" line. Section order as in UI_GUIDE.md; hide metric sections that aren't available yet.
+   - **Done 2026-10-02:** `dashboard/build.py`, the template, and `python -m sleeper_dash.dashboard`: masthead, ladder, weekly awards, every week as of that week. Earlier weeks are pre-drawn into `<template>` blocks rather than embedded as JSON and drawn by JavaScript: one renderer (Python and Jinja2) instead of two that could drift. Chart data will be embedded as JSON when the chart sections arrive. The pipeline writes `data/cache/pipeline_run.json` for the "Updated" line.
+   - **Next:** `theme.py` and the chart sections (luck, lineup efficiency, consistency, strength of schedule, rank history), then "How this works".
 4. Draft the "How this works" copy and show it to the owner for review before it is published.
 5. Add `python -m sleeper_dash.dashboard`, tests (sections present, no external calls besides fonts and the Plotly CDN, page weight under 1 MB), and preview the page in the browser pane at phone and desktop widths.
 6. Phase 4 then adds the GitHub Actions workflow: run the pipeline, build `site/`, publish to Pages (fix risk 1 and pin dependencies first).

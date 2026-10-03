@@ -1,0 +1,130 @@
+/* Design tokens and components from docs/UI_GUIDE.md. Mobile first: base rules are for phones. */
+:root {
+  --turf: #18392B; --chalk: #F6F8F4; --ink: #15201A; --muted: #5B6B61; --hash: #D5DDD7;
+  --pylon: #E8590C; --up: #1D6FB8; --down: #B42318; --bar: #9AA79F;
+  --masthead: #18392B; --on-mast: #F6F8F4; --on-mast-muted: #9DADA3;
+  --page: var(--chalk);
+  color-scheme: light;
+  interpolate-size: allow-keywords;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --turf: #0F1F17; --chalk: #E8EDE9; --ink: #E8EDE9; --muted: #9DADA3; --hash: #2A3D33;
+    --pylon: #FF7A2E; --up: #5AA2E0; --down: #F07060; --bar: #5E7066;
+    --on-mast: #E8EDE9; --page: var(--turf);
+    color-scheme: dark;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink);
+  font: 400 15px/1.5 Barlow, system-ui, -apple-system, "Segoe UI", sans-serif; }
+h1, h2, h3, p { margin: 0; }
+.display { font-family: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif; }
+.num { font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--pylon); outline-offset: 2px; }
+.wrap { max-width: 1200px; padding: 0 16px; }
+
+/* Masthead */
+.mast { background: var(--masthead); color: var(--on-mast); }
+.mast .wrap { padding-top: 16px; padding-bottom: 16px; display: grid; gap: 4px 16px;
+  grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "league week" "title title" "updated updated"; }
+.league { grid-area: league; font-weight: 600; font-size: 20px; line-height: 1.15; align-self: center; }
+.title { grid-area: title; margin-top: 8px; font-weight: 700; font-size: 28px; line-height: 1.15; }
+.updated { grid-area: updated; font-size: 13px; color: var(--on-mast-muted); }
+.week-pick { grid-area: week; align-self: center; visibility: hidden; }
+.js .week-pick { visibility: visible; }  /* the selector needs JavaScript; without it the page shows the latest week */
+.week-pick select {
+  font: 600 15px/1.2 Barlow, system-ui, sans-serif; color: var(--on-mast); background: transparent;
+  border: 1px solid var(--on-mast-muted); border-radius: 6px; padding: 8px 32px 8px 12px; min-height: 40px;
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 17px) 55%, calc(100% - 12px) 55%; background-size: 5px 5px; background-repeat: no-repeat;
+}
+.week-pick select option { color: #15201A; background: #F6F8F4; }
+
+main .wrap { padding-top: 12px; padding-bottom: 64px; }
+.key { margin-bottom: 4px; font-size: 13px; color: var(--muted); }
+.section-title { font-weight: 700; font-size: 28px; line-height: 1.15; margin: 40px 0 12px; }
+
+/* Diverging bar: runs right (above) or left (below) from the centre line */
+.div { position: relative; height: 8px; }
+.div::before { content: ""; position: absolute; left: 0; right: 0; top: 3px; height: 2px; background: var(--hash); }
+.div .mid { position: absolute; left: 50%; top: -3px; bottom: -3px; border-left: 1px solid var(--muted); }
+.div .fill { position: absolute; top: 0; bottom: 0; background: var(--bar); transition: transform 700ms cubic-bezier(.2, .7, .2, 1); }
+.div .fill.pos { transform-origin: left center; }
+.div .fill.neg { transform-origin: right center; }
+.preload .l3 .fill { transform: scaleX(0); }  /* the one grow-in, on first load */
+
+/* Ladder */
+.ladder { list-style: none; margin: 0; padding: 0; }
+.team { border-bottom: 1px solid var(--hash); }
+.row { display: grid; cursor: pointer; border-radius: 6px; padding: 10px 8px; column-gap: 12px; list-style: none;
+  grid-template-columns: 52px minmax(0, 1fr); grid-template-areas: "rank l1" "rank l2" "rank l3"; }
+.row::-webkit-details-marker { display: none; }
+.row:hover { background: color-mix(in srgb, var(--hash) 35%, transparent); }
+.row:focus-visible { outline: 2px solid var(--pylon); outline-offset: -2px; }
+.rank { grid-area: rank; font-weight: 700; font-size: 48px; line-height: 1; color: var(--ink); text-align: right; padding-top: 2px; }
+.team:first-child .rank { color: var(--pylon); }
+.l1, .l2, .l3 { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.l1 { grid-area: l1; } .l2 { grid-area: l2; }
+.l3 { grid-area: l3; align-items: center; margin-top: 4px; }
+.name { flex: 1; min-width: 0; font-weight: 600; font-size: 16px; line-height: 1.3; }
+.move { font-weight: 600; font-size: 18px; line-height: 1.25; white-space: nowrap; }
+.move.up { color: var(--up); } .move.down { color: var(--down); } .move.same { color: var(--muted); }
+.user { flex: 1; min-width: 0; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec { white-space: nowrap; }
+.l3 .div { flex: 1; }
+.team:first-child .l3 .fill { background: var(--pylon); }
+.val { width: 2.6em; text-align: right; font-weight: 600; font-size: 20px; line-height: 1; }
+
+/* Breakdown: the one expand animation (browsers without ::details-content open it instantly) */
+details::details-content { block-size: 0; overflow: hidden;
+  transition: block-size 220ms ease, content-visibility 220ms allow-discrete; }
+details[open]::details-content { block-size: auto; }
+.bd-body { padding: 0 8px 16px; }
+.parts { width: 100%; border-collapse: collapse; font-size: 13px; }
+.parts th, .parts td { padding: 8px 0 8px 12px; text-align: right; vertical-align: top; border-bottom: 1px solid var(--hash); font-weight: 400; }
+.parts thead th { font-weight: 600; color: var(--muted); padding-top: 4px; padding-bottom: 4px; white-space: nowrap; }
+.parts th:first-child { text-align: left; padding-left: 0; }
+.parts .comp { display: block; font-weight: 600; font-size: 15px; white-space: nowrap; }
+.parts .detail { display: block; color: var(--muted); }
+.parts .vs { width: 36%; }
+.parts .vs-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.parts .vs-cell .div { flex: 1; max-width: 160px; }
+.parts .vs-num { width: 2.6em; white-space: nowrap; font-size: 15px; }
+.parts .sc { font-size: 15px; white-space: nowrap; }
+.parts tr.total th, .parts tr.total td { font-weight: 600; border-bottom: 0; font-size: 15px; }
+
+/* Weekly awards: 2-column tiles on phones */
+.tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tile { border: 1px solid var(--hash); border-radius: 6px; padding: 12px; }
+.award { font-weight: 600; font-size: 20px; line-height: 1.15; }
+.award-value { font-weight: 700; font-size: 28px; line-height: 1.15; margin-top: 4px; }
+.winner { font-weight: 600; margin-top: 4px; line-height: 1.3; }
+.caption { font-size: 13px; color: var(--muted); }
+
+@media (min-width: 768px) {
+  .wrap { padding: 0 24px; }
+  .row { grid-template-columns: 52px minmax(0, 1fr) 11.5em 240px 44px; grid-template-areas: "rank name rec score move" "rank user rec score move";
+    align-items: center; }
+  .l1, .l2 { display: contents; }
+  .name { grid-area: name; } .user { grid-area: user; } .rec { grid-area: rec; } .move { grid-area: move; text-align: right; }
+  .l3 { grid-area: score; margin-top: 0; }
+  .bd-body { padding-left: 72px; max-width: 760px; }
+}
+@media (min-width: 1024px) {
+  body { font-size: 16px; }
+  .mast .wrap { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "league title week" ". updated .";
+    column-gap: 32px; padding-top: 20px; padding-bottom: 20px; }
+  .title { margin-top: 0; align-self: baseline; } .league { align-self: baseline; }
+  .week-view { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; align-items: start; }
+  .tiles { grid-template-columns: 1fr; }
+  .awards .section-title { margin-top: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .div .fill, details::details-content { transition: none; }
+  .preload .l3 .fill { transform: none; }
+}

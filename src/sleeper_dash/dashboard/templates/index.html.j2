@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ league_name }} power rankings</title>
+<meta name="description" content="Weekly power rankings, records, and awards for {{ league_name }}.">
+<script>document.documentElement.classList.add("js", "preload");</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+{% include "styles.css" %}
+</style>
+</head>
+<body>
+{% macro diverging(b) -%}
+<span class="div" aria-hidden="true"><span class="fill {{ b.side }}" style="left:{{ b.left }}%;width:{{ b.width }}%"></span><span class="mid"></span></span>
+{%- endmacro %}
+
+{% macro week_sections(v) %}
+<section class="ladder-section" aria-labelledby="title">
+  <p class="key">Power score: 50 is the league average. Bars run left or right from it. Tap a team to see how its score is built.</p>
+  <ol class="ladder" role="list">
+  {% for t in v.ladder %}
+    <li class="team">
+      <details>
+        <summary class="row">
+          <span class="rank display num">{{ t.rank }}</span>
+          <span class="l1"><span class="name">{{ t.team }}</span><span class="move {{ t.move.kind }} display num"><span aria-hidden="true">{{ t.move.text }}</span><span class="sr">{{ t.move.spoken }}</span></span></span>
+          <span class="l2"><span class="user">{{ t.user }}</span><span class="rec num">{{ t.record }}</span></span>
+          <span class="l3 score">{{ diverging(t.bar) }}<span class="val display num"><span class="sr">power score </span>{{ t.score }}</span></span>
+        </summary>
+        <div class="bd-body">
+          <table class="parts">
+            <caption class="sr">How {{ t.team }}'s power score is built</caption>
+            <thead><tr><th scope="col">Component (weight)</th><th scope="col">Score</th><th scope="col">vs average</th></tr></thead>
+            <tbody>
+            {% for p in t.parts %}
+              <tr>
+                <th scope="row"><span class="comp">{{ p.label }} ({{ p.weight }})</span><span class="detail">{{ p.detail }}</span></th>
+                <td class="sc num">{{ p.score }}</td>
+                <td class="vs"><span class="vs-cell">{{ diverging(p.bar) }}<span class="vs-num num">{{ p.gap }}</span></span></td>
+              </tr>
+            {% endfor %}
+              <tr class="total"><th scope="row">Power score</th><td class="num">{{ t.score }}</td><td class="num"><span class="vs-cell"><span class="vs-num">{{ t.gap }}</span></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </li>
+  {% endfor %}
+  </ol>
+</section>
+{% if v.awards %}
+<section class="awards" aria-labelledby="awards-title-{{ v.week }}">
+  <h2 class="section-title display" id="awards-title-{{ v.week }}">Weekly awards</h2>
+  <ul class="tiles" role="list">
+  {% for a in v.awards %}
+    <li class="tile">
+      <h3 class="award display">{{ a.name }}</h3>
+      <p class="award-value display num">{{ a.value }}</p>
+      {% for w in a.winners %}
+      <p class="winner">{{ w.team }}</p>
+      <p class="caption">{{ w.caption }}</p>
+      {% endfor %}
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endmacro %}
+
+<header class="mast">
+  <div class="wrap">
+    <p class="league display">{{ league_name }}</p>
+    <h1 class="title display" id="title">{{ latest.title }}</h1>
+    <p class="updated">Updated {{ updated }}</p>
+    <div class="week-pick"><label class="sr" for="week">Week</label>
+      <select id="week">
+      {% for w in weeks %}
+        <option value="{{ w }}"{% if w == latest.week %} selected{% endif %}>Week {{ w }}</option>
+      {% endfor %}
+      </select>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="wrap week-view" id="week-view" data-week="{{ latest.week }}">
+{{ week_sections(latest) }}
+  </div>
+</main>
+{% for v in earlier %}
+<template id="week-{{ v.week }}" data-title="{{ v.title }}">
+{{ week_sections(v) }}
+</template>
+{% endfor %}
+<script>
+{% include "page.js" %}
+</script>
+</body>
+</html>

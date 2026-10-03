@@ -46,9 +46,10 @@ def test_failures_exit_with_code_1_and_explain(monkeypatch, capsys, error):
 # --- run(): step order and stopping on failed checks ------------------------------------------
 
 @pytest.fixture
-def steps(monkeypatch):
+def steps(monkeypatch, tmp_path):
     """Fake every step of run(), recording the order they're called in."""
     calls = []
+    monkeypatch.setattr(pipeline, "RUN_RECORD_PATH", tmp_path / "pipeline_run.json")
     team_weeks = pd.DataFrame({"week": [1, 2], "roster_id": [1, 1]})
     config = SimpleNamespace(season=2026, metrics={"efficiency": {"ppts_warn_gap": 5.0}})
     outcome = {"data": True, "metric": True}
@@ -86,6 +87,23 @@ def test_steps_run_in_order(steps):
     assert calls == ["extract", "transform", "data checks", "lineups", "metrics", "metric checks", "save", "reload"]
     assert summary["data_checks"] == [("data check", True, "detail")]
     assert summary["metric_checks"] == [("metric check", True, "detail")]
+
+
+def test_a_successful_run_records_when_it_finished(steps):
+    import json
+
+    pipeline.run()
+    record = json.loads(pipeline.RUN_RECORD_PATH.read_text(encoding="utf-8"))
+    assert record["season"] == 2026 and record["weeks"] == [1, 2]
+    assert record["finished_at"].endswith("+00:00")
+
+
+def test_a_failed_run_records_nothing(steps):
+    _, outcome = steps
+    outcome["metric"] = False
+    with pytest.raises(ValidationError):
+        pipeline.run()
+    assert not pipeline.RUN_RECORD_PATH.exists()
 
 
 def test_a_failed_data_check_stops_before_metrics_and_saves_nothing(steps):
