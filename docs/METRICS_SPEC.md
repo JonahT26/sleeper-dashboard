@@ -8,10 +8,10 @@ The source of truth for every metric. Code follows this file, not the other way 
 |---|---|---|
 | 1 | All-play record | **Confirmed** 2026-10-02 |
 | 2 | Expected wins and luck | **Confirmed** 2026-10-02 |
-| 3 | Lineup efficiency | **Confirmed** 2026-10-02 (one parameter pending) |
+| 3 | Lineup efficiency | **Confirmed** 2026-10-02 |
 | 4 | Consistency | **Confirmed** 2026-10-02 |
-| 5 | Strength of schedule | In interview |
-| 6 | Power score | Not started |
+| 5 | Strength of schedule | **Confirmed** 2026-10-02 |
+| 6 | Power score | In interview |
 | 7 | Weekly awards | Not started |
 
 ## Conventions that apply to every metric
@@ -135,7 +135,7 @@ Why the median game doesn't change luck: a team's median-game result is fully de
 
 ## 3. Lineup efficiency
 
-**Status:** confirmed by the owner, 2026-10-02. The soft-check warning threshold is still to be decided.
+**Status:** confirmed by the owner, 2026-10-02.
 
 **Meaning.** *Optimal points* is the best score a team could have posted with hindsight, using only players on its roster that week. *Efficiency* is the share of that best score the team actually got. *Points left on the bench* is the gap between the two.
 
@@ -173,7 +173,9 @@ The players chosen by the optimal lineup are stored as well (one row per slot pe
 **Inputs.** `player_weeks`: `season`, `week`, `roster_id`, `player_id`, `is_starter`, `is_empty_slot`, `points`, `position`. `team_weeks.points`. League settings: `roster_positions`. Sleeper's `ppts` + `ppts_decimal` from `rosters.json`, for the soft check only.
 
 **Parameters.**
-- `metrics.efficiency.ppts_warn_gap`: *pending owner decision*. The proposed warning threshold for the soft check against Sleeper's max points, in points per team-season.
+| Key | Default | Meaning |
+|---|---|---|
+| `metrics.efficiency.ppts_warn_gap` | 5.0 | Soft check: warn when a team's regular-season optimal points exceed Sleeper's `ppts` by more than this many points (owner decision). Falling below `ppts` always warns |
 
 **Edge cases.**
 
@@ -257,3 +259,55 @@ Calibration (weeks 1–3, 36 team-weeks): *d* has SD 23.5 and ranges from −42.
 3. No week is both a boom and a bust (requires both margins > 0; the code must stop with a clear error if either is 0 or less).
 4. Volatility is unchanged if every team's score in a week is shifted by the same amount.
 5. Boom count + bust count ≤ *n* for every team.
+
+---
+
+## 5. Strength of schedule
+
+**Status:** confirmed by the owner, 2026-10-02.
+
+**Meaning.** How good the opponents a team has faced were, and how good the ones still ahead of it are, compared with an average schedule. Positive means a harder schedule.
+
+**Formula.** Through week *t*:
+
+| Quantity | Definition |
+|---|---|
+| Opponent strength *S₍ⱼ₎(t)* | team *j*'s mean points per week over all completed weeks 1…*t* |
+| Baseline *B₍ᵢ₎(t)* | mean strength of the **other** teams: (Σ₍ⱼ₎ *S₍ⱼ₎(t)* − *S₍ᵢ₎(t)*) ÷ (*N* − 1) |
+| SOS played | mean of *S₍opp₎(t)* over the regular-season opponents team *i* has played in weeks 1…*t*, each game counted once (an opponent faced twice counts twice), minus *B₍ᵢ₎(t)* |
+| SOS remaining | mean of *S₍opp₎(t)* over team *i*'s remaining regular-season opponents (weeks *t*+1 … `playoff_week_start` − 1, from the published schedule), each game counted once, minus *B₍ᵢ₎(t)* |
+
+Both are in points per week. Display: two panels, played and remaining, as diverging bars (`UI_GUIDE.md`), to 1 decimal place.
+
+Owner decisions:
+- Opponent strength is average points per week, not all-play % or the points opponents scored in their games against the team (which mostly duplicates luck).
+- The baseline is the other *N* − 1 teams, because a team never plays itself. Against the plain league average, strong teams would look like they had easy schedules partly by construction.
+- An opponent's games against team *i* are not removed from *S₍ⱼ₎*: in fantasy football, an opponent's score does not depend on who it plays.
+
+**Inputs.** `team_weeks`: `season`, `week`, `roster_id`, `points`, `opponent_roster_id`, `is_playoff`. **New data needed:** the published schedule for future regular-season weeks. Sleeper's matchups endpoint already returns future weeks with pairings (`matchup_id`) and 0 points (checked 2026-10-02 for week 14). Building this metric requires extract to pull weeks *t*+1 … `playoff_week_start` − 1 (about 10 more API calls per run early in the season) into a new `schedule` table: season, week, roster_id, opponent_roster_id, is_completed.
+
+**Parameters** (`config.yaml`):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `metrics.schedule.min_weeks` | 3 | Both SOS values are null until this many weeks are complete |
+
+**Edge cases.**
+
+| Case | Rule |
+|---|---|
+| Small early-season samples | **No shrinkage; hidden until `min_weeks`** (owner decision). Shrinking every team's average toward the league mean would not change the SOS ranking, because every team has played the same number of weeks; it would only scale all values by the same factor |
+| Playoff weeks | **Regular-season schedule only** (owner decision). Playoff opponents come from the bracket, not the schedule. Played SOS covers regular-season games; remaining SOS is null after the last regular-season week. Opponent strength *S* still uses every completed week, including playoff weeks |
+| Median game | Ignored. Its "opponent" is the league median for everyone, so it adds nothing to schedule difficulty |
+| Head-to-head and score ties | Play no role |
+| Empty starting slots, players added mid-week | No adjustment. Opponent strength uses actual scores |
+| Schedule changes | The future schedule is re-read from Sleeper on every run (full refresh) |
+
+**Expected range.** Roughly ±15 points per week early in the season, narrowing to about ±5 by the end of the regular season. Remaining SOS is null once the regular season is over.
+
+**Sanity checks.**
+1. Number of opponents in SOS played = regular-season games played.
+2. Games played + games remaining = number of regular-season weeks (14 in 2026) for every team.
+3. The future schedule is symmetric (if A plays B in a week, B plays A) and each `matchup_id` appears exactly twice per week.
+4. Pairings in the `schedule` table for completed weeks match `team_weeks.opponent_roster_id`.
+5. If every team had the same mean points, every SOS value would be 0.
