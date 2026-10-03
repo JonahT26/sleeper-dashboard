@@ -8,8 +8,8 @@ The source of truth for every metric. Code follows this file, not the other way 
 |---|---|---|
 | 1 | All-play record | **Confirmed** 2026-10-02 |
 | 2 | Expected wins and luck | **Confirmed** 2026-10-02 |
-| 3 | Lineup efficiency | In interview |
-| 4 | Consistency | Not started |
+| 3 | Lineup efficiency | **Confirmed** 2026-10-02 (one parameter pending) |
+| 4 | Consistency | In interview |
 | 5 | Strength of schedule | Not started |
 | 6 | Power score | Not started |
 | 7 | Weekly awards | Not started |
@@ -130,3 +130,73 @@ Why the median game doesn't change luck: a team's median-game result is fully de
 2. 0 ≤ *xW₍ᵢ,w₎* ≤ 1 and −1 < *λ₍ᵢ,w₎* < 1 for every team-week.
 3. A head-to-head win with the week's top score has *λ* = 0; a loss with the week's bottom score has *λ* = 0.
 4. Season Σ*A* reproduces the head-to-head part of Sleeper's record: Sleeper's wins minus median wins (cross-check with `validate.py`).
+
+---
+
+## 3. Lineup efficiency
+
+**Status:** confirmed by the owner, 2026-10-02. The soft-check warning threshold is still to be decided.
+
+**Meaning.** *Optimal points* is the best score a team could have posted with hindsight, using only players on its roster that week. *Efficiency* is the share of that best score the team actually got. *Points left on the bench* is the gap between the two.
+
+**Optimal lineup.** From the week's player pool, choose players to fill every starting slot in league settings `roster_positions` (every entry except `BN`), maximising total points, subject to:
+- each player fills at most one slot;
+- each player fills only slots his position allows (table below);
+- every slot is filled whenever at least one unused eligible player is in the pool, even if all eligible players scored below zero.
+
+Solved exactly as an assignment problem (slots × players).
+
+| Slot | Eligible positions |
+|---|---|
+| QB, RB, WR, K, DEF | that position only |
+| FLEX | RB, WR, TE |
+| REC_FLEX | WR, TE |
+| SUPER_FLEX | QB, RB, WR, TE |
+
+The slot list is read from league settings each run. The eligibility table is Sleeper's rule, not a tunable parameter, so it is fixed in this spec. A slot name not in this table stops the run.
+
+**Formula.** For team *i* in week *w*:
+
+| Quantity | Definition |
+|---|---|
+| Optimal points *O₍ᵢ,w₎* | total points of the optimal lineup |
+| Actual points *P₍ᵢ,w₎* | `team_weeks.points` |
+| Efficiency *E₍ᵢ,w₎* | *P₍ᵢ,w₎* ÷ *O₍ᵢ,w₎* |
+| Points left on the bench *B₍ᵢ,w₎* | *O₍ᵢ,w₎* − *P₍ᵢ,w₎* |
+| Season efficiency, through week *t* | Σ*P* ÷ Σ*O* over weeks 1…*t*. This weights each week by its optimal points; it is **not** the mean of weekly ratios (owner decision) |
+| Season points left on the bench | Σ*B* over weeks 1…*t* |
+
+Display: efficiency as a whole-number percentage ("87%"); points to 1 decimal place.
+
+The players chosen by the optimal lineup are stored as well (one row per slot per team-week), so that awards can name specific start/sit mistakes.
+
+**Inputs.** `player_weeks`: `season`, `week`, `roster_id`, `player_id`, `is_starter`, `is_empty_slot`, `points`, `position`. `team_weeks.points`. League settings: `roster_positions`. Sleeper's `ppts` + `ppts_decimal` from `rosters.json`, for the soft check only.
+
+**Parameters.**
+- `metrics.efficiency.ppts_warn_gap`: *pending owner decision*. The proposed warning threshold for the soft check against Sleeper's max points, in points per team-season.
+
+**Edge cases.**
+
+| Case | Rule |
+|---|---|
+| Hindsight | **Pure hindsight** (owner decision). Any player in the pool can fill any eligible slot, regardless of game-time locks. This matches Sleeper's max points |
+| Player pool | Sleeper's matchup `players` list for the week: starters, bench, **and injured reserve** (Phase 1 decision) |
+| Players added mid-week | Included if they are in that week's matchup `players` list. A player who scored from the bench and was then dropped before the week ended is not in the list, so is not in the pool |
+| Negative scores | Slots are always filled when an eligible player is available, even if all options scored below zero. The optimal lineup never leaves a slot empty to gain points (owner decision) |
+| Empty starting slot | Counts as 0 in actual points. If an eligible player was in the pool, the optimal lineup fills the slot, so the manager is penalised by that player's points |
+| No eligible player rostered (e.g. no kicker) | The optimal lineup leaves the slot empty too, so there is no efficiency penalty: it is a roster decision, not a lineup decision |
+| Optimal points of 0 or less | Efficiency is null (cannot occur in practice; listed so the code never divides by zero) |
+| Equal-scoring alternatives | Optimal points are the same either way. For the stored player list, ties go to the player the manager actually started, so no award blames a manager for a pointless swap |
+| Playoff weeks | **Included: every week, every team** (owner decision, consistent with all-play). Season totals include playoff weeks. The soft check against `ppts` uses regular-season weeks only, because `ppts` is assumed to be regular season only (verify at week 15) |
+| Position eligibility | From the players cache, which describes players **today** (owner accepted). A player whose position changed mid-season is judged on his current position. In weeks 1–3, none of the 230 players used had more than one eligible position |
+| Median game | Not relevant |
+| Small early-season samples | No shrinkage. The metric is descriptive |
+
+**Expected range.** Weekly efficiency between 0 and 100%, typically about 80–95%. Points left on the bench are ≥ 0, typically about 5–40 per week.
+
+**Sanity checks.**
+1. *O₍ᵢ,w₎* ≥ *P₍ᵢ,w₎* for every team-week (±0.01).
+2. A team whose actual starters form an optimal lineup has *E* = 100% and *B* = 0.
+3. Every optimal lineup obeys the eligibility table, uses each player at most once, and fills every slot that has an eligible player available.
+4. Optimal points equal the sum of the stored optimal players' points (±0.01).
+5. **Soft check:** each team's regular-season Σ*O* ≥ Sleeper's `ppts`. A team below `ppts`, or above it by more than `metrics.efficiency.ppts_warn_gap`, gets a printed warning, not a failure. Phase 1 found gaps of 0 to 4.00 points with IR players included.
