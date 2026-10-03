@@ -51,7 +51,7 @@ def steps(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(pipeline, "RUN_RECORD_PATH", tmp_path / "pipeline_run.json")
     team_weeks = pd.DataFrame({"week": [1, 2], "roster_id": [1, 1]})
-    config = SimpleNamespace(season=2026, metrics={"efficiency": {"ppts_warn_gap": 5.0}})
+    config = SimpleNamespace(season=2026, season_start_date="2026-09-09", metrics={"efficiency": {"ppts_warn_gap": 5.0}})
     outcome = {"data": True, "metric": True}
 
     def record(name, result=None):

@@ -16,6 +16,7 @@ from sleeper_dash.transform import (
     build_teams,
     build_transactions,
     save_table,
+    season_start_date,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -251,6 +252,24 @@ def test_created_at_is_us_eastern_and_preseason_is_flagged():
 def test_week_2_moves_are_never_preseason():
     moves = build({2: [txn("t8", "free_agent", {"101": 5}, None, week=2, created=AUG_30_NOON_ET)]})
     assert not moves["is_preseason"].any()
+
+
+def state(season, start):
+    return {"season": season, "season_type": "regular", "season_start_date": start}
+
+
+def test_season_start_date_agrees_with_sleeper_in_season():
+    assert season_start_date(state("2026", "2026-09-09"), LEAGUE, "2026-09-09") == "2026-09-09"
+
+
+def test_season_start_date_that_disagrees_with_sleeper_stops_the_run():
+    with pytest.raises(ValueError, match="Sleeper says season 2026 started 2026-09-09"):
+        season_start_date(state("2026", "2026-09-09"), LEAGUE, "2026-09-10")
+
+
+def test_season_start_date_survives_sleeper_moving_to_the_next_season():
+    # Off-season: /state/nfl describes 2027, so config.yaml's date is used without a check.
+    assert season_start_date(state("2027", "2027-09-08"), LEAGUE, "2026-09-09") == "2026-09-09"
 
 
 def test_leg_that_disagrees_with_file_week_stops_the_run():

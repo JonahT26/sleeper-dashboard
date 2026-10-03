@@ -10,7 +10,7 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard). A new Claude session
 | 1 · Data pull (raw extract, tidy tables, validation, pipeline) | **Complete** |
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
-| 4 · Automation (weekly GitHub Action, GitHub Pages) | **Next**. Get the owner's answers in section 7, then fix risks 1 and 2 first (section 8) |
+| 4 · Automation (weekly GitHub Action, GitHub Pages) | **In progress** (started 2026-10-03). Owner's answers in section 6; risk 1 fixed; next: pin dependencies (risk 2) |
 | 5 · Extras | Not started |
 
 At the end of Phase 3 (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
@@ -154,6 +154,14 @@ Dev/
 | 2026-10-02 | The ladder's one-line layout switches on the ladder's own width (container query, 760px), fixing a collapse at 1024–1150px screens where team names had a 0px column | Claude (found in the design review) | UI_GUIDE.md |
 | 2026-10-02 | The awards column may stay ~235px taller than the ladder at 1280px (no further tile tightening) | Owner | — |
 | 2026-10-02 | Phase 3 closed after a privacy check of the built page and every tracked file | Owner (request) | CODEBASE.md changelog |
+| 2026-10-03 | Weekly run Tuesday 12:17 PM Eastern (cron `17 12 * * 2`, `timezone: America/New_York`, so it follows daylight saving); "12:17 EST" read as 12:17 PM local Eastern time | Owner (time), Claude (PM and time-zone reading) | weekly.yml |
+| 2026-10-03 | Second weekly run for stat corrections: Thursday 12:17 PM Eastern | Owner | weekly.yml |
+| 2026-10-03 | The workflow commits refreshed `data/processed/*.csv` back to `main` as the GitHub Actions bot (`contents: write`); local work starts with `git pull` | Owner | weekly.yml, CLAUDE.md |
+| 2026-10-03 | Python 3.14 in GitHub Actions, matching local | Owner | weekly.yml, pyproject.toml |
+| 2026-10-03 | Failed runs: GitHub's default email to the account that last changed the workflow's schedule | Owner | — |
+| 2026-10-03 | Season start date lives in `config.yaml` (`season_start_date`), checked against `/state/nfl` while Sleeper still describes the season (risk 1 fixed) | Owner | config.yaml, CODEBASE.md |
+| 2026-10-03 | Claude switches the Pages source to "GitHub Actions" with `gh` | Owner | — |
+| 2026-10-03 | Phase 4 plan (section 9) approved; commit and push after each step | Owner | — |
 
 ## 7. Open questions and assumptions to verify
 
@@ -178,7 +186,7 @@ Dev/
 
 Ordered by impact on an unattended weekly job.
 
-1. **Off-season breakage (fix before Phase 4).** Transform needs `/state/nfl` to describe the league's season (`season_start_date`, `transform._season_start_date`). When Sleeper rolls over to 2027, transform stops with an error, so the job would start failing. Store the season start date with the season's raw data, or derive it from the league.
+1. **Off-season breakage: fixed 2026-10-03.** The season start date now comes from `config.yaml` and is only checked against `/state/nfl` while that still describes the league's season, so Sleeper's rollover to 2027 no longer stops transform. **Each new season, update `season` and `season_start_date` together** (config refuses a date outside the season).
 2. **Unpinned dependencies (fix before Phase 4).** A fresh install in Actions gets whatever is newest. Plotly is the sharpest edge: a new Python `plotly` changes the expected CDN version, and the version test then stops the job (safe, but no update that week). `charts.js` also uses Plotly internals. `jupyterlab` and `pytest` sit in the runtime dependencies, which makes every Actions install much heavier than it needs to be; move them to an optional `[dev]` extra. Installed versions are in section 3.
 3. **GitHub switches off scheduled workflows in public repos after 60 days with no repository activity.** A quiet stretch from mid-November would stop the weekly run without any error. Committing the refreshed CSVs from the workflow (section 7, question 3) prevents this.
 4. **Week 15 untested on real data** (section 7). A wrong assumption fails "Records match Sleeper" and stops the run: safe, but the page stops updating until fixed.

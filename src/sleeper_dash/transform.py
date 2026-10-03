@@ -372,14 +372,18 @@ def build_transactions(league, transactions_by_week, players, season_start_date)
     return moves.sort_values(["created_at", "transaction_id", "action"], ascending=[True, True, False]).reset_index(drop=True)
 
 
-def _season_start_date(state, league):
-    """The season's start date from /state/nfl, which only describes the current NFL season."""
-    if str(state["season"]) != str(league["season"]):
+def season_start_date(state, league, configured):
+    """The season's start date: config.yaml's value, checked against /state/nfl while that describes this season.
+
+    /state/nfl only describes the current NFL season, so after Sleeper moves on to the next
+    season (the off-season) the configured date is used alone.
+    """
+    if str(state["season"]) == str(league["season"]) and state["season_start_date"] != configured:
         raise ValueError(
-            f"state.json describes season {state['season']}, not the league's season {league['season']}, "
-            "so its season_start_date can't be used to split out preseason transactions."
+            f"config.yaml season_start_date is {configured}, but Sleeper says season {league['season']} "
+            f"started {state['season_start_date']}. Correct config.yaml."
         )
-    return state["season_start_date"]
+    return configured
 
 
 def _standings(team_weeks, teams):
@@ -418,14 +422,14 @@ def save_table(df, name, processed_dir=PROCESSED_DIR):
     return path
 
 
-def build_tables(season):
+def build_tables(season, configured_start_date):
     """Build every tidy table from saved files. Returns (tables, league, rosters, season_start_date)."""
     league = read_raw(season, "league.json")
     rosters = read_raw(season, "rosters.json")
     users = read_raw(season, "users.json")
     matchups = read_matchups(season)
     players = read_players()
-    start_date = _season_start_date(read_raw(season, "state.json"), league)
+    start_date = season_start_date(read_raw(season, "state.json"), league, configured_start_date)
 
     tables = {
         "teams": build_teams(league, rosters, users),
@@ -443,7 +447,8 @@ def save_tables(tables, processed_dir=PROCESSED_DIR):
 
 
 def main():
-    tables, league, rosters, start_date = build_tables(load_config().season)
+    config = load_config()
+    tables, league, rosters, start_date = build_tables(config.season, config.season_start_date)
 
     # Check before saving, so tables that fail never overwrite the last good ones.
     try:

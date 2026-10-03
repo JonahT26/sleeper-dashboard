@@ -44,7 +44,7 @@ GitHub Pages (Phase 4, planned)                       GitHub Actions: pytest →
 ```
 sleeper-dashboard/
 ├── CLAUDE.md                    project context for Claude Code
-├── config.yaml                  league_id, season, model weights, thresholds
+├── config.yaml                  league_id, season, season_start_date, model weights, thresholds
 ├── pyproject.toml               package definition and dependencies
 ├── docs/
 │   ├── CODEBASE.md              this file
@@ -95,7 +95,7 @@ sleeper-dashboard/
 
 | Module | Responsibility | Phase | Status |
 |---|---|---|---|
-| `config.py` | Load and validate `config.yaml` | 0 | built |
+| `config.py` | Load and validate `config.yaml`: quoted `league_id`, whole-number `season`, `season_start_date` (a YYYY-MM-DD date in that season) | 0 | built |
 | `api.py` | `get(path)` with timeout, retries, backoff, pacing; `get_players()` with 24h file cache | 1 | built |
 | `extract.py` | Pull league, users, rosters, state, drafts, picks (`picks/draft_{id}.json`), and per-week matchups and transactions (`matchups/week_XX.json`, `transactions/week_XX.json`) into `data/raw/{season}/`, plus the published pairings for the rest of the regular season (`schedule/week_XX.json`: matchups for future weeks, 0 points; about 11 extra calls early in the season, none after it). Writes to a `.partial` staging folder and swaps it in only when every call succeeds. Also refreshes the players cache via `api.get_players()` (at most once a day) | 1 | built |
 | `transform.py` | Build the tidy tables below from saved files only (raw JSON plus the players cache): `teams`, `team_weeks`, `player_weeks`, `transactions`, `schedule` | 1–2 | built |
@@ -180,7 +180,7 @@ Grain: one row per lineup slot or bench spot per team per week. Key: (`season`, 
 Checks (printed by `python -m sleeper_dash.transform`): starter points sum to `team_weeks.points` for every team-week; counts of empty slots and players missing from the cache; starters by slot × position.
 
 ### `transactions` (built)
-Grain: one row per player move in a completed transaction. Key: (`transaction_id`, `player_id`, `action`). Source: `transactions/week_XX.json`, the players cache, and `state.json` `season_start_date`.
+Grain: one row per player move in a completed transaction. Key: (`transaction_id`, `player_id`, `action`). Source: `transactions/week_XX.json`, the players cache, and `config.yaml` `season_start_date`.
 
 | Column | Type | Notes |
 |---|---|---|
@@ -198,7 +198,7 @@ Grain: one row per player move in a completed transaction. Key: (`transaction_id
 
 Not represented: draft picks and FAAB traded inside trades (`draft_picks`, `waiver_budget`). Roster `waiver_budget_used` therefore won't match summed bids when FAAB is traded or when the in-progress week has claims (seen 2026-10-02: 4 teams differ by $8, all explained by week 4).
 
-`season_start_date` comes from `/state/nfl`, which only describes the current NFL season; transform stops with a clear error if the league's season is no longer current. Revisit before re-running past seasons (Phase 5).
+`season_start_date` comes from `config.yaml` (set once a season, next to `season`), because `/state/nfl` only describes the current NFL season and Sleeper rolls it over during the off-season. While `/state/nfl` still describes the league's season, transform checks the two agree and stops if they don't; afterwards the configured date is used alone (`transform.season_start_date`). Past seasons (Phase 5) will need their own start dates.
 
 ### `schedule` (built)
 Grain: one row per team per regular-season week, played and future. Key: (`season`, `week`, `roster_id`). Source: completed `matchups/week_XX.json` plus future `schedule/week_XX.json`. Playoff weeks are excluded (opponents come from the bracket).
@@ -343,7 +343,7 @@ Field-by-field detail, example records, and the evidence behind each point are i
 - `pytest` runs everything; tests never call the network.
 - Fixtures in `tests/fixtures/` are real responses saved during Phase 1, anonymised before committing (`rosters.json`: fake `owner_id`s `1000000000000000NN` where NN is the roster ID, player nicknames replaced with `"nickname"`).
 - Every metric has invariant tests (e.g. all-play wins + losses + ties = 11 per team-week in a 12-team league), and the same invariants run as validation checks on every pipeline run.
-- 348 tests (211 at the end of Phase 2): `test_api`, `test_extract`, `test_transform`, `test_validate`, `test_pipeline` (step order, stop-on-failure, and the run record, with every step faked), `test_lineup` (including brute-force comparison), `test_allplay`, `test_consistency`, `test_schedule`, `test_power`, `test_awards`, `test_dashboard` (each week shows its own records and awards, hidden sections, co-winners, escaping, only Google Fonts and Plotly loaded from outside, a 17-week season under 1 MB compressed, number and date formats), `test_charts` (theme rules, every figure valid Plotly once colours are filled in, charts follow the week selector and appear only once their data exists, default highlight, each chart's order and values, playoff wording, escaping), `test_page` (the built page read back as HTML, for this season's saved tables and a synthetic 17-week season: every week's sections in guide order and only when their data exists, nothing left behind by a hidden section, well-formed HTML, no outside requests but Google Fonts and the Plotly CDN, under 1 MB compressed including a full season stretched from this season's data, and every number on the ladder, award tiles, and charts equal to `power_rankings`, `metrics_season`, and `awards` for every week), `test_quality_floor` (UI_GUIDE.md quality floor: reduced motion stops every transition, a visible focus ring with 3:1 contrast on every background, keyboard-reachable controls, CSS tokens equal to the guide's table, the guide's stated contrast ratios, WCAG AA for all page and chart text in both modes, pylon only on large text). Metric tests mostly use hand-built or synthetic 17-week seasons, so playoff-week behaviour is tested even though no real playoff data exists yet.
+- 361 tests (211 at the end of Phase 2, 348 at the end of Phase 3): `test_config` (required settings, the season start date's format and year), `test_api`, `test_extract`, `test_transform`, `test_validate`, `test_pipeline` (step order, stop-on-failure, and the run record, with every step faked), `test_lineup` (including brute-force comparison), `test_allplay`, `test_consistency`, `test_schedule`, `test_power`, `test_awards`, `test_dashboard` (each week shows its own records and awards, hidden sections, co-winners, escaping, only Google Fonts and Plotly loaded from outside, a 17-week season under 1 MB compressed, number and date formats), `test_charts` (theme rules, every figure valid Plotly once colours are filled in, charts follow the week selector and appear only once their data exists, default highlight, each chart's order and values, playoff wording, escaping), `test_page` (the built page read back as HTML, for this season's saved tables and a synthetic 17-week season: every week's sections in guide order and only when their data exists, nothing left behind by a hidden section, well-formed HTML, no outside requests but Google Fonts and the Plotly CDN, under 1 MB compressed including a full season stretched from this season's data, and every number on the ladder, award tiles, and charts equal to `power_rankings`, `metrics_season`, and `awards` for every week), `test_quality_floor` (UI_GUIDE.md quality floor: reduced motion stops every transition, a visible focus ring with 3:1 contrast on every background, keyboard-reachable controls, CSS tokens equal to the guide's table, the guide's stated contrast ratios, WCAG AA for all page and chart text in both modes, pylon only on large text). Metric tests mostly use hand-built or synthetic 17-week seasons, so playoff-week behaviour is tested even though no real playoff data exists yet.
 
 ## Adding a new metric
 
@@ -400,3 +400,4 @@ Filled in by the Phase 0 API smoke test (`scripts/smoke_test.py`) on 2026-10-02,
 - Phase 3: page-level tests (`test_page`, `test_quality_floor`; plan step 5). Weeks 1–3: 26 KB compressed; this season stretched to 17 weeks: 135 KB compressed. One finding: UI_GUIDE.md stated chalk on turf as 11.9:1, but it is 11.85:1; the guide now says 11.8:1 (owner). 346 tests.
 - Phase 3: design review at 360, 390, 1024 and 1280px, light and dark (approved fixes): the ladder's one-line layout now depends on the ladder's width (a CSS container query), fixing a 1024px collapse; reading text ~72 characters a line; compact award tiles on desktop; luck labels on a page background; rank-history names cut to 14 characters on phones (`charts.SHORT_NAME`, figure `phone` labels and margin applied by `charts.js` below 768px); centred 1200px column; key "League average: 50". 348 tests.
 - **Phase 3 complete (2026-10-02).** `python -m sleeper_dash.dashboard` builds the full page (masthead and week selector, ladder with breakdowns, nine weekly awards, five charts, "How this works") for every completed week. Privacy check before closing: no value from `data/raw/` (user settings, mascot messages, player nicknames, league chat fields, avatars) appears in the page or in any tracked file; owner IDs appear only in `data/processed/teams.csv` (owner-approved); notebooks have no outputs; fixtures are anonymised. Pipeline: 14 of 14 checks, byte-identical outputs. 348 tests. Next: Phase 4 (HANDOFF.md section 9).
+- Phase 4: the season start date moved to `config.yaml` (`season_start_date`), checked against `/state/nfl` while that still describes the league's season, so the weekly job keeps working after Sleeper rolls over to the next season (risk 1). Rebuilding weeks 1–3 with a simulated 2027 `/state/nfl` gives tables identical to the committed CSVs. New `test_config`. 361 tests.

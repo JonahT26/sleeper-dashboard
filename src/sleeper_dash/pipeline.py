@@ -58,7 +58,7 @@ def run():
 
     extracted = extract.extract(config)
 
-    tables, league, rosters, _ = transform.build_tables(config.season)
+    tables, league, rosters, _ = transform.build_tables(config.season, config.season_start_date)
     data_results = validate.validate(tables, league, rosters, validate.run_data_checks, "Data checks")
 
     tables.update(lineup.build_lineup_tables(tables, league, transform.read_players()))
