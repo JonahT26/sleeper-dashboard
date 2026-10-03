@@ -7,6 +7,7 @@ How the dashboard looks, reads, and behaves. Follow this for every user-facing p
 - **Audience:** the 12 managers in our league. Most will open it on a phone from a group-chat link, once or twice a week.
 - **Primary job:** answer "who's actually good right now, and who's just lucky?" in under ten seconds, then reward anyone who scrolls with deeper analysis.
 - **Tone:** data-first and credible enough to settle arguments, with a little trash talk confined to the weekly awards.
+- **Mobile first** (owner, 2026-10-02): design and check every component at phone width (390px) first, then adapt it for desktop.
 
 ## Design direction: "the sideline"
 
@@ -50,11 +51,11 @@ Scale, in px: 13 (captions), 15 (body, mobile), 16 (body, desktop), 20 (subheads
 
 ## Layout
 
-A single page with a week selector. The default view is the latest completed week; all weeks' data is embedded in the page, so switching weeks needs no network call.
+A single page with a week selector. The default view is the latest completed week; all weeks' data is embedded in the page, so switching weeks needs no network call. The latest week is written into the HTML when the page is built, so it shows without JavaScript and in link previews; JavaScript only redraws the page when the viewer switches weeks (owner, 2026-10-02).
 
 Section order, top to bottom:
 
-1. **Masthead:** league name, "Week 5 power rankings", "Updated Tue Oct 6, 9:00 AM ET", and the week selector.
+1. **Masthead:** league name, "Week 5 power rankings", "Updated Tue Oct 6, 9:00 AM ET", and the week selector. "Updated" is the time the pipeline ran, which the pipeline records; never a file date.
 2. **Power rankings ladder:** the hero. No separate hero card above it; the rankings are the first thing anyone sees.
 3. **Weekly awards**
 4. **Luck:** actual wins vs expected wins
@@ -70,15 +71,15 @@ Phase 5 adds a **Playoff odds** section after the ladder.
 
 ```
 ┌────────────────────────────────┐
-│ League Name             Wk 5 ▾ │  ← turf band
+│ League Name             Wk 5 ▾ │  ← masthead band
 │ Week 5 power rankings          │
 │ Updated Tue Oct 6, 9:00 AM ET  │
 ├────────────────────────────────┤
-│  1  Team Name         ▲2       │
-│     8–2, all-play 41–14        │
-│     ████████████████░░  118.4  │
+│  1  Team Name              ▲2  │
+│     username     8–2, ap 41–14 │  (ap = all-play, shortened here only)
+│     ───────┼████──────   57.8  │
 ├────────────────────────────────┤
-│  2  Team Name         ▼1       │
+│  2  Team Name              ▼1  │
 │     ...                        │
 └────────────────────────────────┘
   Weekly awards (2-column tiles)
@@ -108,13 +109,27 @@ Max content width 1200px, left-aligned text throughout. Numbers right-aligned in
 
 ### Ladder row
 
-- Rank numeral: Barlow Condensed 700, 48px, `--ink`. The #1 numeral alone uses `--pylon`.
-- Team name (600 weight) with the manager's display name (Sleeper username) below it in `--muted`. Owner confirmed 2026-10-02: usernames stay on the public page.
+Settled in the prototype review with the owner, 2026-10-02.
+
+- Rank numeral: Barlow Condensed 700, 48px, `--ink`, in a 52px column so two-digit ranks fit. The #1 numeral alone uses `--pylon`.
+- Phone layout, three lines (about 90px a row, so 7 teams fit on the first screen): team name with movement on the right; the manager's display name (Sleeper username, `--muted`, cut short with an ellipsis if needed) with the record on the right; the power score bar with its value. Desktop puts everything on one row: rank, name over username, record, bar and value, movement. Owner confirmed 2026-10-02: usernames stay on the public page.
 - Movement: `▲2` in `--up`, `▼1` in `--down`, `–` in `--muted` for no change. Always arrow plus number; never color alone.
-- Record and all-play record on one line, separated by a comma.
-- Power score as a thin horizontal bar (`--bar`, with the #1 team in `--pylon`) plus the value, to 1 decimal place. Two teams can show the same value (e.g. both 57.8); the order still follows the unrounded score, and no tie marker is shown (owner decision 2026-10-02).
-- Tapping a row expands it to show each power score component's contribution as a small stacked bar, so anyone can see why a team ranks where it does. This is the one place an expand animation is used.
-- Built as a semantic `<table>` or `<ol>` so screen readers announce ranks correctly.
+- Record and all-play record on one line, separated by a comma. The record is the overall one (head-to-head plus median games).
+- **Power score bar measured from the league average** (owner decision 2026-10-02, replacing a 0–100 bar on which every team looked about half full): a thin bar running right (above average) or left (below average) from a centre line at 50, plus the value to 1 decimal place. `--bar`, with the #1 team in `--pylon`. One fixed axis for every week of the season: the largest gap from 50 in any week so far, rounded up to 5, 10, 15, 20, 25, 30, 40 or 50 points (±15 through week 3). A one-line key above the ladder says that 50 is the league average. Two teams can show the same value (e.g. both 57.8); the order still follows the unrounded score, and no tie marker is shown (owner decision 2026-10-02).
+- **Tapping a row expands its breakdown** (the one place an expand animation is used), a small table so anyone can see why a team ranks where it does:
+
+  | Component (weight) | vs average | Score |
+  |---|---|---|
+  | Season scoring (35%), "141.9 points a week" | small bar from zero, then +2.6 | 20.1 |
+  | Recent form (25%), "141.9 points a week, last 3 weeks" | +1.8 | 14.3 |
+  | Roster strength (20%), "156.5 points a week with the best lineup" | +1.6 | 11.6 |
+  | Head-to-head wins (20%), "Won 1 of 3" | −0.7 | 9.3 |
+  | **Power score** | **+5.3** | **55.3** |
+
+  - "Score" is each component's contribution (weight × component score); the four add up to the power score. The owner keeps it as the transparent part of the scoring (decision 2026-10-02).
+  - "vs average" is the contribution minus an average team's (50 × weight), with a sign, plus a small bar running left or right from zero. All components and teams share one fixed axis for the season (rounded up to 1, 2, 3, 4, 5, 6, 8, 10, 12, 15 or 20; ±6 through week 3), so bars compare across rows. The four add up to the power score minus 50. These replace the stacked bar first specified, whose segments were dominated by the weights and looked the same for every team (owner decision 2026-10-02).
+  - The results component is named **Head-to-head wins**, and its detail line gives the head-to-head record ("Won 1 of 3"), because the ladder shows the overall record and a bare win percentage would contradict it (owner decision 2026-10-02).
+- Built as a semantic `<ol>` (with `role="list"`) so screen readers announce ranks correctly. Each row is a button with `aria-expanded`; the movement arrows have text equivalents ("up 2", "no change").
 
 ### Award tile
 
@@ -131,7 +146,7 @@ All charts use Plotly with one shared theme defined in `dashboard/theme.py`. Nev
 - **Highlight, don't rainbow.** Twelve team colors are unreadable. Draw all teams in `--bar` and highlight one team (the one being discussed, or the one the viewer taps) in `--pylon`.
 - **Direct labels instead of legends** wherever possible.
 - **Titles state what the chart shows; a subtitle says how to read it.** Example: title "Luck", subtitle "Above the line: more wins than your scores earned."
-- Axis titles include units ("Points per week"). Bar charts start at zero.
+- Axis titles include units ("Points per week"). Bar charts start at zero. Bars that show a gap from the league average (the ladder and its breakdown) start at the average, which is their zero, and say so.
 - Gridlines in `--hash`, thin, horizontal only. No chart borders or background fills.
 - Tooltips show team name and the formatted value only.
 - Hide the Plotly mode bar (`displayModeBar: false`) and make charts responsive.
@@ -159,7 +174,7 @@ Specific charts:
 
 ## Motion
 
-One deliberate moment: on first load, the ladder's power-score bars grow in once. Everything else is static unless the viewer acts (expanding a row, switching weeks). Respect `prefers-reduced-motion` by disabling the grow-in.
+One deliberate moment: on first load, the ladder's power-score bars grow out from the average line once. Everything else is static unless the viewer acts (expanding a row, switching weeks). Respect `prefers-reduced-motion` by disabling the grow-in.
 
 ## Quality floor
 

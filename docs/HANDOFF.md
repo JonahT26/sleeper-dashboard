@@ -124,6 +124,8 @@ Dev/
 | 2026-10-02 | Site published from `site/` by a GitHub Actions workflow; `site/` gitignored | Claude, delegated by owner | CLAUDE.md, .gitignore |
 | 2026-10-02 | Dark-mode masthead: `--masthead` `#18392B` in both modes | Owner | CLAUDE.md, UI_GUIDE.md |
 | 2026-10-02 | Season efficiency stored in `metrics_season` with season points left on the bench alongside it | Claude (spec §3 defines both) | CODEBASE.md |
+| 2026-10-02 | Prototype review of the masthead and ladder: mobile first; bars from the league average; breakdown with gap-from-average bars and a "Score" column; "Head-to-head wins" label; two-digit rank column; latest week in the HTML at build time; "Updated" = pipeline run time | Owner | UI_GUIDE.md, METRICS_SPEC.md §2 and §6, CLAUDE.md |
+| 2026-10-02 | Fixed bar axes for the season (largest gap so far, rounded up) so bars compare across weeks | Claude | UI_GUIDE.md |
 
 ## 7. Open questions and assumptions to verify
 
@@ -165,7 +167,7 @@ Follow `docs/UI_GUIDE.md` for everything user-facing.
 
 1. ~~Add season-to-date lineup efficiency to `metrics_season`, with a metric check.~~ Done 2026-10-02 (`efficiency`, `bench_points_lost`; check "Season lineup efficiency is consistent").
 2. ~~Get the owner's answer on the dark-mode masthead proposal.~~ Approved 2026-10-02: `--masthead` `#18392B` in both modes.
-3. Build `src/sleeper_dash/dashboard/`: `theme.py` (the one shared Plotly theme), a Jinja2 template, and a page builder that writes `site/index.html` from the saved CSVs. Embed every week's data as JSON so the week selector needs no network call. Section order as in UI_GUIDE.md; hide metric sections that aren't available yet.
+3. A throwaway prototype of the masthead and ladder was reviewed with the owner on 2026-10-02 (decisions in section 6 and `UI_GUIDE.md` Ladder row). Build `src/sleeper_dash/dashboard/`: `theme.py` (the one shared Plotly theme), a Jinja2 template, and a page builder that writes `site/index.html` from the saved CSVs. Embed every week's data as JSON so the week selector needs no network call, but write the latest week into the HTML at build time so it shows without JavaScript. The pipeline must record its run time for the "Updated" line. Section order as in UI_GUIDE.md; hide metric sections that aren't available yet.
 4. Draft the "How this works" copy and show it to the owner for review before it is published.
 5. Add `python -m sleeper_dash.dashboard`, tests (sections present, no external calls besides fonts and the Plotly CDN, page weight under 1 MB), and preview the page in the browser pane at phone and desktop widths.
 6. Phase 4 then adds the GitHub Actions workflow: run the pipeline, build `site/`, publish to Pages (fix risk 1 and pin dependencies first).

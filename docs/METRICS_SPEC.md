@@ -100,7 +100,7 @@ Example: the 4th-highest score of 12 beats 8 of the other 11 teams, so the all-p
 
 Display: the record as overall wins–losses, with ties only when there are any ("6–0", "5–0–1"); expected wins to 1 decimal place (`UI_GUIDE.md`); luck as a signed number of wins, e.g. "+1.4".
 
-**Record scale (owner decision, changed 2026-10-02).** **Overall: head-to-head plus median games**, the same as Sleeper's official standings. The ladder shows this record next to the all-play record ("8–2, all-play 41–14"), with no head-to-head/median split anywhere on the dashboard (owner decision). Actual and expected wins use the same scale, so the luck chart reads against the record league members see.
+**Record scale (owner decision, changed 2026-10-02).** **Overall: head-to-head plus median games**, the same as Sleeper's official standings. The ladder shows this record next to the all-play record ("8–2, all-play 41–14"), with no head-to-head/median split anywhere on the dashboard (owner decision), with one exception: the power score breakdown names its results component "Head-to-head wins" and gives the head-to-head record behind it ("Won 1 of 3"), so it does not appear to contradict the overall record (owner decision, 2026-10-02 prototype review). Actual and expected wins use the same scale, so the luck chart reads against the record league members see.
 
 History: during the interview the owner first chose head-to-head only; after seeing the first season table, the owner changed it to the overall record. Luck values are identical under both scales: a team's median-game result is fully determined by its own score (it wins exactly when all-play wins ≥ *N*/2), so its expected result always equals its actual result and the median game adds no luck. The power score's results component stays head-to-head only (section 6).
 
@@ -337,7 +337,7 @@ Owner decisions:
 | `season_scoring` | Season scoring | mean points per week over all completed weeks 1…*t* | 0.35 |
 | `recent_form` | Recent form | simple mean points over the last `recent_weeks` completed weeks (*t* − `recent_weeks` + 1 … *t*); all weeks so far when *t* < `recent_weeks` | 0.25 |
 | `roster_strength` | Roster strength | mean **optimal** points per week (metric 3) over weeks 1…*t*: the talent on the roster, bench included | 0.20 |
-| `results` | Results | **head-to-head** win % = (W + ½T) ÷ games, regular-season head-to-head games through *t*. Median games are excluded (owner decision, 2026-10-02): a median win is decided by the team's own score, which season scoring and recent form already weigh at 0.60 | 0.20 |
+| `results` | Results (displayed as "Head-to-head wins") | **head-to-head** win % = (W + ½T) ÷ games, regular-season head-to-head games through *t*. Median games are excluded (owner decision, 2026-10-02): a median win is decided by the team's own score, which season scoring and recent form already weigh at 0.60 | 0.20 |
 
 Deliberately left out (owner approved): **efficiency** (already inside actual points; roster strength captures the upside), **consistency** (volatility hurts a good team and helps a bad one, so it has no clear direction), **all-play %** (almost the same as season scoring), and **strength of schedule** (a team's points don't depend on its opponent). In weeks 1–3, recent form equals season scoring, so the two act as one component weighted 0.60.
 
@@ -355,7 +355,7 @@ Why this scale (owner decision, over percentile ranks or min–max): with *N* te
 
 **Early-season compression (owner decision).** Because *z*-scores ignore scale, shrinking components toward the league mean would not change the ranking. What *f* changes is how confident the spread looks: in week 1, every score lies within 50 ± 12; by week 9 the spread is 75% of full. **The ranking is unaffected.**
 
-Display: power score to 1 decimal place as a thin bar; rank change as ▲/▼ with a number.
+Display: power score to 1 decimal place, with a thin bar running left or right from the league average of 50; rank change as ▲/▼ with a number. The breakdown shows each component's contribution ("Score") and its gap from an average team's contribution, *w₍c₎* · (*s₍ᵢ,c₎* − 50) (`UI_GUIDE.md` Ladder row).
 
 **Inputs.** `team_weeks`: `week`, `roster_id`, `points`, `result`, `is_playoff`. Metric 3: weekly optimal points. League settings: `num_teams`.
 
