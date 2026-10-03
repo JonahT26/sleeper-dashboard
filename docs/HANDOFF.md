@@ -173,6 +173,7 @@ Dev/
 | 2026-10-03 | Live page checked by the owner in every format (360–1280px, light and dark) and approved; Phase 4 closed | Owner | — |
 | 2026-10-03 | Playoff weeks: standings checks accept either counting standard (one must fit every team, named in the check); teams missing from matchups or without a lineup keep stopping the run | Owner (options 2 and 1) | validate.py, CODEBASE.md |
 | 2026-10-03 | Consolation and placement games count for matchup awards in playoff weeks | Owner | METRICS_SPEC.md §7 |
+| 2026-10-03 | Workflow reviewed against the owner's requirements; Tuesday + Thursday 12:17 PM ET schedule and committing refreshed CSVs both reconfirmed, workflow unchanged | Owner | weekly.yml |
 
 ## 7. Open questions and assumptions to verify
 
@@ -188,7 +189,7 @@ Dev/
 
 ## 7a. Running the weekly job
 
-- **Schedule:** Tuesday and Thursday 12:17 PM Eastern (`timezone: America/New_York`, so it follows daylight saving). GitHub can start scheduled runs late, sometimes by tens of minutes.
+- **Schedule:** Tuesday and Thursday 12:17 PM Eastern (`timezone: America/New_York`, so it follows daylight saving). GitHub can start scheduled runs late, sometimes by tens of minutes. The Thursday run picks up stat corrections to the week just finished; Wednesday waiver pickups belong to the week in progress, so they appear the following Tuesday.
 - **Manual run:** the "Run workflow" button on the repo's Actions tab, or `gh workflow run weekly.yml --ref main`. Watch with `gh run watch <id>`; read with `gh run view <id> --log`.
 - **What a run does:** installs the lock file on Python 3.14.7 → all tests on the committed tables → pipeline → dashboard → page tests on this run's tables → commits changed `data/processed/*.csv` as `github-actions[bot]` ("Weekly refresh: tables through week N"; nothing when unchanged) → publishes `site/`. Any failure stops before publishing; the last good page stays live and GitHub emails the owner.
 - **A failed run:** read the log first. A failed check names itself (e.g. "Records match Sleeper"); explain the cause to the owner before changing code (section 2).
