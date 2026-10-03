@@ -41,7 +41,7 @@ Scoring settings, roster slots, playoff start week, and whether the league plays
 ```powershell
 .venv\Scripts\Activate.ps1         # start of every session, from the project folder (Mac/Linux: source .venv/bin/activate)
 pip install -e .                   # one-time setup, or after adding a dependency to pyproject.toml
-python -m sleeper_dash.pipeline    # full refresh: extract → transform → optimal lineups → metrics → validate → save; short summary; exit 1 on failure
+python -m sleeper_dash.pipeline    # full refresh: extract → transform → data checks → metrics → metric checks → save; summary lists every check; exit 1 on failure
 python -m sleeper_dash.extract     # step 1 only: re-download raw JSON into data/raw/{season}/ and refresh the players cache
 python -m sleeper_dash.transform   # step 2 only: rebuild tables from saved files, validate, save, print detailed reports
 python -m sleeper_dash.lineup      # rebuild optimal lineups from the saved tables; print latest week, season, and Sleeper max-points check
@@ -50,7 +50,7 @@ python -m sleeper_dash.metrics.consistency  # rebuild every metric table; print 
 python -m sleeper_dash.metrics.schedule     # rebuild every metric table; print strength of schedule, played and remaining
 python -m sleeper_dash.metrics.power        # rebuild every metric table; print power rankings with each component's contribution
 python -m sleeper_dash.metrics.awards       # rebuild every metric table; print this week's awards and the winners by week
-python -m sleeper_dash.validate    # re-run the checks on the saved tables and print pass/fail
+python -m sleeper_dash.validate    # re-run the data and metric checks on the saved tables and print pass/fail
 pytest                             # run all tests
 jupyter lab                        # open the notebooks
 ```

@@ -161,4 +161,4 @@ def test_validate_raises_with_the_full_table(tables, rosters):
     with pytest.raises(v.ValidationError) as error:
         v.validate(tables, make_league(), rosters)
     message = str(error.value)
-    assert "1 validation check(s) failed" in message and "FAIL" in message and "Records match Sleeper" in message
+    assert "Validation: 1 check(s) failed" in message and "FAIL" in message and "Records match Sleeper" in message

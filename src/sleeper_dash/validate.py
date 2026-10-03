@@ -27,7 +27,8 @@ KEYS = {
     "awards": ["season", "week", "award", "roster_id"],
 }
 LUCK_TOLERANCE = 1e-6  # wins
-BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "schedule"]  # built by transform; the rest by lineup and metrics
+BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "schedule"]  # built by transform
+METRIC_TABLES = [name for name in KEYS if name not in BASE_TABLES]                  # built by lineup and metrics
 
 
 @dataclass
@@ -349,18 +350,18 @@ def check_allplay_and_luck(weekly, season, team_weeks, rosters):
                    f"{len(weekly)} team-weeks; luck sums to 0 each week; median cross-check agrees; records match Sleeper")
 
 
-def check_unique_keys(tables):
+def check_unique_keys(tables, label=None):
     """No table has two rows with the same key."""
     problems = []
     for name, table in tables.items():
         dupes = int(table.duplicated(KEYS[name]).sum())
         if dupes:
             problems.append(f"{name}: {dupes} duplicate key(s) on ({', '.join(KEYS[name])})")
-    return _result("No duplicate keys", problems, f"{len(tables)} tables checked")
+    return _result("No duplicate keys" + (f" ({label})" if label else ""), problems, f"{len(tables)} tables checked")
 
 
-def run_checks(tables, league, rosters):
-    """Run every check. tables maps table name to DataFrame: the BASE_TABLES, plus the lineup tables when present."""
+def run_data_checks(tables, league, rosters):
+    """Checks on the tidy tables built by transform (BASE_TABLES): reconciliation with Sleeper and integrity."""
     team_weeks = tables["team_weeks"]
     results = [
         check_team_rows_per_week(team_weeks, league),
@@ -369,10 +370,18 @@ def run_checks(tables, league, rosters):
         check_records(team_weeks, rosters, league),
         check_points_for_against(team_weeks, rosters),
     ]
-    if "lineups_optimal" in tables:
-        results.append(check_optimal_lineups(tables["lineups_optimal"], tables["lineups_optimal_players"], team_weeks))
     if "schedule" in tables:
         results.append(check_schedule(tables["schedule"], team_weeks, league))
+    results.append(check_unique_keys({n: t for n, t in tables.items() if n not in METRIC_TABLES}, "data tables"))
+    return results
+
+
+def run_metric_checks(tables, league, rosters):
+    """Invariant checks on the lineup and metric tables (METRICS_SPEC.md sanity checks). Uses the data tables as reference."""
+    team_weeks = tables["team_weeks"]
+    results = []
+    if "lineups_optimal" in tables:
+        results.append(check_optimal_lineups(tables["lineups_optimal"], tables["lineups_optimal_players"], team_weeks))
     if "metrics_team_weeks" in tables:
         results.append(check_allplay_and_luck(tables["metrics_team_weeks"], tables["metrics_season"], team_weeks, rosters))
         if "is_boom" in tables["metrics_team_weeks"]:
@@ -381,8 +390,15 @@ def run_checks(tables, league, rosters):
         results.append(check_power_rankings(tables["power_rankings"], team_weeks))
     if "awards" in tables:
         results.append(check_awards(tables["awards"], team_weeks, tables["lineups_optimal"]))
-    results.append(check_unique_keys(tables))
+    metric_tables = {n: t for n, t in tables.items() if n in METRIC_TABLES}
+    if metric_tables:
+        results.append(check_unique_keys(metric_tables, "metric tables"))
     return results
+
+
+def run_checks(tables, league, rosters):
+    """Every check that applies to the tables given: data checks, then metric checks."""
+    return run_data_checks(tables, league, rosters) + run_metric_checks(tables, league, rosters)
 
 
 def format_results(results):
@@ -392,13 +408,13 @@ def format_results(results):
     return "\n".join(lines)
 
 
-def validate(tables, league, rosters):
-    """Run every check; raise ValidationError listing all failures. Returns the results when all pass."""
-    results = run_checks(tables, league, rosters)
+def validate(tables, league, rosters, checks=None, stage="Validation"):
+    """Run a group of checks (default: all); raise ValidationError listing all failures. Returns the results when all pass."""
+    results = (checks or run_checks)(tables, league, rosters)
     failed = [r for r in results if not r.passed]
     if failed:
         raise ValidationError(
-            f"{len(failed)} validation check(s) failed; nothing was saved or published.\n\n" + format_results(results)
+            f"{stage}: {len(failed)} check(s) failed; nothing was saved or published.\n\n" + format_results(results)
         )
     return results
 
@@ -424,8 +440,10 @@ def main():
     from sleeper_dash.transform import read_raw
 
     season = load_config().season
-    results = run_checks(load_tables(), read_raw(season, "league.json"), read_raw(season, "rosters.json"))
-    print(format_results(results))
+    tables, league, rosters = load_tables(), read_raw(season, "league.json"), read_raw(season, "rosters.json")
+    data, metric = run_data_checks(tables, league, rosters), run_metric_checks(tables, league, rosters)
+    print("DATA CHECKS\n" + format_results(data) + "\n\nMETRIC CHECKS\n" + format_results(metric))
+    results = data + metric
     failed = sum(not r.passed for r in results)
     print(f"\n{len(results) - failed} passed, {failed} failed")
     if failed:
