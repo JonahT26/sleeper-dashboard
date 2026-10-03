@@ -16,7 +16,8 @@ Nothing is saved unless steps 3 and 5 pass, so a failed run leaves the last good
 in data/processed/. Exits with code 1 on any failure.
 
 A successful run also writes data/cache/pipeline_run.json (gitignored): when it finished,
-the league name, season, and weeks. The dashboard's "Updated" line reads it.
+the league name, season, weeks, and the league facts the "How this works" copy quotes (number
+of teams, whether there's a median game, playoff start). The dashboard reads it.
 """
 
 import json
@@ -31,12 +32,21 @@ from sleeper_dash.config import PROJECT_ROOT, load_config
 RUN_RECORD_PATH = PROJECT_ROOT / "data" / "cache" / "pipeline_run.json"
 
 
-def write_run_record(league_name, season, weeks, path=None):
+def league_facts(league):
+    """The league settings the dashboard's copy quotes, from Sleeper's league.json (None if they're missing)."""
+    settings = league.get("settings") or {}
+    if "num_teams" not in settings or "playoff_week_start" not in settings:
+        return None
+    return {"teams": int(settings["num_teams"]), "median_game": bool(settings.get("league_average_match")),
+            "playoff_week_start": int(settings["playoff_week_start"])}
+
+
+def write_run_record(league, season, weeks, path=None):
     """Record a successful run for the dashboard. Kept out of data/processed/ so the tables stay byte-identical across runs."""
     path = path or RUN_RECORD_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     record = {"finished_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-              "league_name": league_name, "season": season, "weeks": weeks}
+              "league_name": league.get("name"), "season": season, "weeks": weeks, "league": league_facts(league)}
     path.write_text(json.dumps(record, indent=2), encoding="utf-8")
     return record
 
@@ -60,7 +70,7 @@ def run():
     saved_results = validate.validate(saved, league, rosters, stage="Saved-file checks")  # the CSVs themselves pass
 
     weeks = sorted(int(w) for w in saved["team_weeks"]["week"].unique())
-    write_run_record(league.get("name"), config.season, weeks)
+    write_run_record(league, config.season, weeks)
     sleeper_check = lineup.compare_to_sleeper_max(
         saved["lineups_optimal"], saved["team_weeks"], rosters, config.metrics["efficiency"]["ppts_warn_gap"]
     )

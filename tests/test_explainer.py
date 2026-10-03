@@ -3,7 +3,7 @@
 from sleeper_dash.config import load_config
 from sleeper_dash.dashboard.build import build_view, render
 from sleeper_dash.dashboard.explainer import as_text, sections
-from test_dashboard import POWER, RUN, make_tables
+from test_dashboard import METRICS, RUN, make_tables
 
 LEAGUE = {"teams": 12, "median_game": True, "playoff_week_start": 15}
 OTHER_PARAMS = {
@@ -36,6 +36,17 @@ def test_every_number_follows_the_config_and_league_settings():
     assert "35%" not in text and "{" not in text and "}" not in text
 
 
-def test_not_published_until_the_owner_approves_the_copy():
-    """Owner decision 2026-10-02: the copy is reviewed before it goes live. Change this test when it is approved."""
-    assert "How this works" not in render(build_view(make_tables(), RUN, POWER))
+def test_the_approved_copy_is_the_last_section_of_the_page_with_numbers_from_config():
+    """Owner approved the copy on 2026-10-02. It renders once, after every week's sections, with config values filled in."""
+    html = render(build_view(make_tables(), RUN, METRICS))
+    shown = html.split("<template")[0] + html.split("</template>")[-1]
+    assert shown.count('id="how-title"') == 1 and "<template" not in html.split('id="how-title"')[1].split("</section>")[0]
+    assert shown.index('id="how-title"') > shown.rindex('class="chart-section')  # after the shown week's charts
+    for phrase in ["Season scoring (35%)", "worth 15 points", "75% by week 9", "goes 11–0", "Why past weeks can change"]:
+        assert phrase in html
+
+
+def test_the_page_copy_changes_when_the_config_changes():
+    params = {**OTHER_PARAMS, "awards": {"enabled": ["top_score"]}}
+    html = render(build_view(make_tables(), RUN, params))
+    assert "Season scoring (40%)" in html and "Season scoring (35%)" not in html

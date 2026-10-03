@@ -15,8 +15,11 @@ from sleeper_dash.dashboard.build import (
 )
 
 WEIGHTS = {"season_scoring": 0.35, "recent_form": 0.25, "roster_strength": 0.20, "results": 0.20}
-POWER = {"weights": WEIGHTS, "recent_weeks": 3}
-RUN = {"finished_at": "2026-10-06T13:00:00+00:00", "league_name": "Test League", "season": 2026, "weeks": [1, 2, 3]}
+METRICS = {"power": {"weights": WEIGHTS, "recent_weeks": 3, "scale": 15, "shrink_weeks": 3},
+           "consistency": {"min_weeks": 3, "floor_pct": 0.10, "ceiling_pct": 0.90, "boom_margin": 20, "bust_margin": 20},
+           "schedule": {"min_weeks": 3}}
+RUN = {"finished_at": "2026-10-06T13:00:00+00:00", "league_name": "Test League", "season": 2026, "weeks": [1, 2, 3],
+       "league": {"teams": 12, "median_game": True, "playoff_week_start": 15}}
 
 
 def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining=False):
@@ -71,7 +74,7 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining
 
 
 def page(**kwargs):
-    return render(build_view(make_tables(**kwargs), RUN, POWER))
+    return render(build_view(make_tables(**kwargs), RUN, METRICS))
 
 
 def split(html):
@@ -121,7 +124,7 @@ def test_co_winners_share_one_tile():
 
 
 def test_breakdown_scores_add_up_to_the_power_score_and_gaps_to_the_gap():
-    view = build_view(make_tables(), RUN, POWER)
+    view = build_view(make_tables(), RUN, METRICS)
     for team in view["latest"]["ladder"]:
         assert sum(float(p["score"]) for p in team["parts"]) == pytest.approx(float(team["score"]), abs=0.2)
         assert [p["label"] for p in team["parts"]] == ["Season scoring", "Recent form", "Roster strength", "Head-to-head wins"]
@@ -132,7 +135,7 @@ def test_breakdown_scores_add_up_to_the_power_score_and_gaps_to_the_gap():
 
 
 def test_only_the_top_team_is_listed_first_and_movement_reads_for_screen_readers():
-    view = build_view(make_tables(), RUN, POWER)
+    view = build_view(make_tables(), RUN, METRICS)
     assert [t["rank"] for t in view["latest"]["ladder"]] == list(range(1, 13))
     assert view["earlier"][0]["ladder"][0]["move"]["spoken"] == "first week"
     assert view["latest"]["ladder"][0]["move"]["spoken"] == "no change"
@@ -140,9 +143,9 @@ def test_only_the_top_team_is_listed_first_and_movement_reads_for_screen_readers
 
 def test_ties_appear_only_once_the_league_has_had_one():
     tables = make_tables()
-    assert "–0–" not in render(build_view(tables, RUN, POWER))
+    assert "–0–" not in render(build_view(tables, RUN, METRICS))
     tables["metrics_season"].loc[tables["metrics_season"]["roster_id"] == 2, "allplay_ties"] = 1
-    shown, _ = split(render(build_view(tables, RUN, POWER)))
+    shown, _ = split(render(build_view(tables, RUN, METRICS)))
     assert "all-play 30–3–1" in shown and "6–0," in shown  # all-play ties shown; the record has none, so stays 2-part
 
 
@@ -222,4 +225,4 @@ def test_no_power_rankings_stops_with_a_clear_message():
     tables = make_tables()
     tables["power_rankings"] = tables["power_rankings"].iloc[0:0]
     with pytest.raises(DashboardError, match="pipeline"):
-        build_view(tables, RUN, POWER)
+        build_view(tables, RUN, METRICS)

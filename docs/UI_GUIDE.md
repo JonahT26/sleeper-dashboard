@@ -63,7 +63,7 @@ Section order, top to bottom:
 6. **Consistency:** weekly score spread per team
 7. **Strength of schedule:** played and remaining
 8. **Rank history:** bump chart across weeks
-9. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section. **The owner reviews this copy before it is published** (decision 2026-10-02).
+9. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section. **The owner reviews this copy before it is published** (decision 2026-10-02). Approved with no edits on 2026-10-02; the text lives in `dashboard/explainer.py` with every number filled in from `config.yaml`, so any wording change needs the owner's approval again. One section for the whole page (not per week), after the charts, in a reading column under 75 characters.
 
 Phase 5 adds a **Playoff odds** section after the ladder.
 

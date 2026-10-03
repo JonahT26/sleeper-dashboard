@@ -9,13 +9,13 @@ import pytest
 from sleeper_dash.dashboard import charts, theme
 from sleeper_dash.dashboard.build import build_view, render
 from sleeper_dash.dashboard.theme import PLOTLY_JS_VERSION, base_layout, merge, resolve_tokens, to_script_json
-from test_dashboard import POWER, RUN, make_tables, split
+from test_dashboard import METRICS, RUN, make_tables, split
 
 LIGHT = {"page": "#F6F8F4", "ink": "#15201A", "muted": "#5B6B61", "hash": "#D5DDD7", "bar": "#9AA79F", "pylon": "#E8590C"}
 
 
 def view(**kwargs):
-    return build_view(make_tables(**kwargs), RUN, POWER)
+    return build_view(make_tables(**kwargs), RUN, METRICS)
 
 
 def chart(v, key):
@@ -61,7 +61,7 @@ def test_script_json_cannot_end_its_script_early():
 
 def test_team_names_are_escaped_in_chart_text():
     tables = make_tables(team_names=["<b>Bold</b> & co"] + [f"Team {i}" for i in range(2, 13)])
-    v = build_view(tables, RUN, POWER)
+    v = build_view(tables, RUN, METRICS)
     eff = chart(v["latest"], "efficiency")["figure"]
     assert "&lt;b&gt;Bold&lt;/b&gt; &amp; co" in [a["text"] for a in eff["layout"]["annotations"]]
     assert chart(v["latest"], "luck")["figure"]["data"][1]["hovertext"][0].startswith("&lt;b&gt;Bold")
@@ -140,7 +140,7 @@ def test_efficiency_rows_are_sorted_by_season_efficiency_with_points_per_week():
 def test_a_week_without_lineups_has_no_efficiency_chart():
     tables = make_tables()
     tables["lineups_optimal"] = tables["lineups_optimal"][tables["lineups_optimal"]["week"] > 1]
-    v = build_view(tables, RUN, POWER)
+    v = build_view(tables, RUN, METRICS)
     assert [c["key"] for c in v["earlier"][0]["charts"]] == ["luck"]
     assert [c["key"] for c in v["latest"]["charts"]][:2] == ["luck", "efficiency"]
 
@@ -190,7 +190,7 @@ def test_schedule_has_played_and_remaining_panels_with_bars_from_the_average():
 
 
 def test_schedule_with_every_remaining_schedule_average_says_so_instead_of_drawing_empty_bars():
-    s = chart(build_view(make_tables(flat_remaining=True), RUN, POWER)["latest"], "schedule")
+    s = chart(build_view(make_tables(flat_remaining=True), RUN, METRICS)["latest"], "schedule")
     assert len(s["figure"]["data"]) == 1 and "xaxis2" not in s["figure"]["layout"]
     assert s["subtitle"].endswith("Still to come: every team's remaining opponents are exactly average (0.0).")
 

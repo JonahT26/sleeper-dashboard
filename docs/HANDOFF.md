@@ -127,7 +127,8 @@ Dev/
 | 2026-10-02 | Prototype review of the masthead and ladder: mobile first; bars from the league average; breakdown with gap-from-average bars and a "Score" column; "Head-to-head wins" label; two-digit rank column; latest week in the HTML at build time; "Updated" = pipeline run time | Owner | UI_GUIDE.md, METRICS_SPEC.md §2 and §6, CLAUDE.md |
 | 2026-10-02 | Fixed bar axes for the season (largest gap so far, rounded up) so bars compare across weeks | Claude | UI_GUIDE.md |
 | 2026-10-02 | Page-weight budget (1 MB) counts compressed bytes, what a visitor downloads | Owner | UI_GUIDE.md, CLAUDE.md |
-| 2026-10-02 | "How this works" copy is generated from `config.yaml` at build time so it can't drift from the model; it stays out of the page until the owner approves the draft (a test enforces this) | Owner | dashboard/explainer.py, tests/test_explainer.py |
+| 2026-10-02 | "How this works" copy is generated from `config.yaml` at build time so it can't drift from the model | Owner | dashboard/explainer.py, tests/test_explainer.py |
+| 2026-10-02 | "How this works" draft approved with no edits and published as the last section; boom/bust sentence kept for a future display; the 2.4–97.6 range kept; awards not explained | Owner | UI_GUIDE.md |
 
 ## 7. Open questions and assumptions to verify
 
@@ -173,8 +174,8 @@ Follow `docs/UI_GUIDE.md` for everything user-facing.
    - **Done 2026-10-02:** `dashboard/build.py`, the template, and `python -m sleeper_dash.dashboard`: masthead, ladder, weekly awards, every week as of that week. Earlier weeks are pre-drawn into `<template>` blocks rather than embedded as JSON and drawn by JavaScript: one renderer (Python and Jinja2) instead of two that could drift. Chart data will be embedded as JSON when the chart sections arrive. The pipeline writes `data/cache/pipeline_run.json` for the "Updated" line.
    - **Done 2026-10-02:** `theme.py` (shared Plotly theme, colours as CSS tokens), `charts.py`, and `templates/charts.js`: Luck and Lineup efficiency, following the week selector.
    - **Done 2026-10-02:** consistency, strength of schedule, and rank history charts; tapping a team name in any chart moves the highlight.
-   - **Drafted 2026-10-02, awaiting the owner's approval:** "How this works" copy in `dashboard/explainer.py`; every weight and threshold is filled in from `config.yaml` and league settings when it is built. Print it with `python -m sleeper_dash.dashboard.explainer`. **It is not in the page and must not be added until the owner approves the text**; `tests/test_explainer.py::test_not_published_until_the_owner_approves_the_copy` guards this.
-   - **Next:** the owner's review of the copy; then wire it into the page as the last section.
+   - **Done 2026-10-02:** "How this works" copy (`dashboard/explainer.py`), approved by the owner with no edits, is the page's last section. Every weight and threshold is filled in from `config.yaml`, and league facts (teams, median game, playoff start) from the pipeline run record. Any change to the wording needs the owner's approval again.
+   - **Phase 3 is functionally complete.** Remaining before Phase 4: a final review pass with the owner, then the plan's step 6 (GitHub Actions; fix risk 1 and pin dependencies first).
    - **Page weight (settled 2026-10-02):** the 1 MB budget counts compressed bytes. A synthetic 17-week season is ~1.2 MB raw, ~115 KB compressed.
 4. Draft the "How this works" copy and show it to the owner for review before it is published.
 5. Add `python -m sleeper_dash.dashboard`, tests (sections present, no external calls besides fonts and the Plotly CDN, page weight under 1 MB), and preview the page in the browser pane at phone and desktop widths.

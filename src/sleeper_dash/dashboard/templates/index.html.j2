@@ -103,6 +103,16 @@
   <div class="wrap week-view" id="week-view" data-week="{{ latest.week }}">
 {{ week_sections(latest) }}
   </div>
+  <div class="wrap">
+    <section class="how" aria-labelledby="how-title">
+    {% for s in how_it_works %}
+      {% if loop.first %}<h2 class="section-title display" id="how-title">{{ s.heading }}</h2>{% else %}<h3 class="how-head">{{ s.heading }}</h3>{% endif %}
+      {% for p in s.paragraphs if p %}
+      <p>{{ p }}</p>
+      {% endfor %}
+    {% endfor %}
+    </section>
+  </div>
 </main>
 {% for v in earlier %}
 <template id="week-{{ v.week }}" data-title="{{ v.title }}">

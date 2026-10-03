@@ -10,8 +10,8 @@ Each week shows rankings, records, and metrics as of that week. A section with n
 a week is left out entirely (owner decision, no placeholder).
 """
 
+import gzip
 import json
-import math
 import re
 from datetime import datetime
 from pathlib import Path
@@ -21,7 +21,7 @@ import pandas as pd
 from jinja2 import Environment, PackageLoader
 
 from sleeper_dash.config import PROJECT_ROOT
-from sleeper_dash.dashboard import charts, theme
+from sleeper_dash.dashboard import charts, explainer, theme
 
 SITE_DIR = PROJECT_ROOT / "site"
 TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards"]
@@ -103,18 +103,20 @@ def updated_text(finished_at):
 
 # --- View model -----------------------------------------------------------------------------
 
-def build_view(tables, run, power_params):
+def build_view(tables, run, params):
     """Everything the template needs, as plain values and formatted strings. Pure: no file access.
 
     tables: teams, team_weeks, power_rankings, metrics_season, lineups_optimal, awards. run: the pipeline's run record.
-    power_params: config.yaml metrics.power (weights and recent_weeks).
+    params: config.yaml metrics (power weights and windows for the ladder; every weight and threshold for "How this works").
     """
     teams = tables["teams"].set_index("roster_id")
     power, season, awards = tables["power_rankings"], tables["metrics_season"], tables["awards"]
     lineups, team_weeks = tables["lineups_optimal"], tables["team_weeks"]
     names = teams["team_name"].to_dict()
     regular_weeks = sorted(int(w) for w in team_weeks.loc[~team_weeks["is_playoff"].astype(bool), "week"].unique())
-    weights, recent_weeks = power_params["weights"], power_params["recent_weeks"]
+    weights, recent_weeks = params["power"]["weights"], params["power"]["recent_weeks"]
+    if not run.get("league"):
+        raise DashboardError("The pipeline run record has no league settings. Run `python -m sleeper_dash.pipeline` again.")
     weeks = sorted(int(w) for w in power["week"].unique())
     if not weeks:
         raise DashboardError("No power rankings to show. Run `python -m sleeper_dash.pipeline` first.")
@@ -169,7 +171,8 @@ def build_view(tables, run, power_params):
     chart_theme = theme.to_script_json({"layout": theme.base_layout(), "config": theme.CONFIG, "tokens": theme.TOKENS})
     return {"league_name": run["league_name"], "updated": updated_text(run["finished_at"]),
             "latest": views[-1], "earlier": views[:-1], "weeks": weeks,
-            "plotly_cdn": theme.PLOTLY_CDN, "chart_theme": chart_theme}
+            "plotly_cdn": theme.PLOTLY_CDN, "chart_theme": chart_theme,
+            "how_it_works": explainer.sections(params, run["league"])}  # owner-approved copy, numbers from config.yaml
 
 
 def _component_detail(component, raw, standings, recent):
@@ -217,7 +220,7 @@ def build_site(out_dir=None, processed_dir=None, run_path=None):
     from sleeper_dash.config import load_config
     from sleeper_dash.validate import load_tables
 
-    view = build_view(load_tables(processed_dir, names=TABLES), read_run_record(run_path), load_config().metrics["power"])
+    view = build_view(load_tables(processed_dir, names=TABLES), read_run_record(run_path), load_config().metrics)
     out_dir = Path(out_dir or SITE_DIR)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "index.html"
@@ -238,4 +241,5 @@ def main():
     print(f"  Sections: power rankings; weekly awards in {sum(bool(v['awards']) for v in every)} of {len(weeks)} weeks; "
           f"charts in the latest week: {', '.join(c['key'] for c in view['latest']['charts']) or 'none'}")
     print(f"  Updated:  {view['updated']}")
-    print(f"  Size:     {size / 1024:.0f} KB of the 1 MB budget ({math.ceil(size / len(weeks) / 1024)} KB a week)")
+    compressed = len(gzip.compress(path.read_bytes()))  # the budget counts what a visitor downloads (owner, 2026-10-02)
+    print(f"  Size:     {compressed / 1024:.0f} KB compressed, of the 1 MB budget ({size / 1024:.0f} KB before compression)")

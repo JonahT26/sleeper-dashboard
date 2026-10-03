@@ -4,8 +4,8 @@ Run with:  python -m sleeper_dash.dashboard.explainer   (prints the draft as pla
 
 Every weight and threshold is filled in from config.yaml (and league size, the median game, and the
 playoff start from Sleeper's league settings) each time the copy is built, so the words can never
-drift from the model. The owner reviews this copy before it is published (decision 2026-10-02):
-until then it is not part of the page.
+drift from the model. The owner approved this copy on 2026-10-02; any change to the wording needs
+the owner's approval again before it is published.
 """
 
 import math
@@ -139,15 +139,9 @@ def as_text(copy):
     return "\n\n".join(blocks)
 
 
-def league_facts(league_json):
-    """The league settings the copy needs, from Sleeper's league.json."""
-    settings = league_json["settings"]
-    return {"teams": int(settings["num_teams"]), "median_game": bool(settings.get("league_average_match")),
-            "playoff_week_start": int(settings["playoff_week_start"])}
-
-
 def main():
     from sleeper_dash.config import load_config
+    from sleeper_dash.pipeline import league_facts
     from sleeper_dash.transform import read_raw
 
     config = load_config()
