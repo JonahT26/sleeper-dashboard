@@ -6,17 +6,27 @@ build-backend = "setuptools.build_meta"
 name = "sleeper-dash"
 version = "0.1.0"
 description = "Automated weekly power rankings and analytics for our Sleeper fantasy football league"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
+# Exact versions, so the weekly GitHub Actions run installs what was tested locally.
+# requirements-ci.txt pins these plus everything they pull in; regenerate it after
+# changing a version here (docs/CODEBASE.md, "Dependencies").
+# plotly sets the plotly.js version loaded from the CDN, and charts.js uses Plotly
+# internals: re-check the charts after upgrading it.
 dependencies = [
-    "requests",
-    "pandas",
-    "pyarrow",
-    "pyyaml",
-    "scipy",
-    "plotly",
-    "jinja2",
-    "pytest",
-    "jupyterlab",
+    "requests==2.34.2",
+    "pandas==3.0.6",
+    "pyarrow==25.0.1",
+    "pyyaml==6.0.3",
+    "scipy==1.18.1",
+    "plotly==7.1.0",
+    "jinja2==3.1.6",
+]
+
+[project.optional-dependencies]
+# Local tools: pip install -e ".[dev]". GitHub Actions installs pytest only.
+dev = [
+    "pytest==9.1.1",
+    "jupyterlab==4.6.4",
 ]
 
 [tool.setuptools.packages.find]

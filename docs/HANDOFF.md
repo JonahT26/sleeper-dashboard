@@ -10,7 +10,7 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard). A new Claude session
 | 1 · Data pull (raw extract, tidy tables, validation, pipeline) | **Complete** |
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
-| 4 · Automation (weekly GitHub Action, GitHub Pages) | **In progress** (started 2026-10-03). Owner's answers in section 6; risk 1 fixed; next: pin dependencies (risk 2) |
+| 4 · Automation (weekly GitHub Action, GitHub Pages) | **In progress** (started 2026-10-03). Owner's answers in section 6; risks 1 and 2 fixed; next: the workflow (section 9, step 3) |
 | 5 · Extras | Not started |
 
 At the end of Phase 3 (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
@@ -53,7 +53,7 @@ At the end of Phase 3 (NFL week 4 in progress, so weeks 1–3 are the completed 
 | Excel | Opening CSVs directly corrupts 18-digit IDs. CSVs are `utf-8-sig` |
 | Sleeper politeness | Tests block the network. `api.get` paces calls ≥0.25 s apart; `/players/nfl` cached for 24 h |
 | Plotly version | Python `plotly` 7.1.0 pairs with plotly.js **4.1.1**, loaded from `cdn.plot.ly` (basic bundle). `theme.PLOTLY_JS_VERSION` must match `plotly.offline.get_plotlyjs_version()` (a test checks). `charts.js` uses Plotly internals (`_fullLayout`, axis `_offset`, `l2p`) for label placement; re-check it after any Plotly upgrade |
-| Installed versions (pin these in Phase 4) | pandas 3.0.6, numpy 2.5.3, requests 2.34.2, pyarrow 25.0.1, PyYAML 6.0.3, scipy 1.18.1, plotly 7.1.0, Jinja2 3.1.6, MarkupSafe 3.0.3, pytest 9.1.1, tzdata 2026.4, jupyterlab 4.6.4 |
+| Installed versions (pinned 2026-10-03 in `pyproject.toml` and `requirements-ci.txt`) | pandas 3.0.6, numpy 2.5.3, requests 2.34.2, pyarrow 25.0.1, PyYAML 6.0.3, scipy 1.18.1, plotly 7.1.0, Jinja2 3.1.6, MarkupSafe 3.0.3, pytest 9.1.1, tzdata 2026.4, jupyterlab 4.6.4 |
 
 ### Previewing the page (browser pane)
 
@@ -187,7 +187,7 @@ Dev/
 Ordered by impact on an unattended weekly job.
 
 1. **Off-season breakage: fixed 2026-10-03.** The season start date now comes from `config.yaml` and is only checked against `/state/nfl` while that still describes the league's season, so Sleeper's rollover to 2027 no longer stops transform. **Each new season, update `season` and `season_start_date` together** (config refuses a date outside the season).
-2. **Unpinned dependencies (fix before Phase 4).** A fresh install in Actions gets whatever is newest. Plotly is the sharpest edge: a new Python `plotly` changes the expected CDN version, and the version test then stops the job (safe, but no update that week). `charts.js` also uses Plotly internals. `jupyterlab` and `pytest` sit in the runtime dependencies, which makes every Actions install much heavier than it needs to be; move them to an optional `[dev]` extra. Installed versions are in section 3.
+2. **Unpinned dependencies: fixed 2026-10-03.** Exact versions in `pyproject.toml`; `requirements-ci.txt` pins everything Actions installs; jupyterlab and pytest are the `dev` extra. Upgrades follow `docs/CODEBASE.md` "Dependencies" (a fresh install would otherwise have picked up newer MarkupSafe and tzdata releases already).
 3. **GitHub switches off scheduled workflows in public repos after 60 days with no repository activity.** A quiet stretch from mid-November would stop the weekly run without any error. Committing the refreshed CSVs from the workflow (section 7, question 3) prevents this.
 4. **Week 15 untested on real data** (section 7). A wrong assumption fails "Records match Sleeper" and stops the run: safe, but the page stops updating until fixed.
 5. **The tests in the workflow check the committed tables, not this run's.** `test_page` builds the page from `data/processed/` as committed. Run `pytest tests/test_page.py` again after the pipeline and dashboard steps, so the numbers about to be published are checked too.

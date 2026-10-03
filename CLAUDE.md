@@ -24,8 +24,8 @@ Scoring settings, roster slots, playoff start week, and whether the league plays
 
 ## Stack
 
-- Python 3.11+, installed as a package from `src/sleeper_dash/` (editable install)
-- pandas, requests, pyarrow, pyyaml, scipy, pytest, jupyterlab
+- Python 3.14, installed as a package from `src/sleeper_dash/` (editable install)
+- pandas, requests, pyarrow, pyyaml, scipy; pytest and jupyterlab as the `dev` extra. Exact versions pinned in `pyproject.toml` and `requirements-ci.txt` (see `docs/CODEBASE.md`, "Dependencies")
 - Plotly for charts and Jinja2 for the HTML template (Phase 3)
 - GitHub for version control, GitHub Actions for the weekly schedule, GitHub Pages for hosting (Phase 4)
 
@@ -40,7 +40,7 @@ Scoring settings, roster slots, playoff start week, and whether the league plays
 
 ```powershell
 .venv\Scripts\Activate.ps1         # start of every session, from the project folder (Mac/Linux: source .venv/bin/activate)
-pip install -e .                   # one-time setup, or after adding a dependency to pyproject.toml
+pip install -e ".[dev]"            # one-time setup, or after changing pyproject.toml (dev adds pytest and jupyterlab)
 python -m sleeper_dash.pipeline    # full refresh: extract → transform → data checks → metrics → metric checks → save; summary lists every check; exit 1 on failure
 python -m sleeper_dash.extract     # step 1 only: re-download raw JSON into data/raw/{season}/ and refresh the players cache
 python -m sleeper_dash.transform   # step 2 only: rebuild tables from saved files, validate, save, print detailed reports
