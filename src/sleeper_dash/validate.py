@@ -20,7 +20,10 @@ KEYS = {
     "transactions": ["transaction_id", "player_id", "action"],
     "lineups_optimal": ["season", "week", "roster_id"],
     "lineups_optimal_players": ["season", "week", "roster_id", "slot_order"],
+    "metrics_team_weeks": ["season", "week", "roster_id"],
+    "metrics_season": ["season", "through_week", "roster_id"],
 }
+LUCK_TOLERANCE = 1e-6  # wins
 BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions"]  # built by transform; the rest by lineup
 
 
@@ -151,6 +154,47 @@ def check_optimal_lineups(lineups, chosen, team_weeks):
     return _result("Optimal lineups are consistent", problems, f"{len(both)} team-weeks; optimal >= actual")
 
 
+def check_allplay_and_luck(weekly, season, team_weeks):
+    """All-play and luck invariants (METRICS_SPEC.md sections 1 and 2).
+
+    Per team-week, all-play W + L + T = teams that week − 1. Per week, the league's
+    W + ½T = n(n − 1)/2. In regular-season weeks where every team played, expected wins sum
+    to actual wins, so luck sums to 0. Median cross-check: median_result is W exactly when
+    all-play wins >= n/2. Season totals for the last week equal the sum of the weekly rows.
+    """
+    problems = []
+    week_key = ["season", "week"]
+    n = weekly.groupby(week_key)["roster_id"].transform("size")
+    games = weekly["allplay_wins"] + weekly["allplay_losses"] + weekly["allplay_ties"]
+    for r in weekly[games != n - 1].itertuples():
+        problems.append(f"week {r.week}, roster {r.roster_id}: all-play W+L+T is not {int(n[r.Index]) - 1}")
+
+    by_week = weekly.assign(credit=weekly["allplay_wins"] + 0.5 * weekly["allplay_ties"], n=n).groupby(week_key)
+    for (season_id, week), g in by_week:
+        teams = int(g["n"].iloc[0])
+        if abs(g["credit"].sum() - teams * (teams - 1) / 2) > LUCK_TOLERANCE:
+            problems.append(f"week {week}: league all-play wins {g['credit'].sum()} != {teams * (teams - 1) / 2}")
+        if g["actual_wins"].notna().all():
+            if abs(g["expected_wins"].sum() - g["actual_wins"].sum()) > LUCK_TOLERANCE or abs(g["luck"].sum()) > LUCK_TOLERANCE:
+                problems.append(f"week {week}: expected wins {g['expected_wins'].sum():.6f} vs actual {g['actual_wins'].sum()}; "
+                                f"luck sums to {g['luck'].sum():.2e}")
+
+    if "median_result" in team_weeks:
+        merged = weekly.assign(n=n).merge(team_weeks[week_key + ["roster_id", "median_result"]], on=week_key + ["roster_id"])
+        played = merged[merged["median_result"].notna()]
+        mismatch = played[(played["median_result"] == "W") != (played["allplay_wins"] >= played["n"] / 2)]
+        problems += [f"week {r.week}, roster {r.roster_id}: median_result {r.median_result} but all-play wins {r.allplay_wins}"
+                     for r in mismatch.itertuples()]
+
+    last = season[season["through_week"] == season["through_week"].max()].set_index("roster_id")
+    sums = weekly.groupby("roster_id")[["allplay_wins", "actual_wins", "expected_wins", "luck"]].sum()
+    for column in sums:
+        diff = (last[column] - sums[column]).abs()
+        problems += [f"roster {rid}: season {column} differs from the weekly total" for rid in diff[diff > LUCK_TOLERANCE].index]
+    return _result("All-play and luck are consistent", problems,
+                   f"{len(weekly)} team-weeks; luck sums to 0 each week; median cross-check agrees")
+
+
 def check_unique_keys(tables):
     """No table has two rows with the same key."""
     problems = []
@@ -173,6 +217,8 @@ def run_checks(tables, league, rosters):
     ]
     if "lineups_optimal" in tables:
         results.append(check_optimal_lineups(tables["lineups_optimal"], tables["lineups_optimal_players"], team_weeks))
+    if "metrics_team_weeks" in tables:
+        results.append(check_allplay_and_luck(tables["metrics_team_weeks"], tables["metrics_season"], team_weeks))
     results.append(check_unique_keys(tables))
     return results
 
