@@ -28,7 +28,7 @@ REDUCED, DARK = "(prefers-reduced-motion: reduce)", "(prefers-color-scheme: dark
 
 
 def css_rules(css, media=None):
-    """[(media query or None, [selectors], {property: value})] for every rule, one level of @media deep."""
+    """[(media or container query, or None; [selectors]; {property: value})] for every rule, one level of @media or @container deep."""
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
     rules, i = [], 0
     while (start := css.find("{", i)) >= 0:
@@ -39,6 +39,8 @@ def css_rules(css, media=None):
         head, body = css[i:start].strip(), css[start + 1:end - 1]
         if head.startswith("@media"):
             rules += css_rules(body, head.removeprefix("@media").strip())
+        elif head.startswith("@container"):
+            rules += css_rules(body, head)
         else:
             declarations = dict((p.strip(), v.strip()) for p, v in (d.split(":", 1) for d in body.split(";") if ":" in d))
             rules.append((media, [s.strip() for s in head.split(",")], declarations))
@@ -104,6 +106,20 @@ def test_nothing_else_moves_on_its_own():
     for figure in re.findall(r'<script type="application/json" id="fig-[^"]+">(.*?)</script>', page(), re.S):
         figure = json.loads(figure)
         assert "transition" not in figure["layout"] and "frames" not in figure  # Plotly animates only with these
+
+
+# --- Layout ------------------------------------------------------------------------------------
+
+def test_the_one_line_ladder_leaves_room_for_team_names():
+    """The ladder goes to one line a team only when the ladder itself is wide enough (beside the awards on a 1024px
+    screen it is ~580px, and a screen-width rule once squeezed the name column to nothing there)."""
+    [(query, row)] = [(m, d) for m, selectors, d in RULES if selectors == [".row"] and "grid-template-columns" in d and m]
+    assert query.startswith("@container ladder")
+    width = int(re.search(r"min-width:\s*(\d+)px", query).group(1))
+    fixed = sum(float(n) * (16 if unit == "em" else 1)
+                for n, unit in re.findall(r"(?<![\w(,])(\d+(?:\.\d+)?)(px|em)", row["grid-template-columns"]))
+    gaps = 4 * 12 + 2 * 8  # column gaps and the row's side padding
+    assert width - fixed - gaps >= 180   # the longest team name so far needs 191px at 16px; room left for the name column
 
 
 # --- Keyboard focus ----------------------------------------------------------------------------
@@ -186,7 +202,7 @@ LARGE_TEXT = {".team:first-child .rank"}                       # the #1 rank num
 
 def text_colours():
     for m, selectors, d in RULES:
-        if m in (None, DARK) and "color" in d and d["color"] not in ("inherit", "currentColor", "transparent"):
+        if m != REDUCED and "color" in d and d["color"] not in ("inherit", "currentColor", "transparent"):
             for s in selectors:
                 yield m, s, d["color"], d.get("background")
 

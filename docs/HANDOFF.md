@@ -17,7 +17,7 @@ At the end of this session (NFL week 4 in progress, so weeks 1–3 are the compl
 
 - `python -m sleeper_dash.pipeline`: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric checks → save 11 tables → re-check the saved CSVs. 14 of 14 checks pass, 23 API calls, ~7 seconds, processed CSVs byte-identical across runs. A successful run also writes `data/cache/pipeline_run.json` (finish time, league name, season, weeks, and league facts: 12 teams, median game on, playoffs from week 15).
 - `python -m sleeper_dash.dashboard`: builds `site/index.html` from the saved CSVs and the run record. Sections, top to bottom: masthead with week selector, power rankings ladder (tap a row for its breakdown), weekly awards, five charts (Luck, Lineup efficiency, Consistency, Strength of schedule, Rank history), and "How this works". Every completed week is in the page; each week shows rankings, records, awards, and charts as of that week. 26 KB compressed (194 KB raw) for weeks 1–3.
-- **346 tests pass.** Git clean and in sync with `origin/main` at `a733794`.
+- **348 tests pass.** Git clean and in sync with `origin/main` at `a733794`.
 
 ## 2. Working with the owner
 
@@ -83,7 +83,7 @@ Dev/
 │       ├── explainer.py          "How this works" copy, numbers from config.yaml (owner-approved)
 │       └── templates/            index.html.j2, styles.css, page.js (week selector), charts.js (drawing,
 │                                 highlight, label placement); CSS and JS are inlined into the page
-├── tests/                        346 tests, one file per module, plus page-level
+├── tests/                        348 tests, one file per module, plus page-level
 │                                 test_page and test_quality_floor; conftest blocks the network
 ├── data/raw/, data/cache/        GITIGNORED
 ├── data/processed/               COMMITTED, public (owner decision)
@@ -140,6 +140,8 @@ Dev/
 | 2026-10-02 | Page-weight budget (1 MB) counts compressed bytes | Owner (option 1) | UI_GUIDE.md, CLAUDE.md |
 | 2026-10-02 | "How this works" generated from `config.yaml` at build time | Owner | explainer.py |
 | 2026-10-02 | UI_GUIDE.md contrast note corrected: chalk on turf is 11.8:1 (was stated as 11.9) | Owner | UI_GUIDE.md |
+| 2026-10-02 | Design review fixes: ladder key reads "League average: 50"; rank-history names cut to 14 characters on phones; reading width ~72 characters; movement 16px; spacing on the scale; compact award tiles on desktop; luck labels on a page background; 1200px column centred; guide reworded for tooltips, phone sketch, and the ladder's details element | Owner (approved list; movement size delegated to Claude) | UI_GUIDE.md |
+| 2026-10-02 | The ladder's one-line layout switches on the ladder's own width (container query, 760px), fixing a collapse at 1024–1150px screens where team names had a 0px column | Claude (found in the design review) | UI_GUIDE.md |
 | 2026-10-02 | "How this works" approved with no edits and published; boom/bust sentence kept for a future display; 2.4–97.6 range kept; awards not explained; future wording changes need approval | Owner | UI_GUIDE.md |
 
 ## 7. Open questions and assumptions to verify
@@ -187,7 +189,7 @@ Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 r
 ## 11. First steps for the new session
 
 1. Read `CLAUDE.md`, this file, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`.
-2. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **346 passed**) and `git status` (expect clean, in sync with `origin/main`).
+2. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **348 passed**) and `git status` (expect clean, in sync with `origin/main`).
 3. Refresh: `.venv\Scripts\python.exe -m sleeper_dash.pipeline` (every check passes; 9 awards a week; week 4 appears once Sleeper has scored it), then `.venv\Scripts\python.exe -m sleeper_dash.dashboard`. Commit and push any changed processed CSVs.
 4. Start the `dashboard` preview server and check the page at 390px and 1280px (section 3), paying attention to the week-4 items in section 7.
 5. Then section 9: the owner's final Phase 3 review, and the Phase 4 plan.

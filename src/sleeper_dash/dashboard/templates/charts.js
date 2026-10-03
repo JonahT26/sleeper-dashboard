@@ -50,6 +50,17 @@
       if (a.name === String(roster)) a.text = "<b>" + a.text + "</b>";
     });
   }
+  // Phones (the page's phone layout, below 768px): a figure may give shorter team names and margins; the full
+  // name moves to the label's tooltip.
+  var phoneWidth = window.matchMedia("(max-width: 767px)");
+  function fitPhone(figure) {
+    if (!figure.phone || !phoneWidth.matches) return;
+    (figure.layout.annotations || []).forEach(function (a) {
+      var short = figure.phone.labels[a.name];
+      if (short && short !== a.text) { a.hovertext = a.text; a.text = short; }
+    });
+    figure.layout.margin = merge(figure.layout.margin || {}, figure.phone.margin);
+  }
   function escapeText(text) {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -111,7 +122,8 @@
         name: String(p.label.roster), captureevents: true,
         x: p.label.x, y: p.label.y, xref: "x", yref: "y", ax: best.cx - p.x, ay: best.cy - p.y, axref: "pixel", ayref: "pixel",
         text: bold ? "<b>" + text + "</b>" : text, xanchor: "center", yanchor: "middle",
-        font: {size: 12, color: colours.ink}, showarrow: true, arrowhead: 0, arrowwidth: 1, standoff: 6,
+        font: {size: 12, color: colours.ink}, bgcolor: colours.page,  // the 45° line passes behind the name
+        showarrow: true, arrowhead: 0, arrowwidth: 1, standoff: 6,
         arrowcolor: best.far ? colours.muted : "rgba(0,0,0,0)"
       };
     });
@@ -121,6 +133,7 @@
   function draw(div) {
     var figure = JSON.parse(document.getElementById("fig-" + div.dataset.figure).textContent);
     var roster = chosen === null ? figure.highlight : chosen;
+    fitPhone(figure);
     paint(figure, roster);
     var colours = palette();
     var fallback = div.querySelector(".chart-fallback");

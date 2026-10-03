@@ -71,19 +71,20 @@ Phase 5 adds a **Playoff odds** section after the ladder.
 
 ```
 ┌────────────────────────────────┐
-│ League Name             Wk 5 ▾ │  ← masthead band
+│ League Name           Week 5 ▾ │  ← masthead band
 │ Week 5 power rankings          │
 │ Updated Tue Oct 6, 9:00 AM ET  │
 ├────────────────────────────────┤
 │  1  Team Name              ▲2  │
-│     username     8–2, ap 41–14 │  (ap = all-play, shortened here only)
+│     user   8–2, all-play 41–14 │
 │     ───────┼████──────   57.8  │
 ├────────────────────────────────┤
 │  2  Team Name              ▼1  │
 │     ...                        │
 └────────────────────────────────┘
   Weekly awards (2-column tiles)
-  Charts stacked, full width, 320px tall
+  Charts stacked, full width; height to suit the chart (luck is square;
+  one-row-per-team charts about 30px a row)
 ```
 
 ### Desktop (1024px+)
@@ -103,7 +104,7 @@ Phase 5 adds a **Playoff odds** section after the ladder.
 └────────────────────────────────────────────────────────────────┘
 ```
 
-Max content width 1200px, left-aligned text throughout. Numbers right-aligned in tables.
+Max content width 1200px, centred on wider screens (owner, 2026-10-02); left-aligned text throughout. Reading text ("How this works", chart subtitles) is held to about 72 characters a line (`31em`). Numbers right-aligned in tables.
 
 ## Components
 
@@ -112,10 +113,10 @@ Max content width 1200px, left-aligned text throughout. Numbers right-aligned in
 Settled in the prototype review with the owner, 2026-10-02.
 
 - Rank numeral: Barlow Condensed 700, 48px, `--ink`, in a 52px column so two-digit ranks fit. The #1 numeral alone uses `--pylon`.
-- Phone layout, three lines (about 90px a row, so 7 teams fit on the first screen): team name with movement on the right; the manager's display name (Sleeper username, `--muted`, cut short with an ellipsis if needed) with the record on the right; the power score bar with its value. Desktop puts everything on one row: rank, name over username, record, bar and value, movement. Owner confirmed 2026-10-02: usernames stay on the public page.
-- Movement: `▲2` in `--up`, `▼1` in `--down`, `–` in `--muted` for no change. Always arrow plus number; never color alone.
+- Phone layout, three lines (about 85px a row, so 7 teams fit on the first screen): team name with movement on the right; the manager's display name (Sleeper username, `--muted`, cut short with an ellipsis if needed) with the record on the right; the power score bar with its value. When the ladder is at least 760px wide, everything goes on one row: rank, name over username, record, bar and value, movement. The switch depends on the ladder's own width, not the screen's: on a 1024px screen the awards sit beside the ladder, which is then about 580px wide and keeps the three-line layout (design review 2026-10-02). Owner confirmed 2026-10-02: usernames stay on the public page.
+- Movement (16px, the team name's size): `▲2` in `--up`, `▼1` in `--down`, `–` in `--muted` for no change. Always arrow plus number; never color alone.
 - Record and all-play record on one line, separated by a comma. The record is the overall one (head-to-head plus median games).
-- **Power score bar measured from the league average** (owner decision 2026-10-02, replacing a 0–100 bar on which every team looked about half full): a thin bar running right (above average) or left (below average) from a centre line at 50, plus the value to 1 decimal place. `--bar`, with the #1 team in `--pylon`. One fixed axis for every week of the season: the largest gap from 50 in any week so far, rounded up to 5, 10, 15, 20, 25, 30, 40 or 50 points (±15 through week 3). A one-line key above the ladder says that 50 is the league average. Two teams can show the same value (e.g. both 57.8); the order still follows the unrounded score, and no tie marker is shown (owner decision 2026-10-02).
+- **Power score bar measured from the league average** (owner decision 2026-10-02, replacing a 0–100 bar on which every team looked about half full): a thin bar running right (above average) or left (below average) from a centre line at 50, plus the value to 1 decimal place. `--bar`, with the #1 team in `--pylon`. One fixed axis for every week of the season: the largest gap from 50 in any week so far, rounded up to 5, 10, 15, 20, 25, 30, 40 or 50 points (±15 through week 3). A one-line key above the ladder reads "League average: 50" (owner wording, 2026-10-02). Two teams can show the same value (e.g. both 57.8); the order still follows the unrounded score, and no tie marker is shown (owner decision 2026-10-02).
 - **Tapping a row expands its breakdown** (the one place an expand animation is used), a small table so anyone can see why a team ranks where it does:
 
   | Component (weight) | Score | vs average |
@@ -131,11 +132,11 @@ Settled in the prototype review with the owner, 2026-10-02.
   - "Score" is each component's contribution (weight × component score); the four add up to the power score. The owner keeps it as the transparent part of the scoring (decision 2026-10-02).
   - "vs average" is the contribution minus an average team's (50 × weight), with a sign, plus a small bar running left or right from zero. All components and teams share one fixed axis for the season (rounded up to 1, 2, 3, 4, 5, 6, 8, 10, 12, 15 or 20; ±6 through week 3), so bars compare across rows. The four add up to the power score minus 50. These replace the stacked bar first specified, whose segments were dominated by the weights and looked the same for every team (owner decision 2026-10-02).
   - The results component is named **Head-to-head wins**, and its detail line gives the head-to-head record ("Won 1 of 3"), because the ladder shows the overall record and a bare win percentage would contradict it (owner decision 2026-10-02).
-- Built as a semantic `<ol>` (with `role="list"`) so screen readers announce ranks correctly. Each row is a button with `aria-expanded`; the movement arrows have text equivalents ("up 2", "no change").
+- Built as a semantic `<ol>` (with `role="list"`) so screen readers announce ranks correctly. Each row is a native `<details>`/`<summary>`, so it is keyboard-operable and announces whether it is open; the movement arrows have text equivalents ("up 2", "no change").
 
 ### Award tile
 
-Award name, team name, the number, and a one-line caption, e.g. "Left 38.4 points on the bench." Captions are where personality is allowed. Keep them factual and specific; the number does the joking. Nine awards are enabled (2026-10-02), so in the 2-column mobile grid the last tile sits alone on its row.
+Award name, team name, the number, and a one-line caption, e.g. "Left 38.4 points on the bench." Captions are where personality is allowed. Keep them factual and specific; the number does the joking. Nine awards are enabled (2026-10-02), so in the 2-column mobile grid the last tile sits alone on its row. Beside the ladder on desktop, each tile puts the award name and the number on one line, so the awards column is about as tall as the ladder.
 
 ### Week selector
 
@@ -150,7 +151,7 @@ All charts use Plotly with one shared theme defined in `dashboard/theme.py`. Nev
 - **Titles state what the chart shows; a subtitle says how to read it.** Example: title "Luck", subtitle "Above the line: more wins than your scores earned."
 - Axis titles include units ("Points per week"). Bar charts start at zero. Bars that show a gap from the league average (the ladder and its breakdown) start at the average, which is their zero, and say so.
 - Gridlines in `--hash`, thin, horizontal only. No chart borders or background fills.
-- Tooltips show team name and the formatted value only.
+- Tooltips show the team name and that point's formatted values (e.g. "3 wins, 2.8 expected, luck +0.2"), nothing else.
 - Hide the Plotly mode bar (`displayModeBar: false`) and make charts responsive.
 - Load Plotly from its CDN rather than embedding it, to keep the page small (`cdn.plot.ly`, the basic bundle, version matched to the Python `plotly` package).
 - **Highlighted team** (Claude, 2026-10-02): each week's #1 by default, matching the pylon #1 on the ladder. Tapping a chart point, a team name in any chart, or opening a ladder row moves the highlight to that team in every chart, and it stays through week changes. A highlighted label is bold `--ink`, never pylon text (pylon fails contrast for small text in light mode).
@@ -161,11 +162,11 @@ Specific charts:
 
 | Section | Chart | Notes |
 |---|---|---|
-| Luck | Scatter: expected wins (x) vs actual wins (y) | 45° reference line; label every point with team name. Equal scales on a square plot (0 to the most wins so far + 0.5). Labels are placed by the page so they don't collide, with a leader line when a label has to sit away from its point. Regular season only; from the playoffs on, the subtitle says so |
+| Luck | Scatter: expected wins (x) vs actual wins (y) | 45° reference line; label every point with team name. Equal scales on a square plot (0 to the most wins so far + 0.5). Labels are placed by the page so they don't collide, on a page-coloured background so the 45° line passes behind them, with a leader line when a label has to sit away from its point. Regular season only; from the playoffs on, the subtitle says so |
 | Efficiency | Dot plot: actual and optimal points per team, connected by a line | Points per week through the selected week; solid dot = scored, open dot = best possible. Sorted by season-to-date efficiency (best on top), team name above each row and the efficiency % at its right. Taller than 320px (30px a row) so 12 rows stay readable on a phone |
 | Consistency | Strip or box plot of weekly scores per team | League median as a reference line. Built as a strip plot: one row per team, each week's score a dot, a shaded bar from floor to ceiling, steadiest (lowest volatility) on top, ± volatility at the right; dotted line at the median of every score so far. Appears from `metrics.consistency.min_weeks` |
 | Schedule | Diverging bar: opponents' average points vs league average | Played and remaining as two panels, side by side with one row per team (toughest played schedule on top), whole-number ticks. When every remaining value is 0.0 (this league's round-robin makes that happen in week 3), the remaining panel is replaced by one line in the subtitle; after the regular season only the played panel shows. Appears from `metrics.schedule.min_weeks` |
-| Rank history | Bump chart, rank by week | All lines grey; tap a team to highlight. Full width; rank 1 at the top; team names at the end of each line; the highlighted line is drawn on top. Appears from week 2 |
+| Rank history | Bump chart, rank by week | All lines grey; tap a team to highlight. Full width; rank 1 at the top; team names at the end of each line (on phones, names longer than 14 characters are cut to 13 plus "…", owner 2026-10-02; the full name is in the tooltip); the highlighted line is drawn on top. Appears from week 2 |
 
 ## Numbers and copy
 

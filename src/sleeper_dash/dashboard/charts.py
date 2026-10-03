@@ -12,6 +12,7 @@ import math
 from sleeper_dash.dashboard import theme
 
 MINUS = "−"
+SHORT_NAME = 14  # on phones, rank history cuts longer team names to this many characters, ending in "…" (owner, 2026-10-02)
 
 
 def _signed(value):
@@ -28,6 +29,11 @@ def _wins(value):
 def _plotly_text(names):
     """Team names escaped for Plotly hover text and annotations, which read a little HTML (<b>, <br>)."""
     return {roster: html.escape(name, quote=False) for roster, name in names.items()}
+
+
+def _short(name):
+    """A team name cut to SHORT_NAME characters, ending in "…", for narrow screens."""
+    return name if len(name) <= SHORT_NAME else name[:SHORT_NAME - 1].rstrip(" &:,'’-") + "…"
 
 
 def _team_label(text, roster, **position):
@@ -293,6 +299,9 @@ def rank_history_chart(rankings, names, highlight, week):
                      "hovertemplate": "%{hovertext}<extra></extra>", "meta": {"roster": roster, "paint": ["line.color", "marker.color"]}})
         annotations.append(_team_label(shown[roster], roster, x=week, y=int(latest[roster]), xanchor="left", xshift=8))
     longest = max(len(names[r]) for r in latest.index)
+    # Phones: the names at the line ends take less room, so the plot keeps more of the width; the full name is in the tooltip.
+    phone = {"labels": {str(int(r)): html.escape(_short(names[r]), quote=False) for r in latest.index},
+             "margin": {"r": min(170, 6 * max(len(_short(names[r])) for r in latest.index) + 16)}}
     layout = {
         "xaxis": {"title": {"text": "Week"}, "range": [weeks[0] - 0.2, week + 0.2], "dtick": 1},
         "yaxis": {"title": {"text": "Power rank"}, "range": [n + 0.5, 0.5], "dtick": 1},
@@ -308,5 +317,6 @@ def rank_history_chart(rankings, names, highlight, week):
         "title": "Rank history: power rankings week by week",
         "subtitle": "Each line is one team's power rank after each week. Tap a line or a name to follow that team.",
         "summary": summary, "wide": True,
-        "figure": {"data": data, "layout": layout, "labels": [], "highlight": highlight, "height": {"phone": 26 * n + 90, "desktop": 30 * n + 90}},
+        "figure": {"data": data, "layout": layout, "labels": [], "highlight": highlight, "phone": phone,
+                   "height": {"phone": 26 * n + 90, "desktop": 30 * n + 90}},
     }

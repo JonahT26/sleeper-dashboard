@@ -213,6 +213,19 @@ def test_rank_history_draws_one_grey_line_per_team_with_the_top_team_highlighted
     assert len(labels) == 12 and all(a["x"] == 3 for a in labels)             # names at the end of each line, tappable
 
 
+def test_rank_history_gives_phones_shorter_names_and_more_room_for_the_lines():
+    names = ["Burrow UrFace N My Butker", "Lawrence & Order: SNU", "Fourteen chars"] + [f"Team {i}" for i in range(4, 13)]
+    fig = chart(build_view(make_tables(team_names=names), RUN, METRICS)["latest"], "rank_history")["figure"]
+    labels = fig["phone"]["labels"]
+    assert labels["1"] == "Burrow UrFace…" and labels["2"] == "Lawrence &amp; Or…"      # cut before escaping
+    assert labels["3"] == "Fourteen chars" and labels["4"] == "Team 4"          # 14 characters or fewer: unchanged
+    assert all(len(text.replace("&amp;", "&")) <= 14 for text in labels.values())
+    assert fig["phone"]["margin"]["r"] < fig["layout"]["margin"]["r"]
+    phone_layout = dict(fig["layout"], margin=dict(fig["layout"]["margin"], **fig["phone"]["margin"]),
+                        annotations=[dict(a, text=labels[a["name"]], hovertext=a["text"]) for a in fig["layout"]["annotations"]])
+    go.Figure(data=resolve_tokens(fig["data"], LIGHT), layout=resolve_tokens(phone_layout, LIGHT))  # what charts.js draws on a phone
+
+
 def test_team_name_labels_can_be_tapped_to_highlight():
     v = view()
     for c in v["latest"]["charts"]:

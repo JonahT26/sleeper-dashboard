@@ -21,7 +21,7 @@
 
 {% macro week_sections(v) %}
 <section class="ladder-section" aria-labelledby="title">
-  <p class="key">Power score: 50 is the league average. Bars run left or right from it. Tap a team to see how its score is built.</p>
+  <p class="key">League average: 50</p>
   <ol class="ladder" role="list">
   {% for t in v.ladder %}
     <li class="team" data-roster="{{ t.roster_id }}">
