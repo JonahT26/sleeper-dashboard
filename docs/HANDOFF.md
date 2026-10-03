@@ -107,6 +107,10 @@ Dev/
 | 2026-10-02 | `slot_order` is 0-based; bench follows starters in Sleeper's `players` order | Claude (per spec wording) | CODEBASE.md |
 | 2026-10-02 | CSVs written `utf-8-sig`; list columns as JSON text | Claude | CODEBASE.md |
 | 2026-10-02 | Validation runs before saving; the pipeline re-validates the saved CSVs | Claude | CODEBASE.md |
+| 2026-10-02 | All seven metric definitions confirmed in the Phase 2 interview | Owner | METRICS_SPEC.md |
+| 2026-10-02 | Past weeks are recomputed every run (no freezing of posted rankings) | Owner | METRICS_SPEC.md §6 |
+| 2026-10-02 | Displayed record = overall (head-to-head + median games), with no split shown; expected and actual wins on the same scale. First chosen as head-to-head only, changed by the owner after seeing the luck table | Owner | METRICS_SPEC.md §2 |
+| 2026-10-02 | Power score's results component stays head-to-head only (median wins excluded to avoid double-counting scoring) | Owner | METRICS_SPEC.md §6 |
 
 ## 7. Open questions and assumptions to verify
 
@@ -124,8 +128,8 @@ Dev/
 - **Dependencies are unpinned** in `pyproject.toml`. Pin them before Phase 4 so GitHub Actions matches local; local is Python 3.14.
 
 **Open product questions (raised early, not yet decided):**
-- **Ladder record:** head-to-head only, or overall including median? This affects Phase 3 and possibly the power score.
-- **Retroactive changes:** full refresh can change already-posted rankings after stat corrections. Is that acceptable, or should posted weeks be frozen?
+- ~~**Ladder record:**~~ Settled 2026-10-02: overall record including median games (see decisions log).
+- ~~**Retroactive changes:**~~ Settled 2026-10-02: recompute everything every run (see decisions log).
 - **Where league members see updates:** bookmark only, or also a group-chat post (CLAUDE.md open decision, Phase 5).
 - **Minor UI_GUIDE issue:** in dark mode the masthead band and the page background are both `--turf`, so the masthead doesn't stand out.
 - **Phase 4 scheduling:** GitHub Actions cron runs in UTC, so 9 AM ET shifts by an hour with daylight saving.

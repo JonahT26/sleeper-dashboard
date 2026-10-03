@@ -74,7 +74,7 @@ Phase 5 adds a **Playoff odds** section after the ladder.
 │ Updated Tue Oct 6, 9:00 AM ET  │
 ├────────────────────────────────┤
 │  1  Team Name         ▲2       │
-│     4–1, all-play 41–14        │
+│     8–2, all-play 41–14        │
 │     ████████████████░░  118.4  │
 ├────────────────────────────────┤
 │  2  Team Name         ▼1       │
@@ -149,7 +149,7 @@ Specific charts:
 ## Numbers and copy
 
 - Points: 1 decimal (`118.4`). Percentages: whole numbers (`87%`). Expected wins: 1 decimal.
-- Records use an en dash: `4–1`. Show ties only if the league has had one: `4–1–1`.
+- Records use an en dash: `8–2`. Show ties only if the league has had one: `8–1–1`. The record is the overall one, head-to-head plus median games, matching Sleeper's standings (owner decision, see `METRICS_SPEC.md` section 2).
 - Dates: "Tue Oct 6, 9:00 AM ET".
 - Sentence case everywhere. No all-caps labels or tracked-out eyebrow text above headings.
 - Name things by what managers understand ("Points left on the bench"), not by how the code works ("bench_points_lost").

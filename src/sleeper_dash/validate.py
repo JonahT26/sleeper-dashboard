@@ -154,13 +154,14 @@ def check_optimal_lineups(lineups, chosen, team_weeks):
     return _result("Optimal lineups are consistent", problems, f"{len(both)} team-weeks; optimal >= actual")
 
 
-def check_allplay_and_luck(weekly, season, team_weeks):
+def check_allplay_and_luck(weekly, season, team_weeks, rosters):
     """All-play and luck invariants (METRICS_SPEC.md sections 1 and 2).
 
     Per team-week, all-play W + L + T = teams that week − 1. Per week, the league's
     W + ½T = n(n − 1)/2. In regular-season weeks where every team played, expected wins sum
     to actual wins, so luck sums to 0. Median cross-check: median_result is W exactly when
-    all-play wins >= n/2. Season totals for the last week equal the sum of the weekly rows.
+    all-play wins >= n/2. Season totals for the last week equal the sum of the weekly rows,
+    and the season record (head-to-head + median) equals Sleeper's roster wins/losses/ties.
     """
     problems = []
     week_key = ["season", "week"]
@@ -191,8 +192,17 @@ def check_allplay_and_luck(weekly, season, team_weeks):
     for column in sums:
         diff = (last[column] - sums[column]).abs()
         problems += [f"roster {rid}: season {column} differs from the weekly total" for rid in diff[diff > LUCK_TOLERANCE].index]
+
+    # The displayed record (head-to-head + median) must be Sleeper's official record.
+    for roster_id, sleeper in sorted(_sleeper_totals(rosters).items()):
+        if roster_id not in last.index:
+            problems.append(f"roster {roster_id}: missing from metrics_season")
+            continue
+        ours = tuple(int(last.at[roster_id, c]) for c in ("wins", "losses", "ties"))
+        if ours != (sleeper["W"], sleeper["L"], sleeper["T"]):
+            problems.append(f"roster {roster_id}: record {'–'.join(map(str, ours))} vs Sleeper {sleeper['W']}–{sleeper['L']}–{sleeper['T']}")
     return _result("All-play and luck are consistent", problems,
-                   f"{len(weekly)} team-weeks; luck sums to 0 each week; median cross-check agrees")
+                   f"{len(weekly)} team-weeks; luck sums to 0 each week; median cross-check agrees; records match Sleeper")
 
 
 def check_unique_keys(tables):
@@ -218,7 +228,7 @@ def run_checks(tables, league, rosters):
     if "lineups_optimal" in tables:
         results.append(check_optimal_lineups(tables["lineups_optimal"], tables["lineups_optimal_players"], team_weeks))
     if "metrics_team_weeks" in tables:
-        results.append(check_allplay_and_luck(tables["metrics_team_weeks"], tables["metrics_season"], team_weeks))
+        results.append(check_allplay_and_luck(tables["metrics_team_weeks"], tables["metrics_season"], team_weeks, rosters))
     results.append(check_unique_keys(tables))
     return results
 

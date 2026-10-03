@@ -82,30 +82,31 @@ Display: "all-play 41–14", with a third number only when ties exist ("41–13�
 
 ## 2. Expected wins and luck
 
-**Status:** confirmed by the owner, 2026-10-02.
+**Status:** confirmed by the owner, 2026-10-02; record scale changed by the owner the same day (see Record scale).
 
-**Meaning.** *Expected wins* is how many games your scores deserved to win against an average opponent. *Luck* is actual wins minus expected wins. Positive luck means your schedule handed you wins your scores didn't earn; negative means it took wins away.
+**Meaning.** *Expected wins* is how many games your scores deserved to win. *Luck* is actual wins minus expected wins. Positive luck means your schedule handed you wins your scores didn't earn; negative means it took wins away.
 
-**Formula.** For team *i* in regular-season week *w*:
+**Formula.** For team *i* in regular-season week *w*, with *M₍ᵢ,w₎* the weekly median-game result (1 for a win, 0 for a loss; 0 in a week without a median game):
 
 | Quantity | Definition |
 |---|---|
-| Expected wins *xW₍ᵢ,w₎* | that week's all-play win % (metric 1) = (*W* + ½*T*) ÷ (*n₍w₎* − 1). This is the probability of beating an opponent drawn at random from that week's other teams |
-| Actual wins *A₍ᵢ,w₎* | head-to-head result: 1 for a win, ½ for a tie, 0 for a loss |
-| Luck *λ₍ᵢ,w₎* | *A₍ᵢ,w₎* − *xW₍ᵢ,w₎* |
+| Head-to-head actual wins *H₍ᵢ,w₎* | 1 for a win, ½ for a tie, 0 for a loss |
+| Actual wins *A₍ᵢ,w₎* | *H₍ᵢ,w₎* + *M₍ᵢ,w₎*: head-to-head plus median game, 0 to 2 per week. Matches Sleeper's official record |
+| Expected wins *xW₍ᵢ,w₎* | that week's all-play win % (metric 1) + *M₍ᵢ,w₎*. The all-play % is the probability of beating an opponent drawn at random from that week's other teams; the median game's expected result equals its actual result, because it is decided by the team's own score alone |
+| Luck *λ₍ᵢ,w₎* | *A₍ᵢ,w₎* − *xW₍ᵢ,w₎* = *H₍ᵢ,w₎* − all-play % |
 | Season to date, through week *t* | Σ*xW*, Σ*A*, and Σ*λ* over regular-season weeks 1…*t* |
 
-Example: the 4th-highest score of 12 beats 8 of the other 11 teams, so *xW* = 8/11 = 0.73. A loss that week gives luck −0.73; a win gives +0.27.
+Example: the 4th-highest score of 12 beats 8 of the other 11 teams, so the all-play % is 8/11 = 0.73, and the team also wins the median game (top 6), so *xW* = 1.73. A head-to-head loss that week gives *A* = 1 and luck −0.73; a win gives *A* = 2 and luck +0.27.
 
-Display: expected wins to 1 decimal place (`UI_GUIDE.md`); luck as a signed number of wins, e.g. "+1.4".
+Display: the record as overall wins–losses, with ties only when there are any ("6–0", "5–0–1"); expected wins to 1 decimal place (`UI_GUIDE.md`); luck as a signed number of wins, e.g. "+1.4".
 
-**Record scale (owner decision).** Head-to-head only. The ladder shows the head-to-head record next to the all-play record ("4–1, all-play 41–14"), and actual wins, expected wins, and luck are all on the same scale of one game per week. This settles the Phase 1 open question about the ladder record. Sleeper's official record, which includes median games, is not shown on the ladder.
+**Record scale (owner decision, changed 2026-10-02).** **Overall: head-to-head plus median games**, the same as Sleeper's official standings. The ladder shows this record next to the all-play record ("8–2, all-play 41–14"), with no head-to-head/median split anywhere on the dashboard (owner decision). Actual and expected wins use the same scale, so the luck chart reads against the record league members see.
 
-Why the median game doesn't change luck: a team's median-game result is fully determined by its own score (it wins exactly when all-play wins ≥ *N*/2), so its expected result always equals its actual result and its luck is always zero. Including median games would double the scale but leave luck unchanged.
+History: during the interview the owner first chose head-to-head only; after seeing the first season table, the owner changed it to the overall record. Luck values are identical under both scales: a team's median-game result is fully determined by its own score (it wins exactly when all-play wins ≥ *N*/2), so its expected result always equals its actual result and the median game adds no luck. The power score's results component stays head-to-head only (section 6).
 
 **Model (owner decision).** All-play based, as above. The alternative, a score-distribution model of the probability of beating the actual opponent from each team's mean and SD, was rejected: it mixes team strength into luck, overlapping with the power score, and is unstable with few weeks of data.
 
-**Inputs.** Metric 1 (weekly all-play *W*, *T*, and *n₍w₎*); `team_weeks`: `result`, `is_playoff`.
+**Inputs.** Metric 1 (weekly all-play *W*, *T*, and *n₍w₎*); `team_weeks`: `result`, `median_result` (present when the league plays a median game), `is_playoff`.
 
 **Parameters.** None.
 
@@ -114,24 +115,26 @@ Why the median game doesn't change luck: a team's median-game result is fully de
 | Case | Rule |
 |---|---|
 | Playoff weeks | **Excluded** (owner decision). Expected wins, actual wins, and luck cover the regular season only, because their job is to explain the regular-season standings. Weekly all-play values still exist for playoff weeks (metric 1). From week 15 on, season-to-date values stay at their end-of-regular-season totals |
-| Head-to-head ties | ½ actual win, consistent with all-play ties |
-| Median game | Not part of actual or expected wins (see Record scale) |
+| Head-to-head ties | ½ actual win, consistent with all-play ties. The displayed record counts the tie as a tie ("5–0–1") |
+| Median game | Included in actual and expected wins with equal value, so it never changes luck. A score exactly at the median stops the run (Phase 1 rule) |
+| League or week without a median game | *M* = 0: actual and expected wins fall back to head-to-head only |
 | Exact score ties with other teams | Handled through all-play ties (½ each) |
 | Empty starting slots | No adjustment. The team's actual score stands |
 | Players added mid-week | No adjustment. The team's actual score stands |
 | Small early-season samples | No shrinkage. Luck describes results already banked rather than estimating talent, so it is valid from week 1 and simply starts close to zero |
 
 **Expected range.**
+- Weekly actual and expected wins between 0 and 2 (between 0 and 1 without a median game).
 - Weekly luck lies strictly between −1 and +1, and at most ±(*n₍w₎* − 2)/(*n₍w₎* − 1) = ±10/11, e.g. losing with the second-highest score.
-- Season expected wins lie between 0 and the number of regular-season games played.
+- Season expected wins lie between 0 and the number of regular-season games played (head-to-head plus median).
 - The league's total luck is 0 every week, so the league average is 0.
 - Weekly luck has a standard deviation of roughly 0.4 wins, so by the end of a 14-week regular season most teams should be within about ±3 wins.
 
 **Sanity checks.**
-1. In every regular-season week where all teams have a game, the league's luck sums to 0 (±0.000001), because total actual wins = *N*/2 = total expected wins.
-2. 0 ≤ *xW₍ᵢ,w₎* ≤ 1 and −1 < *λ₍ᵢ,w₎* < 1 for every team-week.
+1. In every regular-season week where all teams have a game, the league's expected wins equal its actual wins and luck sums to 0 (±0.000001): head-to-head wins total *N*/2 = total all-play %, and median wins equal on both sides.
+2. 0 ≤ *xW₍ᵢ,w₎* ≤ 2 and −1 < *λ₍ᵢ,w₎* < 1 for every team-week.
 3. A head-to-head win with the week's top score has *λ* = 0; a loss with the week's bottom score has *λ* = 0.
-4. Season Σ*A* reproduces the head-to-head part of Sleeper's record: Sleeper's wins minus median wins (cross-check with `validate.py`).
+4. Each team's regular-season overall wins, losses, and ties equal Sleeper's roster `wins`, `losses`, and `ties` (checked in `validate.py`).
 
 ---
 
@@ -330,7 +333,7 @@ Owner decisions:
 | `season_scoring` | Season scoring | mean points per week over all completed weeks 1…*t* | 0.35 |
 | `recent_form` | Recent form | simple mean points over the last `recent_weeks` completed weeks (*t* − `recent_weeks` + 1 … *t*); all weeks so far when *t* < `recent_weeks` | 0.25 |
 | `roster_strength` | Roster strength | mean **optimal** points per week (metric 3) over weeks 1…*t*: the talent on the roster, bench included | 0.20 |
-| `results` | Results | head-to-head win % = (W + ½T) ÷ games, regular-season games through *t* (metric 2's actual wins ÷ games) | 0.20 |
+| `results` | Results | **head-to-head** win % = (W + ½T) ÷ games, regular-season head-to-head games through *t*. Median games are excluded (owner decision, 2026-10-02): a median win is decided by the team's own score, which season scoring and recent form already weigh at 0.60 | 0.20 |
 
 Deliberately left out (owner approved): **efficiency** (already inside actual points; roster strength captures the upside), **consistency** (volatility hurts a good team and helps a bad one, so it has no clear direction), **all-play %** (almost the same as season scoring), and **strength of schedule** (a team's points don't depend on its opponent). In weeks 1–3, recent form equals season scoring, so the two act as one component weighted 0.60.
 
@@ -374,7 +377,7 @@ The weights must be ≥ 0 and sum to 1 (±0.000001), or the run stops. They are 
 | Ties in power score | Broken by season scoring, then head-to-head win %, then lower `roster_id`. Every team gets a distinct rank |
 | Playoff weeks | **Every week, every team** (owner decision). Results stay frozen at the end-of-regular-season win %; the other three components keep updating |
 | Week 1 | Results are 0, ½, or 1 for every team; *f* = 0.25 keeps the spread small. Rank change is null |
-| Median game | Not used: results are head-to-head only (metric 2) |
+| Median game | Not used: results are head-to-head only, even though the displayed record includes median games (owner decision, 2026-10-02) |
 | Empty starting slots, players added mid-week | No adjustment. Season scoring and recent form use actual scores; roster strength uses the roster as Sleeper recorded it (metric 3 rules) |
 | A component with no spread | *z* = 0 for every team, so it contributes exactly 50 × weight to everyone |
 
