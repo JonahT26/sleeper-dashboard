@@ -23,10 +23,9 @@ As of **Monday 2026-10-05, end of session** (NFL week 4's Monday game is tonight
 |---|---|---|---|---|
 | `main` | `90c3190` | Phase 4 + the playoff odds spec | 433 | Live; the workflow's bot commits refreshed tables here |
 | `playoff-odds` | `e600246` | Playoff odds (metric, `playoff_odds` and `winners_bracket` tables, 2 checks → 16), calibration notebook 04, the Playoff odds section after the ladder, "How this works" paragraph | 467 | **Owner-approved, wording included.** Merge after the Tue Oct 6 run is checked |
-| `past-seasons` | `145f01a` | Stacked on `playoff-odds`: seasons 2020–2025 in the pipeline, `managers` table (17 checks), three owner rules from past data, the History section | 489 | Built and checked; **History wording awaiting the owner's approval**. The local checkout is on this branch |
+| `past-seasons` | `145f01a` | Stacked on `playoff-odds`: seasons 2020–2025 in the pipeline, `managers` table (17 checks), three owner rules from past data, the History section | 489 | Built and checked; **History wording approved** (2026-10-05). Merge after `playoff-odds` |
 
 **Owner input still pending:**
-- **History wording** (UI_GUIDE.md "History"): subtitle, headings, column headers, luck and high-score lines, as reported 2026-10-05. Also flagged: the season count sits under each manager's name instead of in its own column, so the table fits 360px (a separate column overflowed 20px at 390px). Approve, or keep the column and let the table scroll sideways on phones.
 - **Order of the remaining extras** (section 9).
 - **League-chat post:** the owner started a request for an automatic weekly post (webhook as a GitHub secret, dry-run mode, never posting a week twice, a CLAUDE.md rule 7 exception) and then said to **ignore it** in the same message. Nothing was built or asked. Don't act on it unless the owner raises it again.
 
@@ -225,6 +224,7 @@ Dev/
 | 2026-10-05 | Playoff bracket view: build it now (after the playoff odds merge), tested on the real 2025 bracket and the fake league, so it can show from the Dec 22 run; it appears only in playoff weeks | Owner (option 1) | section 9 |
 | 2026-10-05 | Restore the strict playoff-week standings checks (regular season only), reversing the 2026-10-03 "either standard" rule, but only once 2026's week 15 data confirms Sleeper counts the regular season only, as in 2025 | Owner (agreed with Claude's recommendation) | section 7, risk 4 |
 | 2026-10-05 | A one-time scheduled session, Tue Dec 22 2026 at 2:00 PM ET (`sleeper-week15-playoff-checks`, Claude desktop app, Scheduled): checks today's run, verifies the three playoff assumptions on week 15, tightens the checks if they hold, builds the page, and reports on a branch (`playoff-week15-checks`) without merging or publishing | Owner (request), Claude (task) | section 7 |
+| 2026-10-05 | History wording approved as drafted (subtitle, headings, column headers, luck and high-score lines), with the season count under each manager's name rather than its own column, so the table fits 360px; merge `past-seasons` right after `playoff-odds` | Owner | UI_GUIDE.md "History" |
 | 2026-10-05 | Playoff odds wording approved as drafted (section subtitle, column headers, "Clinched"/"Out"/"<1%"/">99%", the "How this works" paragraph); per-seed odds in the spec, the tie reading, and the stopping bracket check confirmed; merge after the Tue Oct 6 run is checked | Owner (1 approve, 2–4 agree) | UI_GUIDE.md "Playoff odds", METRICS_SPEC.md section 8 |
 | 2026-10-05 | Playoff odds definition, every recommended option accepted: normal model on scores relative to the week's league mean; team means shrunk toward the league mean with fixed `shrink_weeks` 6 (2025 calibration 6.5) and posterior uncertainty drawn once per simulated season; one pooled score SD; no recency weighting; median game decided from the same simulated scores; seeding by wins then points for, verified format only (anything else stops the run); a new check that our seeding matches Sleeper's provisional `winners_bracket`; 10,000 simulations; a seed per (season, week); outputs playoff, bye, and title odds and average final record from week 3; "Clinched"/"Out" only when a bound proves it, otherwise "<1%"/">99%" | Owner | METRICS_SPEC.md section 8 |
 
@@ -298,11 +298,11 @@ Ordered by impact on the unattended weekly job.
 | Playoff odds (METRICS_SPEC.md section 8) | Built, approved, unmerged | `playoff-odds` |
 | Calibration on 2025 (notebook 04) | Done: playoff Brier 0.134 (vs 0.250 everyone-50%, 0.222 top-6-now); bye odds no better than flat 2/12; more shrinkage scored better in-sample (k 20: 0.128). Revisit `shrink_weeks` after 2026's week 14 | `playoff-odds` |
 | Past seasons 2020–2025 | Built and checked (17 of 17 in every season) | `past-seasons` |
-| History section | Built; wording awaiting approval | `past-seasons` |
+| History section | Built; wording approved | `past-seasons` |
 
 **Merging** (in this order; never merge with an unchecked run or unapproved wording):
 1. After the Tue Oct 6 run succeeds (and its actor is checked, section 7): `git switch main`, `git pull`, `git merge playoff-odds`. The bot's week 4 commit will conflict on `data/processed/*.csv`: take either side (`git checkout --theirs data/processed/`), run `.venv\Scripts\python.exe -m sleeper_dash.pipeline` (16 of 16 checks; week 4 odds appear), run all tests (467), commit, push. Check the page at 360, 390, 1024 and 1280px, light and dark. The Thursday Oct 8 run publishes it (or run Weekly refresh by hand).
-2. When the owner approves the History wording: `git merge past-seasons` into `main` the same way (conflicts again only in tables; pipeline 17 of 17 in every season; 489 tests). The first GitHub run afterwards takes about 4 minutes (RUNBOOK.md says so); watch it once with `gh run watch`.
+2. Right after step 1 (History wording approved 2026-10-05): `git merge past-seasons` into `main` the same way (conflicts again only in tables; pipeline 17 of 17 in every season; 489 tests). The first GitHub run afterwards takes about 4 minutes (RUNBOOK.md says so); watch it once with `gh run watch`.
 3. Update this file, `CLAUDE.md` "Current status", and the memory note after each merge.
 
 **Next to build: the playoff bracket view** (owner, 2026-10-05: build now, after the playoff odds merge). A section shown only in playoff weeks, from the `winners_bracket` table (seeds, byes, results as they come in), mobile first per UI_GUIDE.md; tested offline on the real 2025 bracket (in `data/processed/` once `past-seasons` is merged; seasons 2020–2025 give six finished brackets) and the fake 8-team `PlayoffLeague`. Wording to the owner as a draft. Must be on `main` before the Tue Dec 22 run; aim for early December. Start a new branch from `main` after the merges (or from `past-seasons` if History is still pending, and say so).
@@ -325,5 +325,5 @@ Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 r
 3. Check the weekly job: `gh run list --workflow weekly.yml --limit 5`. Any failure comes first (section 7a, CLAUDE.md rule 13). **Tue Oct 6** should commit "Weekly refresh: tables through week 4"; check its actor is JonahT26 (`gh api repos/JonahT26/sleeper-dashboard/actions/runs/<id> --jq .actor.login`, risk 13). **Thu Oct 8** should report no new week.
 4. Confirm the environment on each branch you touch: `.venv\Scripts\python.exe -m pytest -q` (**433** on `main`, **467** on `playoff-odds`, **489** on `past-seasons`; a `test_dependencies` failure means the environment drifted from the pins) and `git status` (clean, in sync).
 5. If the Tue Oct 6 run passed: merge `playoff-odds` (section 9, "Merging", step 1) and check the page.
-6. Ask the owner about the History wording (section 1); on approval, merge `past-seasons` (step 2).
+6. Merge `past-seasons` (step 2): the History wording is approved.
 7. Then build the playoff bracket view (section 9), and ask the owner to order the remaining extras.

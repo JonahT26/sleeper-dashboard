@@ -172,7 +172,7 @@ Added 2026-10-05 (Phase 5; definitions in `METRICS_SPEC.md` section 8). The sect
 
 ### History
 
-Design approved by the owner 2026-10-05 (pieces, rows, names, record scale). **The wording is a draft awaiting the owner's approval.** Built by `dashboard/history.py` from every saved season; a season counts once Sleeper's bracket names its champion.
+Design approved by the owner 2026-10-05 (pieces, rows, names, record scale). Wording approved by the owner as drafted, 2026-10-05, season count under the name included. Built by `dashboard/history.py` from every saved season; a season counts once Sleeper's bracket names its champion.
 
 - One section for the whole page, after Rank history and before "How this works", the same whatever week is selected, at most 760px wide. Hidden until a season has finished.
 - Subtitle: "Every finished season, 2020–2025. Records are regular-season records, median games included; playoff results count as appearances and titles."
