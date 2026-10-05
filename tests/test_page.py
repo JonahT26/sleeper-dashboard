@@ -31,7 +31,7 @@ from test_dashboard import METRICS, RUN, make_tables
 
 MINUS, EN_DASH = "−", "–"
 # The guide's section order (UI_GUIDE.md "Layout"); "How this works" follows, once for the whole page.
-SECTION_ORDER = ["ladder", "odds", "bracket", "awards", "luck", "efficiency", "consistency", "schedule", "rank-history"]
+SECTION_ORDER = ["ladder", "odds", "bracket", "awards", "luck", "efficiency", "consistency", "schedule", "rank-history", "moves"]
 # Bar axes, rounded up to these (UI_GUIDE.md "Ladder row").
 POWER_AXIS_STEPS = [5, 10, 15, 20, 25, 30, 40, 50]
 PART_AXIS_STEPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20]
@@ -124,6 +124,8 @@ def section_keys(node):
             keys.append("odds")
         elif "bracket-section" in section.classes:
             keys.append("bracket")
+        elif "moves-section" in section.classes:
+            keys.append("moves")
         elif "awards" in section.classes:
             keys.append("awards")
         elif "chart-section" in section.classes:
@@ -229,6 +231,18 @@ def standings(tables, week):
     return s[s["through_week"] == week].set_index("roster_id").sort_index()
 
 
+def has_moves(tables, week):
+    """Roster moves shows once a pickup has scored, a team has bid, or a trade has been made (regular season)."""
+    if "start_credits" not in tables:
+        return False
+    cutoff = min(week, RUN["league"]["playoff_week_start"] - 1)
+    credits = tables["start_credits"]
+    scored = credits[(credits["week"] <= cutoff) & credits["source"].isin(["waiver", "free_agent"])]
+    season = tables["metrics_season"]
+    spent = "faab_spent" in season and bool((season.loc[season["through_week"] == week, "faab_spent"] > 0).any())
+    return bool((scored["points"] > 0).any()) or bool((tables["trades"]["week"] <= cutoff).any()) or spent
+
+
 def expected_sections(tables, week):
     """Which sections a week should show, worked out from the tables alone."""
     s = standings(tables, week)
@@ -237,6 +251,7 @@ def expected_sections(tables, week):
         "ladder": True,
         "odds": "playoff_odds" in tables and bool((tables["playoff_odds"]["week"] == week).any()),
         "bracket": week >= RUN["league"]["playoff_week_start"] and not tables["winners_bracket"].empty,
+        "moves": has_moves(tables, week),
         "awards": bool((tables["awards"]["week"] == week).any()),
         "luck": not s.empty and bool(s["expected_wins"].notna().all()),
         "efficiency": bool((lineups["week"] <= week).any()),
@@ -291,7 +306,7 @@ def test_every_week_shows_exactly_the_sections_its_data_supports_in_guide_order(
 def test_hidden_sections_leave_nothing_behind(season):
     for week, node in week_nodes(season.doc).items():
         keys = section_keys(node)
-        assert bool(node.all("div", "charts")) == any(k not in ("ladder", "odds", "bracket", "awards") for k in keys), f"week {week}"
+        assert bool(node.all("div", "charts")) == any(k not in ("ladder", "odds", "bracket", "awards", "moves") for k in keys), f"week {week}"
         for section in node.all("section"):
             assert section.text().strip(), f"an empty section in week {week}"
         assert not node.all("ul", "tiles") or node.one("ul", "tiles").all("li", "tile")
@@ -318,7 +333,7 @@ def test_a_week_whose_data_is_missing_loses_those_sections_and_nothing_else():
     tables["metrics_season"] = tables["metrics_season"].copy()
     tables["metrics_season"].loc[tables["metrics_season"]["through_week"] == first, "expected_wins"] = float("nan")
     nodes = week_nodes(built(tables, params).doc)
-    assert section_keys(nodes[first]) == ["ladder", "awards"] and not nodes[first].all("div", "charts")
+    assert section_keys(nodes[first]) == ["ladder", "awards", "moves"] and not nodes[first].all("div", "charts")
     assert "awards" not in section_keys(nodes[second]) and "Weekly awards" not in nodes[second].text()
     assert section_keys(nodes[second])[0] == "ladder" and "luck" in section_keys(nodes[second])
 

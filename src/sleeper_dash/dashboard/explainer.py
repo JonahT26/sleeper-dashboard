@@ -140,6 +140,20 @@ def sections(params, league):
             + " then points for. \"Clinched\" and \"Out\" appear only when the standings make them certain; otherwise a chance "
             f"that rounds to 0% or 100% shows as \"<1%\" or \">99%\". Playoff odds appear once {odds['min_weeks']} weeks are complete.",
         ]})
+    moves = params.get("transactions")
+    if moves:  # draft awaiting the owner's approval, 2026-10-05
+        out.append({"heading": "Roster moves", "paragraphs": [
+            "Every regular-season start is credited to how the team got that player: the draft, a waiver claim, a "
+            "free-agent pickup, or a trade. If a team drops a player and picks him up again, or trades for a player it "
+            "once had, the latest move gets the credit. Playoff weeks don't count.",
+            "Best pickups are the waiver claims and free-agent pickups whose players have scored the most in that team's "
+            "starting lineup. FAAB \"Per $\" is the points a team's waiver claims have scored, $0 claims included, divided "
+            f"by the dollars it has bid; it shows once a team has spent ${number(moves['min_faab_spend'])}. FAAB traded "
+            "between teams isn't spending.",
+            "A trade compares what each side's new players have scored in that team's starting lineup since the trade. "
+            "FAAB that changed hands is listed but not turned into points. Points in a lineup aren't the same as value "
+            "added: a new starter may only have replaced a slightly worse one.",
+        ]})
     out += [
         {"heading": "Why past weeks can change", "paragraphs": [
             "Sleeper sometimes corrects player stats a few days after a game, for example when a catch is ruled a fumble on review. "

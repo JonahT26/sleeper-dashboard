@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 
 from sleeper_dash.dashboard import build
+from sleeper_dash.metrics.transactions import PICKUPS_COLUMNS, START_CREDITS_COLUMNS, TRADES_COLUMNS
 from sleeper_dash import seasons
 from sleeper_dash.dashboard.build import (
     DashboardError, award_value, bar, build_site, build_view, movement, nice_axis, record, render, signed, updated_text,
@@ -83,7 +84,10 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining
             "playoff_odds": make_odds(range(3, min(weeks, 14) + 1), n),
             "managers": seasons.build_managers(teams),
             "winners_bracket": pd.DataFrame(columns=["season", "round", "matchup_id", "t1_roster_id", "t2_roster_id", "t1_from",
-                                                     "t2_from", "winner_roster_id", "loser_roster_id", "place"])}
+                                                     "t2_from", "winner_roster_id", "loser_roster_id", "place"]),
+            # No roster moves in the synthetic season (tests/test_moves.py covers the section).
+            "start_credits": pd.DataFrame(columns=START_CREDITS_COLUMNS), "pickups": pd.DataFrame(columns=PICKUPS_COLUMNS),
+            "trades": pd.DataFrame(columns=TRADES_COLUMNS)}
 
 
 def with_history(tables, n=12):
