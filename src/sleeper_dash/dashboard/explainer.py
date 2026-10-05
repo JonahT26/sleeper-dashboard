@@ -141,7 +141,7 @@ def sections(params, league):
             f"that rounds to 0% or 100% shows as \"<1%\" or \">99%\". Playoff odds appear once {odds['min_weeks']} weeks are complete.",
         ]})
     moves = params.get("transactions")
-    if moves:  # draft awaiting the owner's approval, 2026-10-05
+    if moves:  # owner-approved as drafted, 2026-10-05
         out.append({"heading": "Roster moves", "paragraphs": [
             "Every regular-season start is credited to how the team got that player: the draft, a waiver claim, a "
             "free-agent pickup, or a trade. If a team drops a player and picks him up again, or trades for a player it "

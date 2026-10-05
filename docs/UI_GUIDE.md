@@ -184,7 +184,7 @@ Added 2026-10-05 (Phase 5). Wording approved by the owner as drafted, 2026-10-05
 
 ### Roster moves
 
-Added 2026-10-05 (Phase 5; metrics in `METRICS_SPEC.md` section 9). Layout, contents, and order approved by the owner (1a 2a 3a 4a, 2026-10-05). **The wording, and the "How this works" paragraph, are drafts awaiting the owner's approval.** Built by `dashboard/moves.py`.
+Added 2026-10-05 (Phase 5; metrics in `METRICS_SPEC.md` section 9). Layout, contents, and order approved by the owner (1a 2a 3a 4a, 2026-10-05). Wording and the "How this works" paragraph approved by the owner as drafted, 2026-10-05; changes need approval again. Built by `dashboard/moves.py`.
 
 - **One section per week, after Rank history** and before History, full width on desktop. Title "Roster moves"; subtitle "Points each move has put in the starting lineup this regular season." In playoff weeks: "… in the regular season; playoff weeks don't count." The numbers are as of the selected week; in playoff weeks they are the final regular-season numbers.
 - **Best pickups:** the top 5 waiver or free-agent pickups by points credited so far (only those that have scored). Each row: player name (semi-bold) with points at the right, then a muted line "‹team› · waivers, $5, week 2 · 11 starts" ("free agent, week 5"; "before the season" for preseason adds).
