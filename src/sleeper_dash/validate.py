@@ -18,6 +18,7 @@ KEYS = {
     "team_weeks": ["season", "week", "roster_id"],
     "player_weeks": ["season", "week", "roster_id", "slot_order"],
     "transactions": ["transaction_id", "player_id", "action"],
+    "trade_assets": ["transaction_id", "asset_order"],
     "schedule": ["season", "week", "roster_id"],
     "winners_bracket": ["season", "matchup_id"],
     "lineups_optimal":["season", "week", "roster_id"],
@@ -27,10 +28,13 @@ KEYS = {
     "power_rankings": ["season", "week", "roster_id"],
     "awards": ["season", "week", "award", "roster_id"],
     "playoff_odds": ["season", "week", "roster_id"],
+    "start_credits": ["season", "week", "roster_id", "player_id"],
+    "pickups": ["transaction_id", "player_id"],
+    "trades": ["transaction_id", "roster_id"],
     "managers": ["owner_id"],
 }
 LUCK_TOLERANCE = 1e-6  # wins
-BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "schedule", "winners_bracket"]  # built by transform
+BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "trade_assets", "schedule", "winners_bracket"]  # built by transform
 HISTORY_TABLES = ["managers"]                                                      # across seasons (seasons.py)
 METRIC_TABLES = [name for name in KEYS if name not in BASE_TABLES + HISTORY_TABLES]  # built by lineup and metrics
 
@@ -585,6 +589,60 @@ def check_playoff_odds(odds, team_weeks, league):
                                    "every seed once; Clinched and Out consistent")
 
 
+def check_trade_assets(trade_assets):
+    """FAAB and draft picks traded inside trades (METRICS_SPEC.md section 9, check 5): amounts positive, two different teams."""
+    faab = trade_assets[trade_assets["asset"] == "faab"]
+    problems = [f"trade {r.transaction_id}: FAAB amount {r.faab_amount}" for r in faab.itertuples() if not r.faab_amount > 0]
+    problems += [f"trade {r.transaction_id}: roster {r.sender_roster_id} sends to itself"
+                 for r in trade_assets.itertuples() if r.sender_roster_id == r.receiver_roster_id]
+    problems += [f"trade {r.transaction_id}: asset {r.asset!r} is neither faab nor pick"
+                 for r in trade_assets.itertuples() if r.asset not in ("faab", "pick")]
+    picks = int((trade_assets["asset"] == "pick").sum())
+    return _result("Trade assets are consistent", problems,
+                   f"{len(faab)} FAAB transfers (${int(faab['faab_amount'].sum()) if len(faab) else 0}), {picks} draft picks")
+
+
+def check_transaction_credits(credits, pickups, trades, season, team_weeks):
+    """Transactions (METRICS_SPEC.md section 9, checks 1-4): every regular-season starter point is credited exactly once,
+    pickups and trades add up to their credits, trade margins are opposite, and the season columns agree."""
+    name = "Transaction credits add up"
+    problems = []
+    regular = team_weeks[~team_weeks["is_playoff"].astype(bool)].set_index(["week", "roster_id"])["points"]
+    by_team_week = credits.groupby(["week", "roster_id"])["points"].sum().reindex(regular.index, fill_value=0.0)
+    off = (by_team_week - regular).abs() > TOLERANCE
+    problems += [f"week {w}, roster {r}: credits sum to {by_team_week[(w, r)]:.2f}, team scored {regular[(w, r)]:.2f}"
+                 for w, r in regular.index[off]]
+    extra = set(credits["week"]) - set(regular.index.get_level_values("week"))
+    problems += [f"credits in non-regular-season week {w}" for w in sorted(extra)]
+    pickup_credit = credits.loc[credits["source"].isin(["waiver", "free_agent"]), "points"].sum()
+    if abs(pickups["start_points"].sum() - pickup_credit) > TOLERANCE:
+        problems.append(f"pickups total {pickups['start_points'].sum():.2f}, but pickups were credited {pickup_credit:.2f}")
+    trade_credit = credits.loc[credits["source"] == "trade", "points"].sum()
+    if abs(trades["start_points"].sum() - trade_credit) > TOLERANCE:
+        problems.append(f"trades total {trades['start_points'].sum():.2f}, but trades were credited {trade_credit:.2f}")
+    net = trades.groupby("transaction_id")["margin"].sum()
+    problems += [f"trade {tid}: the two sides' margins sum to {m:.2f}" for tid, m in net.items() if abs(m) > TOLERANCE]
+    ratio = season.dropna(subset=["faab_points_per_dollar"])
+    wrong = (ratio["faab_points_per_dollar"] - ratio["waiver_points"] / ratio["faab_spent"]).abs() > 1e-3
+    problems += [f"through week {r.through_week}, roster {r.roster_id}: FAAB efficiency {r.faab_points_per_dollar} "
+                 f"isn't waiver points / FAAB spent" for r in ratio[wrong].itertuples()]
+    unshown = season.loc[season["faab_points_per_dollar"].isna(), "faab_spent"]
+    if len(ratio) and len(unshown) and unshown.max() >= ratio["faab_spent"].min():
+        problems.append("FAAB efficiency is hidden for a team that spent more than one it's shown for")
+    if len(season):
+        last = season[season["through_week"] == season["through_week"].max()].set_index("roster_id")
+        pickup_total = pickups.groupby("roster_id")["start_points"].sum().reindex(last.index, fill_value=0.0)
+        margin_total = trades.groupby("roster_id")["margin"].sum().reindex(last.index, fill_value=0.0)
+        problems += [f"roster {r}: pickup points {last.at[r, 'pickup_points']:.2f} in metrics_season, {pickup_total[r]:.2f} in pickups"
+                     for r in last.index if abs(last.at[r, "pickup_points"] - pickup_total[r]) > TOLERANCE]
+        problems += [f"roster {r}: trade margin {last.at[r, 'trade_margin']:.2f} in metrics_season, {margin_total[r]:.2f} in trades"
+                     for r in last.index if abs(last.at[r, "trade_margin"] - margin_total[r]) > TOLERANCE]
+    sources = credits.groupby("source")["points"].sum()
+    share = ", ".join(f"{s} {v / sources.sum():.0%}" for s, v in sources.sort_values(ascending=False).items()) if len(sources) else "none"
+    return _result(name, problems, f"{len(credits)} starts credited once each ({share}); {len(pickups)} pickups, "
+                                   f"{trades['transaction_id'].nunique()} trades")
+
+
 def check_managers(managers, teams):
     """Managers are matched across seasons by Sleeper owner ID (seasons.build_managers).
 
@@ -640,6 +698,8 @@ def run_data_checks(tables, league, rosters):
         results.append(check_schedule(tables["schedule"], team_weeks, league))
     if "winners_bracket" in tables:
         results.append(check_seeding_matches_sleeper(tables["winners_bracket"], team_weeks, league))
+    if "trade_assets" in tables:
+        results.append(check_trade_assets(tables["trade_assets"]))
     results.append(check_unique_keys({n: t for n, t in tables.items() if n not in METRIC_TABLES}, "data tables"))
     return results
 
@@ -662,6 +722,9 @@ def run_metric_checks(tables, league, rosters):
         results.append(check_awards(tables["awards"], team_weeks, tables["lineups_optimal"]))
     if "playoff_odds" in tables:
         results.append(check_playoff_odds(tables["playoff_odds"], team_weeks, league))
+    if "start_credits" in tables:
+        results.append(check_transaction_credits(tables["start_credits"], tables["pickups"], tables["trades"],
+                                                 tables["metrics_season"], team_weeks))
     metric_tables = {n: t for n, t in tables.items() if n in METRIC_TABLES}
     if metric_tables:
         results.append(check_unique_keys(metric_tables, "metric tables"))

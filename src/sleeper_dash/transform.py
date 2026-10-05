@@ -36,6 +36,10 @@ SCHEDULE_COLUMNS = ["season", "week", "roster_id", "matchup_id", "opponent_roste
 WINNERS_BRACKET_COLUMNS = ["season", "round", "matchup_id", "t1_roster_id", "t2_roster_id", "t1_from", "t2_from",
                            "winner_roster_id", "loser_roster_id", "place"]
 EMPTY_SLOT = "0"
+TRADE_ASSETS_COLUMNS = [
+    "transaction_id", "season", "week", "asset_order", "asset", "sender_roster_id", "receiver_roster_id",
+    "faab_amount", "pick_season", "pick_round", "pick_original_roster_id", "created_at",
+]
 EASTERN = "America/New_York"
 
 
@@ -401,6 +405,53 @@ def build_transactions(league, transactions_by_week, players, season_start_date)
     return moves.sort_values(["created_at", "transaction_id", "action"], ascending=[True, True, False]).reset_index(drop=True)
 
 
+def build_trade_assets(league, transactions_by_week):
+    """One row per FAAB transfer or draft pick inside a completed trade. Key: (transaction_id, asset_order).
+
+    These aren't player moves, so `transactions` doesn't hold them (Phase 5, METRICS_SPEC.md section 9). FAAB comes
+    from a trade's `waiver_budget` ([{"amount", "sender", "receiver"}], roster IDs); picks from `draft_picks`
+    (previous_owner_id gives the pick, owner_id receives it, roster_id is the team whose pick it originally was).
+    Trades of FAAB only, with no players, are here and nowhere else.
+    """
+    season = int(league["season"])
+    rows = []
+    for week, transactions in sorted(transactions_by_week.items()):
+        for t in transactions:
+            if t["status"] != "complete" or t["type"] != "trade":
+                continue
+            created_at = pd.Timestamp(t["created"], unit="ms", tz="UTC").tz_convert(EASTERN)
+            base = {"transaction_id": t["transaction_id"], "season": season, "week": week, "created_at": created_at}
+            assets = [{"asset": "faab", "sender_roster_id": f["sender"], "receiver_roster_id": f["receiver"],
+                       "faab_amount": f["amount"]} for f in t.get("waiver_budget") or []]
+            assets += [{"asset": "pick", "sender_roster_id": p["previous_owner_id"], "receiver_roster_id": p["owner_id"],
+                        "pick_season": int(p["season"]), "pick_round": p["round"], "pick_original_roster_id": p["roster_id"]}
+                       for p in t.get("draft_picks") or []]
+            rows += [{**base, "asset_order": i, **a} for i, a in enumerate(assets)]
+    assets = pd.DataFrame(rows, columns=TRADE_ASSETS_COLUMNS).astype({
+        "transaction_id": "string", "season": "int64", "week": "int64", "asset_order": "int64", "asset": "string",
+        "sender_roster_id": "int64", "receiver_roster_id": "int64", "faab_amount": "Int64", "pick_season": "Int64",
+        "pick_round": "Int64", "pick_original_roster_id": "Int64", "created_at": f"datetime64[ns, {EASTERN}]"})
+    return assets.sort_values(["created_at", "transaction_id", "asset_order"]).reset_index(drop=True)
+
+
+def faab_balances(transactions, trade_assets, rosters, budget):
+    """FAAB per team: budget, winning bids, FAAB received and sent in trades, what's left, and Sleeper's own
+    `waiver_budget_used` with the gap (METRICS_SPEC.md section 9, "FAAB balance report"; printed, never a stopping
+    check: Sleeper's current-season figure includes the week in progress, and 2021-2024 have unexplained gaps)."""
+    faab = trade_assets[trade_assets["asset"] == "faab"]
+    table = pd.DataFrame({
+        "spent": transactions[transactions["action"] == "add"].groupby("roster_id")["waiver_bid"].sum(),
+        "received": faab.groupby("receiver_roster_id")["faab_amount"].sum(),
+        "sent": faab.groupby("sender_roster_id")["faab_amount"].sum(),
+    }).reindex(sorted(r["roster_id"] for r in rosters)).fillna(0).astype("int64")
+    table.index.name = "roster_id"
+    table.insert(0, "budget", int(budget))
+    table["left"] = table["budget"] - table["spent"] + table["received"] - table["sent"]
+    table["sleeper_used"] = table.index.map({r["roster_id"]: (r["settings"] or {}).get("waiver_budget_used", 0) for r in rosters})
+    table["gap"] = table["sleeper_used"] - (table["budget"] - table["left"])
+    return table
+
+
 def season_start_date(state, league, configured):
     """The season's start date: config.yaml's value, cross-checked against /state/nfl when it can be.
 
@@ -446,7 +497,7 @@ def save_table(df, name, processed_dir=None):
     """
     out = df.copy()
     for column in out.columns:
-        if out[column].map(lambda v: isinstance(v, list)).any():
+        if any(isinstance(v, list) for v in out[column]):
             out[column] = out[column].map(json.dumps)
     processed_dir = processed_dir or PROCESSED_DIR
     processed_dir.mkdir(parents=True, exist_ok=True)
@@ -463,12 +514,14 @@ def build_tables(season, configured_start_date):
     matchups = read_matchups(season)
     players = read_players()
     start_date = season_start_date(read_raw(season, "state.json"), league, configured_start_date)
+    transactions = read_weekly(season, "transactions")
 
     tables = {
         "teams": build_teams(league, rosters, users),
         "team_weeks": build_team_weeks(league, matchups),
         "player_weeks": build_player_weeks(league, matchups, players),
-        "transactions": build_transactions(league, read_weekly(season, "transactions"), players, start_date),
+        "transactions": build_transactions(league, transactions, players, start_date),
+        "trade_assets": build_trade_assets(league, transactions),
         "schedule": build_schedule(league, matchups, read_weekly(season, "schedule", required=False)),
         "winners_bracket": build_winners_bracket(league, read_raw(season, "winners_bracket.json")),
     }
@@ -516,6 +569,17 @@ def main():
     _report_standings(team_weeks, teams, rosters)
     _report_player_weeks(player_weeks, team_weeks)
     _report_transactions(transactions, teams, rosters, start_date)
+    _report_faab(transactions, tables["trade_assets"], teams, rosters, league)
+
+
+def _report_faab(transactions, trade_assets, teams, rosters, league):
+    balances = faab_balances(transactions, trade_assets, rosters, league["settings"].get("waiver_budget", 0))
+    balances.insert(0, "team_name", teams.set_index("roster_id")["team_name"])
+    print(f"\nFAAB (trade_assets: {int((trade_assets['asset'] == 'faab').sum())} FAAB transfers, "
+          f"{int((trade_assets['asset'] == 'pick').sum())} draft picks)")
+    print("  " + balances.to_string().replace("\n", "\n  "))
+    print(f"  {int((balances['gap'] == 0).sum())} of {len(balances)} teams match Sleeper's budget used. A gap is "
+          "expected while a week is in progress: Sleeper counts its claims and trades, this table doesn't yet.")
 
 
 def _report_transactions(moves, teams, rosters, start_date):

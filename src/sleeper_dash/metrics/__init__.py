@@ -5,6 +5,7 @@ Most modules add columns to the same two tables:
 - metrics_season: one row per team as of every completed week (key: season, through_week, roster_id)
 The power score has its own table, power_rankings (key: season, week, roster_id), and so do
 the weekly awards (key: season, week, award, roster_id) and playoff odds (key: season, week, roster_id).
+Transactions (section 9) add start_credits, pickups, and trades, plus season-to-date columns in metrics_season.
 """
 
 TEAM_WEEK_KEY = ["season", "week", "roster_id"]
@@ -17,8 +18,11 @@ def build_metric_tables(tables, params, league=None):
     params = config.yaml metrics section. league = Sleeper's league.json, whose playoff settings playoff
     odds need; without it (some tests) playoff_odds is left out.
     """
+    import pandas as pd
+
     from sleeper_dash.lineup import efficiency_season
-    from sleeper_dash.metrics import allplay, awards, consistency, playoff_odds, power, schedule
+    from sleeper_dash.metrics import allplay, awards, consistency, playoff_odds, power, schedule, transactions
+    from sleeper_dash.transform import TRADE_ASSETS_COLUMNS
 
     team_weeks = tables["team_weeks"]
     allplay_weekly = allplay.build_metrics_team_weeks(team_weeks)
@@ -27,18 +31,23 @@ def build_metric_tables(tables, params, league=None):
     allplay_season = allplay.build_metrics_season(allplay_weekly)
 
     weekly = allplay_weekly.merge(consistency_weekly, on=TEAM_WEEK_KEY, validate="one_to_one")
+    trade_assets = tables["trade_assets"] if "trade_assets" in tables else pd.DataFrame(columns=TRADE_ASSETS_COLUMNS)
+    moves = transactions.build_transaction_tables(team_weeks, tables["player_weeks"], tables["transactions"],
+                                                  trade_assets, params["transactions"])
     season = (
         allplay_season
         .merge(consistency.consistency_season(team_weeks, consistency_weekly, params["consistency"]), on=SEASON_KEY, validate="one_to_one")
         .merge(schedule.strength_of_schedule(team_weeks, tables["schedule"], params["schedule"]), on=SEASON_KEY, validate="one_to_one")
         .merge(efficiency_season(tables["lineups_optimal"]), on=SEASON_KEY, validate="one_to_one")
+        .merge(moves["season"], on=SEASON_KEY, validate="one_to_one")
     )
     if len(weekly) != len(team_weeks) or len(season) != len(allplay_season):
         raise ValueError("Metric tables lost rows while combining; check that every module covers the same team-weeks.")
     rankings = power.build_power_rankings(team_weeks, tables["lineups_optimal"], params["power"])
     weekly_awards = awards.build_awards(team_weeks, tables["lineups_optimal"], tables["player_weeks"],
                                         tables["transactions"], tables["teams"], params["awards"])
-    built = {"metrics_team_weeks": weekly, "metrics_season": season, "power_rankings": rankings, "awards": weekly_awards}
+    built = {"metrics_team_weeks": weekly, "metrics_season": season, "power_rankings": rankings, "awards": weekly_awards,
+             "start_credits": moves["start_credits"], "pickups": moves["pickups"], "trades": moves["trades"]}
     if league is not None:
         built["playoff_odds"] = playoff_odds.build_playoff_odds(team_weeks, tables["schedule"], league, params["playoff_odds"])
     return built

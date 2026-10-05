@@ -116,7 +116,7 @@ def _week_awards(week_teams, week_players, lineups, acquisitions, names):
 def latest_acquisitions(transactions, week):
     """Each team's most recent add of each player in weeks 1..week, with how it happened."""
     adds = transactions[(transactions["action"] == "add") & (transactions["week"] <= week)]
-    adds = (adds.assign(_when=pd.to_datetime(adds["created_at"], utc=True))  # text when read back from CSV
+    adds = (adds.assign(_when=pd.to_datetime(adds["created_at"], utc=True, format="ISO8601"))  # text when read back from CSV
             .sort_values(["_when", "transaction_id"]).drop_duplicates(["roster_id", "player_id"], keep="last"))
     return adds[["roster_id", "player_id", "type", "is_preseason"]].assign(added_week=adds["week"])
 
