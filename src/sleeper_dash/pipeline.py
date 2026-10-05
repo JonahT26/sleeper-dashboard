@@ -94,7 +94,7 @@ def run():
     data_results = validate.validate(tables, league, rosters, validate.run_data_checks, "Data checks")
 
     tables.update(lineup.build_lineup_tables(tables, league, transform.read_players()))
-    tables.update(metrics.build_metric_tables(tables, config.metrics))
+    tables.update(metrics.build_metric_tables(tables, config.metrics, league))
     metric_results = validate.validate(tables, league, rosters, validate.run_metric_checks, "Metric checks")
 
     before, previous_week = saved_snapshot(config.season, tables)

@@ -2,7 +2,8 @@
 
 Six teams; lineup QB, RB, WR, FLEX plus two bench spots; weekly median game on; regular season
 weeks 1-5 (a full round robin), playoffs from week 6. Scores are fixed pseudo-random numbers,
-so every run sees the same league. `last_scored_leg` says how many weeks Sleeper has scored,
+so every run sees the same league. Six teams make the playoffs (seeds 1 and 2 on a bye, the format
+playoff odds support), so in this league everyone qualifies. `last_scored_leg` says how many weeks Sleeper has scored,
 `state` is what /state/nfl reports, and `corrections` changes a player's score after the fact
 (a stat correction). Week 1 has one preseason pickup (before the 2026-09-09 start) and one after
 it, so a wrong season start date changes the transactions table.
@@ -12,6 +13,11 @@ Playoffs: `PlayoffLeague()` is an 8-team version (round robin weeks 1-7, playoff
 Sleeper returned for this league's real 2025 playoffs. `behaviours` switches on the other ways
 Sleeper might report playoff weeks (see PLAYOFF_BEHAVIOURS), so tests can show what the pipeline
 does in each case.
+
+/winners_bracket is built the way Sleeper builds it: seeds from the regular-season standings so far
+(wins including the median game, then points for), seeds 3 v 6 and 4 v 5 in round 1, seeds 1 and 2
+waiting for those winners in round 2, then the final, 3rd-place and 5th-place games. Like Sleeper's,
+it doesn't change once the regular season is over, whatever the roster standings count.
 """
 
 import random
@@ -182,6 +188,34 @@ class FakeSleeper:
             for r, t in totals.items()
         ]
 
+    def _seeds(self):
+        """roster_ids by regular-season wins (head-to-head plus median), then points for, both highest first."""
+        wins = {r: 0 for r in range(1, self.teams + 1)}
+        points = dict.fromkeys(wins, 0)
+        for week in range(1, min(self.last_scored_leg, self.playoff_week_start - 1) + 1):
+            rows = {m["roster_id"]: round(m["points"] * 100) for m in self._matchups(week)}
+            median = statistics.median(rows.values())
+            for a, c in self.pairings[week]:
+                wins[a if rows[a] > rows[c] else c] += 1
+            for r, cents in rows.items():
+                wins[r] += cents > median
+                points[r] += cents
+        return sorted(wins, key=lambda r: (wins[r], points[r]), reverse=True)
+
+    def _winners_bracket(self):
+        if self.last_scored_leg < 1:
+            return None  # Sleeper has no bracket before any week is scored
+        s = self._seeds()
+        return [
+            {"r": 1, "m": 1, "t1": s[3], "t2": s[4], "w": None, "l": None},
+            {"r": 1, "m": 2, "t1": s[2], "t2": s[5], "w": None, "l": None},
+            {"r": 2, "m": 3, "t1": s[0], "t2": None, "t2_from": {"w": 1}, "w": None, "l": None},
+            {"r": 2, "m": 4, "t1": s[1], "t2": None, "t2_from": {"w": 2}, "w": None, "l": None},
+            {"r": 2, "m": 5, "p": 5, "t1": None, "t2": None, "t1_from": {"l": 1}, "t2_from": {"l": 2}, "w": None, "l": None},
+            {"r": 3, "m": 6, "p": 1, "t1": None, "t2": None, "t1_from": {"w": 3}, "t2_from": {"w": 4}, "w": None, "l": None},
+            {"r": 3, "m": 7, "p": 3, "t1": None, "t2": None, "t1_from": {"l": 3}, "t2_from": {"l": 4}, "w": None, "l": None},
+        ]
+
     def _transactions(self, week):
         moves = []
         for player_id, (roster_id, t) in self.pickups.items():
@@ -205,12 +239,15 @@ class FakeSleeper:
             return {"league_id": LEAGUE_ID, "name": "Fake League", "season": SEASON, "status": "in_season",
                     "roster_positions": ROSTER_POSITIONS,
                     "settings": {"num_teams": self.teams, "playoff_week_start": self.playoff_week_start, "start_week": 1,
-                                 "league_average_match": 1, "last_scored_leg": self.last_scored_leg}}
+                                 "league_average_match": 1, "last_scored_leg": self.last_scored_leg,
+                                 "playoff_teams": 6, "playoff_round_type": 0, "playoff_seed_type": 0}}
         if path == f"{league}/users":
             return [{"user_id": f"90000000000000000{r}", "display_name": f"manager{r}",
                      "metadata": {"team_name": f"Team {r}"}} for r in range(1, self.teams + 1)]
         if path == f"{league}/rosters":
             return self._rosters()
+        if path == f"{league}/winners_bracket":
+            return self._winners_bracket()
         if path == f"{league}/drafts":
             return [{"draft_id": "800000000000000000", "season": SEASON, "status": "complete"}]
         if path == "/draft/800000000000000000/picks":

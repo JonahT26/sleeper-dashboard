@@ -1,0 +1,8 @@
+﻿season,round,matchup_id,t1_roster_id,t2_roster_id,t1_from,t2_from,winner_roster_id,loser_roster_id,place
+2026,1,1,1,12,,,,,
+2026,1,2,4,10,,,,,
+2026,2,3,6,,,W1,,,
+2026,2,4,9,,,W2,,,
+2026,2,5,,,L1,L2,,,5
+2026,3,6,,,W3,W4,,,1
+2026,3,7,,,L3,L4,,,3

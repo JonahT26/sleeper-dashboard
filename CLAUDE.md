@@ -52,6 +52,7 @@ python -m sleeper_dash.metrics.consistency  # rebuild every metric table; print 
 python -m sleeper_dash.metrics.schedule     # rebuild every metric table; print strength of schedule, played and remaining
 python -m sleeper_dash.metrics.power        # rebuild every metric table; print power rankings with each component's contribution
 python -m sleeper_dash.metrics.awards       # rebuild every metric table; print this week's awards and the winners by week
+python -m sleeper_dash.metrics.playoff_odds # rebuild every metric table; print the latest playoff odds (seed, bye, title) with their sums
 python -m sleeper_dash.validate    # re-run the data and metric checks on the saved tables and print pass/fail
 python -m sleeper_dash.dashboard   # build site/index.html from the saved tables and the last run record (run the pipeline first); prints weeks, sections, size
 python -m http.server 8766 --directory site   # view the built page at http://localhost:8766 (Ctrl+C to stop)

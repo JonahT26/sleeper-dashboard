@@ -4,20 +4,21 @@ Most modules add columns to the same two tables:
 - metrics_team_weeks: one row per team per completed week (key: season, week, roster_id)
 - metrics_season: one row per team as of every completed week (key: season, through_week, roster_id)
 The power score has its own table, power_rankings (key: season, week, roster_id), and so do
-the weekly awards (key: season, week, award, roster_id).
+the weekly awards (key: season, week, award, roster_id) and playoff odds (key: season, week, roster_id).
 """
 
 TEAM_WEEK_KEY = ["season", "week", "roster_id"]
 SEASON_KEY = ["season", "through_week", "roster_id"]
 
 
-def build_metric_tables(tables, params):
-    """Build metrics_team_weeks, metrics_season, and power_rankings from the tidy and lineup tables.
+def build_metric_tables(tables, params, league=None):
+    """Build every metric table from the tidy and lineup tables.
 
-    params = config.yaml metrics section.
+    params = config.yaml metrics section. league = Sleeper's league.json, whose playoff settings playoff
+    odds need; without it (some tests) playoff_odds is left out.
     """
     from sleeper_dash.lineup import efficiency_season
-    from sleeper_dash.metrics import allplay, awards, consistency, power, schedule
+    from sleeper_dash.metrics import allplay, awards, consistency, playoff_odds, power, schedule
 
     team_weeks = tables["team_weeks"]
     allplay_weekly = allplay.build_metrics_team_weeks(team_weeks)
@@ -37,7 +38,10 @@ def build_metric_tables(tables, params):
     rankings = power.build_power_rankings(team_weeks, tables["lineups_optimal"], params["power"])
     weekly_awards = awards.build_awards(team_weeks, tables["lineups_optimal"], tables["player_weeks"],
                                         tables["transactions"], tables["teams"], params["awards"])
-    return {"metrics_team_weeks": weekly, "metrics_season": season, "power_rankings": rankings, "awards": weekly_awards}
+    built = {"metrics_team_weeks": weekly, "metrics_season": season, "power_rankings": rankings, "awards": weekly_awards}
+    if league is not None:
+        built["playoff_odds"] = playoff_odds.build_playoff_odds(team_weeks, tables["schedule"], league, params["playoff_odds"])
+    return built
 
 
 def rebuild_from_saved():
@@ -50,7 +54,7 @@ def rebuild_from_saved():
     config = load_config()
     league, rosters = read_raw(config.season, "league.json"), read_raw(config.season, "rosters.json")
     tables = load_tables(names=BASE_TABLES + ["lineups_optimal", "lineups_optimal_players"])
-    metric_tables = build_metric_tables(tables, config.metrics)
+    metric_tables = build_metric_tables(tables, config.metrics, league)
     try:
         validate({**tables, **metric_tables}, league, rosters)
     except ValidationError as error:

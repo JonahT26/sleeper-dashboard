@@ -19,15 +19,17 @@ KEYS = {
     "player_weeks": ["season", "week", "roster_id", "slot_order"],
     "transactions": ["transaction_id", "player_id", "action"],
     "schedule": ["season", "week", "roster_id"],
+    "winners_bracket": ["season", "matchup_id"],
     "lineups_optimal":["season", "week", "roster_id"],
     "lineups_optimal_players": ["season", "week", "roster_id", "slot_order"],
     "metrics_team_weeks": ["season", "week", "roster_id"],
     "metrics_season": ["season", "through_week", "roster_id"],
     "power_rankings": ["season", "week", "roster_id"],
     "awards": ["season", "week", "award", "roster_id"],
+    "playoff_odds": ["season", "week", "roster_id"],
 }
 LUCK_TOLERANCE = 1e-6  # wins
-BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "schedule"]  # built by transform
+BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "schedule", "winners_bracket"]  # built by transform
 METRIC_TABLES = [name for name in KEYS if name not in BASE_TABLES]                  # built by lineup and metrics
 
 
@@ -471,6 +473,110 @@ def check_allplay_and_luck(weekly, season, team_weeks, rosters):
                    f"{len(weekly)} team-weeks; luck sums to 0 each week; median cross-check agrees; records match Sleeper")
 
 
+def _bracket_expectation(seeds):
+    """{bye team: the two teams whose first-round winner it meets}, from roster_ids in seed order (verified format)."""
+    return {seeds[0]: frozenset(seeds[3:5]), seeds[1]: frozenset((seeds[2], seeds[5]))}
+
+
+def check_seeding_matches_sleeper(bracket, team_weeks, league):
+    """Our seeding (wins, then points for) gives Sleeper's byes and first-round pairings (METRICS_SPEC.md section 8, check 8).
+
+    During the regular season Sleeper's bracket is provisional, built from the current standings; from the
+    playoffs on it is the real one, so it is compared with the final regular-season standings.
+    """
+    from sleeper_dash.metrics.playoff_odds import league_format, seeding, standings_through
+
+    name = "Seeding matches Sleeper's bracket"
+    regular = team_weeks.loc[~team_weeks["is_playoff"].astype(bool), "week"]
+    if regular.empty or bracket.empty:
+        return CheckResult(name, True, "Sleeper has no bracket yet; nothing to compare")
+    try:
+        fmt = league_format(league)
+    except ValueError as error:
+        return CheckResult(name, False, str(error))
+    week = min(int(regular.max()), fmt["regular_weeks"])
+    expected = _bracket_expectation(seeding(standings_through(team_weeks, week)))
+
+    first_round = {int(g.matchup_id): frozenset((int(g.t1_roster_id), int(g.t2_roster_id)))
+                   for g in bracket[bracket["round"] == 1].itertuples()
+                   if pd.notna(g.t1_roster_id) and pd.notna(g.t2_roster_id)}
+    sleeper = {}
+    for g in bracket[bracket["round"] == 2].itertuples():
+        for team, source, other in ((g.t1_roster_id, g.t1_from, g.t2_from), (g.t2_roster_id, g.t2_from, g.t1_from)):
+            if pd.notna(team) and pd.isna(source) and isinstance(other, str) and other.startswith("W"):
+                sleeper[int(team)] = first_round.get(int(other[1:]))
+    if len(first_round) != 2 or len(sleeper) != 2 or None in sleeper.values():
+        return CheckResult(name, True, "Sleeper's bracket isn't filled in yet; nothing to compare")
+
+    def describe(pairings):
+        return "; ".join(f"bye {bye} meets the {'/'.join(str(t) for t in sorted(pair))} winner"
+                         for bye, pair in sorted(pairings.items()))
+
+    problems = [] if sleeper == expected else [f"through week {week} our seeding gives {describe(expected)}, "
+                                               f"but Sleeper's bracket has {describe(sleeper)}"]
+    return _result(name, problems, f"through week {week}: byes and first-round pairings agree ({describe(expected)})")
+
+
+def check_playoff_odds(odds, team_weeks, league):
+    """Playoff odds invariants (METRICS_SPEC.md section 8, sanity checks 1-5, plus the seed probabilities).
+
+    Every probability in 0-1; title and bye odds at most playoff odds; each week the playoff odds sum
+    to 6, bye odds to 2, title odds to 1, and each seed's odds to 1; a team's seed odds sum to its
+    playoff odds; average final wins add up to the season's total wins; Clinched teams have playoff
+    odds 1 and Out teams 0; after the last regular-season week everything matches the final standings.
+    """
+    from sleeper_dash.metrics.playoff_odds import BYES, SEEDS, VERIFIED_FORMAT, league_format, seeding, standings_through
+
+    name = "Playoff odds add up"
+    if odds.empty:
+        return CheckResult(name, True, "no playoff odds yet")
+    fmt = league_format(league)
+    tol = LUCK_TOLERANCE * fmt["n_teams"]
+    seed_cols = [f"p_seed_{s}" for s in SEEDS]
+    prob_cols = ["p_playoffs", "p_bye", "p_title"] + seed_cols
+    problems = []
+    out_of_range = odds[((odds[prob_cols] < 0) | (odds[prob_cols] > 1)).any(axis=1)]
+    problems += [f"week {r.week}, roster {r.roster_id}: a probability outside 0-1" for r in out_of_range.itertuples()]
+    above = odds[(odds["p_title"] > odds["p_playoffs"] + LUCK_TOLERANCE) | (odds["p_bye"] > odds["p_playoffs"] + LUCK_TOLERANCE)]
+    problems += [f"week {r.week}, roster {r.roster_id}: title or bye odds above playoff odds" for r in above.itertuples()]
+    seed_total = odds[seed_cols].sum(axis=1)
+    problems += [f"week {odds.at[i, 'week']}, roster {odds.at[i, 'roster_id']}: seed odds sum to {seed_total[i]:.6f}, "
+                 f"playoff odds {odds.at[i, 'p_playoffs']:.6f}"
+                 for i in odds.index[(seed_total - odds["p_playoffs"]).abs() > LUCK_TOLERANCE]]
+    byes = odds[seed_cols[:BYES]].sum(axis=1)
+    problems += [f"week {odds.at[i, 'week']}, roster {odds.at[i, 'roster_id']}: bye odds aren't the seed 1 and 2 odds"
+                 for i in odds.index[(byes - odds["p_bye"]).abs() > LUCK_TOLERANCE]]
+    is_clinched, is_out = odds["clinched"].astype(bool), odds["out"].astype(bool)
+    problems += [f"week {r.week}, roster {r.roster_id}: both clinched and out" for r in odds[is_clinched & is_out].itertuples()]
+    problems += [f"week {r.week}, roster {r.roster_id}: clinched but playoff odds {r.p_playoffs}"
+                 for r in odds[is_clinched & (odds["p_playoffs"] != 1)].itertuples()]
+    problems += [f"week {r.week}, roster {r.roster_id}: out but odds above 0"
+                 for r in odds[is_out & (odds[["p_playoffs", "p_bye", "p_title"]] != 0).any(axis=1)].itertuples()]
+
+    wins_per_week = fmt["n_teams"] if fmt["median"] else fmt["n_teams"] // 2  # head-to-head winners plus median winners
+    targets = {"p_playoffs": VERIFIED_FORMAT["playoff_teams"], "p_bye": BYES, "p_title": 1, **{c: 1 for c in seed_cols}}
+    for (season, week), g in odds.groupby(["season", "week"]):
+        if len(g) != fmt["n_teams"]:
+            problems.append(f"week {week}: {len(g)} teams, expected {fmt['n_teams']}")
+        for column, target in targets.items():
+            if abs(g[column].sum() - target) > tol:
+                problems.append(f"week {week}: {column} sums to {g[column].sum():.6f}, not {target}")
+        season_weeks = team_weeks[team_weeks["season"] == season]
+        so_far = season_weeks[(season_weeks["week"] <= week) & ~season_weeks["is_playoff"].astype(bool)]
+        total_wins = fmt["regular_weeks"] * wins_per_week - int((so_far["result"] == "T").sum()) // 2
+        if abs(g["avg_wins"].sum() - total_wins) > 0.001:  # each average is stored to 4 decimal places
+            problems.append(f"week {week}: average final wins sum to {g['avg_wins'].sum():.4f}, not {total_wins}")
+        if week == fmt["regular_weeks"]:
+            seeds = seeding(standings_through(season_weeks, week))
+            for r in g.itertuples():
+                seed = seeds.index(r.roster_id) + 1
+                wanted = {f"p_seed_{s}": float(s == seed) for s in SEEDS}
+                if any(getattr(r, c) != v for c, v in wanted.items()) or r.p_playoffs != float(seed <= len(SEEDS)):
+                    problems.append(f"week {week}, roster {r.roster_id}: odds don't match the final standings (seed {seed})")
+    return _result(name, problems, f"{odds['week'].nunique()} weeks; each week 6 playoff spots, 2 byes, 1 title, "
+                                   "every seed once; Clinched and Out consistent")
+
+
 def check_unique_keys(tables, label=None):
     """No table has two rows with the same key."""
     problems = []
@@ -493,6 +599,8 @@ def run_data_checks(tables, league, rosters):
     ]
     if "schedule" in tables:
         results.append(check_schedule(tables["schedule"], team_weeks, league))
+    if "winners_bracket" in tables:
+        results.append(check_seeding_matches_sleeper(tables["winners_bracket"], team_weeks, league))
     results.append(check_unique_keys({n: t for n, t in tables.items() if n not in METRIC_TABLES}, "data tables"))
     return results
 
@@ -513,6 +621,8 @@ def run_metric_checks(tables, league, rosters):
         results.append(check_power_rankings(tables["power_rankings"], team_weeks))
     if "awards" in tables:
         results.append(check_awards(tables["awards"], team_weeks, tables["lineups_optimal"]))
+    if "playoff_odds" in tables:
+        results.append(check_playoff_odds(tables["playoff_odds"], team_weeks, league))
     metric_tables = {n: t for n, t in tables.items() if n in METRIC_TABLES}
     if metric_tables:
         results.append(check_unique_keys(metric_tables, "metric tables"))

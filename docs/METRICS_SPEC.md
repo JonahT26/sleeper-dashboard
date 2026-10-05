@@ -13,9 +13,9 @@ The source of truth for every metric. Code follows this file, not the other way 
 | 5 | Strength of schedule | **Confirmed** 2026-10-02 |
 | 6 | Power score | **Confirmed** 2026-10-02 |
 | 7 | Weekly awards | **Confirmed** 2026-10-02 |
-| 8 | Playoff odds | **Confirmed** 2026-10-05 (Phase 5), not built yet |
+| 8 | Playoff odds | **Confirmed** 2026-10-05 (Phase 5); built 2026-10-05 |
 
-Metrics 1–7 are confirmed and built (Phase 2). Metric 8 was confirmed in the Phase 5 interview and is built next, in the order of `docs/CODEBASE.md` "Adding a new metric" (pure function, invariant tests, pipeline wiring, docs update).
+Metrics 1–7 were confirmed and built in Phase 2; metric 8 in Phase 5.
 
 ## Conventions that apply to every metric
 
@@ -513,6 +513,7 @@ Every completed week counts equally; recent weeks get no extra weight (owner dec
 |---|---|
 | Playoff odds | share of simulations in which the team is seeded 1…*P* |
 | Bye odds | share seeded 1 or 2 |
+| Seed odds | share seeded 1, 2, … 6, one value per seed (added at the owner's request, 2026-10-05); they sum to the playoff odds |
 | Title odds | share in which it wins the final |
 | Average final record | mean final wins, counting whole wins only (actual + simulated); losses = games − wins − actual ties, with 2*R* games per team with a median game and *R* without |
 | Clinched | **proved** by a bound, not the simulation: at most *P* − 1 other teams can still reach this team's current wins (another team's maximum = its current wins + 2*G*, or + *G* without a median game) |
@@ -545,9 +546,9 @@ Owner decisions (2026-10-05):
 
 Backtest, predicting each team's next-week relative score from earlier weeks only (weeks 4–14, 132 predictions), RMSE: league average 23.35; own mean unshrunk 22.95; **own mean shrunk 22.60**; last 3 weeks unshrunk 24.28; recency-weighted with a 3-week half-life, shrunk, 22.49 (0.5% better than equal weights, within noise). Team strength explains a small share of weekly scores, so honest odds stay fairly open until late in the season. 2026 weeks 1–3 give *σ* 21.3, *τ* 9.6, *k* 4.9. Recheck *k* on 2026's 14 weeks after week 14.
 
-**Inputs.** `team_weeks`: `week`, `roster_id`, `points`, `result`, `median_result`, `is_playoff`. `schedule`: remaining regular-season pairings. League settings: `num_teams`, `playoff_week_start`, `playoff_teams`, `playoff_round_type`, `playoff_seed_type`, `league_average_match`. **New data:** Sleeper's `winners_bracket` (1 API call per run), used only by sanity check 8.
+**Inputs.** `team_weeks`: `week`, `roster_id`, `points`, `result`, `median_result`, `is_playoff`. `schedule`: remaining regular-season pairings. League settings: `num_teams`, `playoff_week_start`, `playoff_teams`, `playoff_round_type`, `playoff_seed_type`, `league_average_match`. **New data:** Sleeper's `winners_bracket` (1 API call per run), stored as the `winners_bracket` table and used only by sanity check 8.
 
-**Output table** `playoff_odds`, one row per team per week *t*: `season`, `week`, `roster_id`, `strength` (*m̂ᵢ*, points per week above the league average), `strength_sd` (√*vᵢ*), `score_sd` (*σ̂*, same for every team that week), `p_playoffs`, `p_bye`, `p_title`, `avg_wins`, `avg_losses`, `clinched`, `out`. Schema details go in `docs/CODEBASE.md` when built.
+**Output table** `playoff_odds`, one row per team per week *t*: `season`, `week`, `roster_id`, `strength` (*m̂ᵢ*, points per week above the league average), `strength_sd` (√*vᵢ*), `score_sd` (*σ̂*, same for every team that week), `p_playoffs`, `p_bye`, `p_seed_1` … `p_seed_6`, `p_title`, `avg_wins`, `avg_losses`, `clinched`, `out`. Schema details go in `docs/CODEBASE.md` when built.
 
 **Parameters** (`config.yaml`):
 
@@ -569,7 +570,7 @@ Backtest, predicting each team's next-week relative score from earlier weeks onl
 | Playoff settings other than the verified format | The run stops with a message naming the setting (e.g. reseeding, two-week rounds, a different `playoff_teams`), rather than guessing a bracket |
 | League without a median game | Step 3 skips the median game; a team plays *R* games and its maximum adds *G* |
 | Actual head-to-head ties | Half a win in the standings, as Sleeper's record counts them. Simulated scores are continuous, so simulated ties have zero probability |
-| Teams level on wins and points for to 2 decimal places at the end of the regular season | The run stops with a clear message: no tie rule is known (same approach as median ties) |
+| Teams level on wins and points for to 2 decimal places at the end of the regular season | The run stops with a clear message: no tie rule is known (same approach as median ties). Only ties that affect seeding count: tied teams inside the top *P*, or straddling the cut (Claude's reading, 2026-10-05: a tie for 9th changes no odds) |
 | Stat corrections, schedule changes | Recomputed every run (full refresh); the remaining schedule is re-read from Sleeper |
 | Trades, injuries, roster changes | Not modelled: the model sees scores only. A team that just traded for a star is valued on its past scores until new weeks arrive |
 | Empty starting slots, players added mid-week | No adjustment. Actual scores stand |
@@ -578,7 +579,7 @@ Backtest, predicting each team's next-week relative score from earlier weeks onl
 
 **Sanity checks.**
 1. Every probability is between 0 and 1, and for every team title odds ≤ playoff odds and bye odds ≤ playoff odds.
-2. Every week, the playoff odds sum to exactly *P*, bye odds to 2, and title odds to 1 (exact, since they are counts).
+2. Every week, the playoff odds sum to exactly *P*, bye odds to 2, title odds to 1, and each seed's odds to 1 (exact, since they are counts). Each team's seed odds sum to its playoff odds, and its bye odds equal its seed 1 and seed 2 odds.
 3. Every week, the league's average final wins sum to the regular season's total wins: *N* · *R* with a median game (*N* · *R* ÷ 2 without), minus one for each tied head-to-head game so far (±0.000001).
 4. A Clinched team has playoff odds 1; an Out team has playoff, bye, and title odds 0.
 5. At *t* = *R*, playoff and bye odds are all 0 or 1 and match the actual final seeding.

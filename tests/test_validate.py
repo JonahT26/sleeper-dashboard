@@ -9,7 +9,8 @@ import pandas as pd
 import pytest
 
 from sleeper_dash import validate as v
-from sleeper_dash.transform import build_player_weeks, build_schedule, build_team_weeks, build_teams, build_transactions
+from sleeper_dash.transform import (build_player_weeks, build_schedule, build_team_weeks, build_teams, build_transactions,
+                                    build_winners_bracket)
 
 FIXTURES = Path(__file__).parent / "fixtures"
 ROSTER_POSITIONS = ["QB", "RB", "RB", "WR", "WR", "FLEX", "REC_FLEX", "SUPER_FLEX", "K", "DEF"] + ["BN"] * 6
@@ -19,7 +20,8 @@ def make_league(median=True):
     return {
         "season": "2026",
         "roster_positions": ROSTER_POSITIONS,
-        "settings": {"num_teams": 12, "start_week": 1, "playoff_week_start": 15, "league_average_match": int(median)},
+        "settings": {"num_teams": 12, "start_week": 1, "playoff_week_start": 15, "league_average_match": int(median),
+                     "playoff_teams": 6, "playoff_round_type": 0, "playoff_seed_type": 0},
     }
 
 
@@ -50,6 +52,20 @@ def week_1_settings(week_1, median=True):
     return settings
 
 
+def sleeper_bracket(rosters):
+    """Sleeper's provisional winners bracket, seeded straight from the roster standings (wins, then points for)."""
+    def key(r):
+        s = r["settings"]
+        return s["wins"] + s["ties"] / 2, s["fpts"] + s["fpts_decimal"] / 100
+    s = [r["roster_id"] for r in sorted(rosters, key=key, reverse=True)]
+    return [
+        {"r": 1, "m": 1, "t1": s[3], "t2": s[4]}, {"r": 1, "m": 2, "t1": s[2], "t2": s[5]},
+        {"r": 2, "m": 3, "t1": s[0], "t2": None, "t2_from": {"w": 1}},
+        {"r": 2, "m": 4, "t1": s[1], "t2": None, "t2_from": {"w": 2}},
+        {"r": 3, "m": 6, "p": 1, "t1": None, "t2": None, "t1_from": {"w": 3}, "t2_from": {"w": 4}},
+    ]
+
+
 @pytest.fixture
 def rosters(week_1):
     rosters = json.loads((FIXTURES / "rosters.json").read_text(encoding="utf-8"))
@@ -70,6 +86,7 @@ def tables(week_1, rosters):
         "transactions": build_transactions(league, {}, {}, "2026-09-09"),
         # Weeks 2-14 not played yet: Sleeper publishes their pairings ahead of time (reused from week 1 here).
         "schedule": build_schedule(league, {1: week_1}, {week: week_1 for week in range(2, 15)}),
+        "winners_bracket": build_winners_bracket(league, sleeper_bracket(rosters)),
     }
 
 
@@ -85,7 +102,7 @@ def test_settings_helper_matches_a_known_result(week_1):
 
 def test_all_checks_pass_on_fixture_data(tables, rosters):
     results = v.run_checks(tables, make_league(), rosters)
-    assert len(results) == 7
+    assert len(results) == 8  # the 7 data checks plus seeding vs Sleeper's bracket
     assert failed(results) == []
 
 
@@ -162,3 +179,30 @@ def test_validate_raises_with_the_full_table(tables, rosters):
         v.validate(tables, make_league(), rosters)
     message = str(error.value)
     assert "Validation: 1 check(s) failed" in message and "FAIL" in message and "Records match Sleeper" in message
+
+
+# --- seeding vs Sleeper's bracket (METRICS_SPEC.md section 8, sanity check 8) -------------------
+
+def test_seeding_matches_sleepers_bracket(tables, rosters):
+    result = v.check_seeding_matches_sleeper(tables["winners_bracket"], tables["team_weeks"], make_league())
+    assert result.passed and "through week 1: byes and first-round pairings agree" in result.detail
+
+
+def test_a_different_seeding_in_sleepers_bracket_fails(tables, rosters):
+    bracket = sleeper_bracket(rosters)
+    bracket[2]["t1"], bracket[3]["t1"] = bracket[3]["t1"], bracket[2]["t1"]  # seeds 1 and 2 swapped
+    result = v.check_seeding_matches_sleeper(build_winners_bracket(make_league(), bracket), tables["team_weeks"], make_league())
+    assert not result.passed and "but Sleeper's bracket has" in result.detail
+
+
+def test_no_bracket_yet_is_not_a_failure(tables):
+    empty = build_winners_bracket(make_league(), [])
+    result = v.check_seeding_matches_sleeper(empty, tables["team_weeks"], make_league())
+    assert result.passed and "no bracket yet" in result.detail
+
+
+def test_an_unverified_playoff_format_fails_the_seeding_check(tables):
+    league = make_league()
+    league["settings"]["playoff_seed_type"] = 1
+    result = v.check_seeding_matches_sleeper(tables["winners_bracket"], tables["team_weeks"], league)
+    assert not result.passed and "playoff_seed_type is 1" in result.detail

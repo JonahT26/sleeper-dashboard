@@ -33,6 +33,8 @@ TRANSACTIONS_COLUMNS = [
     "player_id", "player_name", "action", "waiver_bid", "created_at",
 ]
 SCHEDULE_COLUMNS = ["season", "week", "roster_id", "matchup_id", "opponent_roster_id", "is_completed"]
+WINNERS_BRACKET_COLUMNS = ["season", "round", "matchup_id", "t1_roster_id", "t2_roster_id", "t1_from", "t2_from",
+                           "winner_roster_id", "loser_roster_id", "place"]
 EMPTY_SLOT = "0"
 EASTERN = "America/New_York"
 
@@ -252,6 +254,32 @@ def build_schedule(league, matchups_by_week, schedule_by_week):
     return schedule.sort_values(["week", "roster_id"]).reset_index(drop=True)
 
 
+def _bracket_source(source):
+    """Where a bracket slot's team comes from: {"w": 1} is "W1" (winner of matchup 1), {"l": 2} is "L2"."""
+    if not source:
+        return None
+    (kind, matchup), = source.items()
+    return f"{kind.upper()}{matchup}"
+
+
+def build_winners_bracket(league, bracket):
+    """Sleeper's winners bracket, one row per bracket game. Key: (season, matchup_id).
+
+    During the regular season Sleeper publishes a provisional bracket from the current standings
+    (teams filled in for the first round and the byes, no winners yet); playoff odds check our seeding
+    against it (METRICS_SPEC.md section 8, sanity check 8). Before Sleeper has one, the table is empty.
+    """
+    season = int(league["season"])
+    rows = [{"season": season, "round": g["r"], "matchup_id": g["m"], "t1_roster_id": g.get("t1"), "t2_roster_id": g.get("t2"),
+             "t1_from": _bracket_source(g.get("t1_from")), "t2_from": _bracket_source(g.get("t2_from")),
+             "winner_roster_id": g.get("w"), "loser_roster_id": g.get("l"), "place": g.get("p")}
+            for g in bracket or []]
+    table = pd.DataFrame(rows, columns=WINNERS_BRACKET_COLUMNS).astype(
+        {"season": "int64", "round": "int64", "matchup_id": "int64", "t1_roster_id": "Int64", "t2_roster_id": "Int64",
+         "t1_from": "object", "t2_from": "object", "winner_roster_id": "Int64", "loser_roster_id": "Int64", "place": "Int64"})
+    return table.sort_values(["round", "matchup_id"]).reset_index(drop=True)
+
+
 def _player_name(info):
     """full_name, or first + last name for entries without one (team defenses)."""
     full = _clean_text(info.get("full_name"))
@@ -442,6 +470,7 @@ def build_tables(season, configured_start_date):
         "player_weeks": build_player_weeks(league, matchups, players),
         "transactions": build_transactions(league, read_weekly(season, "transactions"), players, start_date),
         "schedule": build_schedule(league, matchups, read_weekly(season, "schedule", required=False)),
+        "winners_bracket": build_winners_bracket(league, read_raw(season, "winners_bracket.json")),
     }
     return tables, league, rosters, start_date
 
