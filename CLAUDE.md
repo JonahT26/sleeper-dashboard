@@ -143,6 +143,5 @@ Roadmap:
 
 ## Open decisions
 
-- The order of the Phase 5 extras after playoff odds (`docs/HANDOFF.md` section 9).
 - Where league members see updates: bookmark only, or also a weekly post to the league chat (Phase 5).
 - What the page shows between next season's rollover and its week 1 (before the 2027 season).
