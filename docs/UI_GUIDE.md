@@ -57,7 +57,7 @@ Section order, top to bottom:
 
 1. **Masthead:** league name, "Week 5 power rankings", and the week selector, then the **status bar**: "Updated Tue Oct 6, 9:00 AM ET", pinned to the top of the screen while scrolling, and the stale-data line when it applies (Components, "Status bar"). "Updated" is the time the pipeline ran, which the pipeline records; never a file date.
 2. **Power rankings ladder:** the hero. No separate hero card above it; the rankings are the first thing anyone sees.
-3. **Playoff odds** (Phase 5): from `metrics.playoff_odds.min_weeks` (week 3) to the last regular-season week (Components, "Playoff odds")
+3. **Playoff odds** (Phase 5): from `metrics.playoff_odds.min_weeks` (week 3) to the last regular-season week (Components, "Playoff odds"). In playoff weeks **Playoffs**, the bracket, takes its place (Components, "Playoffs")
 4. **Weekly awards**
 5. **Luck:** actual wins vs expected wins
 6. **Lineup efficiency:** actual vs optimal points
@@ -168,7 +168,18 @@ Added 2026-10-05 (Phase 5; definitions in `METRICS_SPEC.md` section 8). The sect
 - **Percentages are whole numbers.** "Clinched" and "Out" replace the playoff number only when a bound proves them (never because the simulation happened to say 100% or 0%). Otherwise a value that rounds to 0% shows as "<1%" and one that rounds to 100% as ">99%". Values known for certain show plainly: bye and seed odds after the last regular-season week, and 0% for every column of a team that is Out.
 - **"Chance of each seed"** sits below in a closed `<details>`: the same rows with seeds 1–6, each cell its percentage on a `--bar` tint whose strength follows the probability (at most 60%), so the numbers carry the meaning and the tint only helps scanning. It opens instantly: the ladder's breakdown stays the page's one expand animation.
 - **Layout:** on phones it follows the ladder at full width; both tables fit at 360px (checked 2026-10-05), and a table scrolls sideways inside its own box if it ever has to. From 1024px it sits under the ladder in the left column while the awards column spans both.
-- **Hidden** before `min_weeks` and in playoff weeks (the table ends with the regular season; the playoff bracket is a separate Phase 5 extra).
+- **Hidden** before `min_weeks` and in playoff weeks (the table ends with the regular season; the Playoffs section takes its place).
+
+### Playoffs
+
+Added 2026-10-05 (Phase 5). **The wording is a draft awaiting the owner's approval.** Built by `dashboard/bracket.py` from Sleeper's `winners_bracket`, the week's `team_weeks` scores, and our seeding of the final regular-season standings (the seeding the pipeline checks against Sleeper's bracket).
+
+- **Shown only in playoff weeks** (from the league's `playoff_week_start`), in the playoff odds' place after the ladder; on desktop it sits under the ladder in the left column, beside the awards.
+- Title "Playoffs"; subtitle "Seeded by the final regular-season standings, one round a week. The top 2 seeds skip the first round." Once the final is played, a 28px bold line: "‹Team› won the 2026 title." (ink, not pylon: pylon text stays the #1 rank numeral's).
+- **Rounds** "First round", "Semifinals", "Final", each with its week ("Week 15") in small muted type. Each game is a bordered box (6px radius) with two lines: seed (Barlow Condensed 700, muted), team name, and the week's points (1 decimal, right-aligned, tabular). The winner's line is semi-bold and the loser's muted, with "won"/"lost" for screen readers, so the result never rests on colour alone. Placement games follow their round's main games, labelled "Fifth place game" and "Third place game". Under the first round: "Bye: 1 ‹team›, 2 ‹team›".
+- **As of the selected week:** a round shows scores and winners from its week on; a later round's slot names its team once the game that sends it there has been played, and until then reads "Winner of 1 v 5" (or "Winner of 1 v 4/5" if that game isn't set either), by seeds. A game not yet played shows the teams without scores. The champion line appears from the final's week.
+- **Layout:** rounds stacked on phones (checked at 360 and 390px); three columns side by side once the section is at least 640px wide (1280px desktop); stacked again in the 1024px left column.
+- Team names are this season's team names, as on the ladder. Only the winners bracket is shown; the consolation bracket isn't.
 
 ### History
 

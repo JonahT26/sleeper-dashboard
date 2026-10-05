@@ -11,21 +11,23 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 a
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
 | 4 · Automation (weekly GitHub Action, GitHub Pages, monitoring, rollback, runbook) | **Complete** (2026-10-03) |
-| 5 · Extras | **In progress** (2026-10-05): playoff odds and past seasons + History built on two stacked branches, **not merged**; playoff bracket view next; week 15 checks scheduled for Dec 22 (section 9) |
+| 5 · Extras | **In progress** (2026-10-05): playoff odds, past seasons + History, and the playoff bracket view built on three stacked branches, **not merged**; week 15 checks scheduled for Dec 22 (section 9) |
 
 As of **Monday 2026-10-05, end of session** (NFL week 4's Monday game is tonight, so weeks 1–3 are the completed weeks):
 
 **What's live (`main`) hasn't changed since 2026-10-03.** https://jonaht26.github.io/sleeper-dashboard/ shows weeks 1–3: ladder, awards, five charts, "How this works". **No scheduled run has happened yet: the first is Tuesday Oct 6, 12:17 PM ET** (should bring week 4), then Thursday Oct 8 (section 7). The only Phase 5 commit on `main` is the playoff odds spec (`90c3190`, docs only).
 
-**Three branches** (all pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
+**Four branches** (all pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
 
 | Branch | Head | Adds | Tests | State |
 |---|---|---|---|---|
 | `main` | `90c3190` | Phase 4 + the playoff odds spec | 433 | Live; the workflow's bot commits refreshed tables here |
 | `playoff-odds` | `e600246` | Playoff odds (metric, `playoff_odds` and `winners_bracket` tables, 2 checks → 16), calibration notebook 04, the Playoff odds section after the ladder, "How this works" paragraph | 467 | **Owner-approved, wording included.** Merge after the Tue Oct 6 run is checked |
-| `past-seasons` | `145f01a` | Stacked on `playoff-odds`: seasons 2020–2025 in the pipeline, `managers` table (17 checks), three owner rules from past data, the History section | 489 | Built and checked; **History wording approved** (2026-10-05). Merge after `playoff-odds` |
+| `past-seasons` | `bfbdc54` | Stacked on `playoff-odds`: seasons 2020–2025 in the pipeline, `managers` table (17 checks), three owner rules from past data, the History section | 489 | Built and checked; **History wording approved** (2026-10-05). Merge after `playoff-odds` |
+| `bracket-view` | see `git log` | Stacked on `past-seasons`: the Playoffs section (`dashboard/bracket.py`), shown in playoff weeks in the odds' place | 515 | Built and checked on 2020–2025's brackets; **wording awaiting the owner's approval**. The local checkout is on this branch |
 
 **Owner input still pending:**
+- **Playoffs wording** (UI_GUIDE.md "Playoffs", drafted 2026-10-05): title, subtitle, round names, "Bye:", "Fifth place game"/"Third place game", "Winner of 1 v 5", the champion line. Also offered: the champion's name in pylon orange (28px bold passes contrast as large text, but the quality-floor test keeps pylon text to the #1 rank numeral, so it needs the owner's yes and a test change).
 - **Order of the remaining extras** (section 9).
 - **League-chat post:** the owner started a request for an automatic weekly post (webhook as a GitHub secret, dry-run mode, never posting a week twice, a CLAUDE.md rule 7 exception) and then said to **ignore it** in the same message. Nothing was built or asked. Don't act on it unless the owner raises it again.
 
@@ -119,6 +121,7 @@ Dev/
 │       ├── charts.py             five chart sections as Plotly figure dicts (pure functions)
 │       ├── explainer.py          "How this works" copy, numbers from config.yaml (owner-approved)
 │       ├── history.py            (past-seasons) the History section: champions, all-time records, luck, high score
+│       ├── bracket.py            (bracket-view) the Playoffs section: the winners bracket as of each playoff week
 │       └── templates/            index.html.j2, styles.css, page.js (week selector), charts.js (drawing,
 │                                 highlight, label placement, phone labels); CSS and JS are inlined into the page
 ├── notebooks/                    01 data check, 02 power-score sensitivity, 04 playoff odds calibration (branches); no outputs
@@ -224,6 +227,7 @@ Dev/
 | 2026-10-05 | Playoff bracket view: build it now (after the playoff odds merge), tested on the real 2025 bracket and the fake league, so it can show from the Dec 22 run; it appears only in playoff weeks | Owner (option 1) | section 9 |
 | 2026-10-05 | Restore the strict playoff-week standings checks (regular season only), reversing the 2026-10-03 "either standard" rule, but only once 2026's week 15 data confirms Sleeper counts the regular season only, as in 2025 | Owner (agreed with Claude's recommendation) | section 7, risk 4 |
 | 2026-10-05 | A one-time scheduled session, Tue Dec 22 2026 at 2:00 PM ET (`sleeper-week15-playoff-checks`, Claude desktop app, Scheduled): checks today's run, verifies the three playoff assumptions on week 15, tightens the checks if they hold, builds the page, and reports on a branch (`playoff-week15-checks`) without merging or publishing | Owner (request), Claude (task) | section 7 |
+| 2026-10-05 | Playoffs section design (Claude, for the owner's review): winners bracket only (no consolation bracket); placement games (5th, 3rd) shown under their round; seeds from our seeding of the final standings; each week shows what was known by then; open slots named by seeds ("Winner of 1 v 5"); in the odds' place after the ladder; champion line in ink rather than pylon | Claude (wording awaiting approval) | UI_GUIDE.md "Playoffs" |
 | 2026-10-05 | History wording approved as drafted (subtitle, headings, column headers, luck and high-score lines), with the season count under each manager's name rather than its own column, so the table fits 360px; merge `past-seasons` right after `playoff-odds` | Owner | UI_GUIDE.md "History" |
 | 2026-10-05 | Playoff odds wording approved as drafted (section subtitle, column headers, "Clinched"/"Out"/"<1%"/">99%", the "How this works" paragraph); per-seed odds in the spec, the tie reading, and the stopping bracket check confirmed; merge after the Tue Oct 6 run is checked | Owner (1 approve, 2–4 agree) | UI_GUIDE.md "Playoff odds", METRICS_SPEC.md section 8 |
 | 2026-10-05 | Playoff odds definition, every recommended option accepted: normal model on scores relative to the week's league mean; team means shrunk toward the league mean with fixed `shrink_weeks` 6 (2025 calibration 6.5) and posterior uncertainty drawn once per simulated season; one pooled score SD; no recency weighting; median game decided from the same simulated scores; seeding by wins then points for, verified format only (anything else stops the run); a new check that our seeding matches Sleeper's provisional `winners_bracket`; 10,000 simulations; a seed per (season, week); outputs playoff, bye, and title odds and average final record from week 3; "Clinched"/"Out" only when a bound proves it, otherwise "<1%"/">99%" | Owner | METRICS_SPEC.md section 8 |
@@ -299,13 +303,15 @@ Ordered by impact on the unattended weekly job.
 | Calibration on 2025 (notebook 04) | Done: playoff Brier 0.134 (vs 0.250 everyone-50%, 0.222 top-6-now); bye odds no better than flat 2/12; more shrinkage scored better in-sample (k 20: 0.128). Revisit `shrink_weeks` after 2026's week 14 | `playoff-odds` |
 | Past seasons 2020–2025 | Built and checked (17 of 17 in every season) | `past-seasons` |
 | History section | Built; wording approved | `past-seasons` |
+| Playoff bracket view (Playoffs section) | Built; wording awaiting approval | `bracket-view` |
 
 **Merging** (in this order; never merge with an unchecked run or unapproved wording):
 1. After the Tue Oct 6 run succeeds (and its actor is checked, section 7): `git switch main`, `git pull`, `git merge playoff-odds`. The bot's week 4 commit will conflict on `data/processed/*.csv`: take either side (`git checkout --theirs data/processed/`), run `.venv\Scripts\python.exe -m sleeper_dash.pipeline` (16 of 16 checks; week 4 odds appear), run all tests (467), commit, push. Check the page at 360, 390, 1024 and 1280px, light and dark. The Thursday Oct 8 run publishes it (or run Weekly refresh by hand).
 2. Right after step 1 (History wording approved 2026-10-05): `git merge past-seasons` into `main` the same way (conflicts again only in tables; pipeline 17 of 17 in every season; 489 tests). The first GitHub run afterwards takes about 4 minutes (RUNBOOK.md says so); watch it once with `gh run watch`.
-3. Update this file, `CLAUDE.md` "Current status", and the memory note after each merge.
+3. When the owner approves the Playoffs wording: `git merge bracket-view` the same way (no table changes of its own; 515 tests). Must be on `main` before the Tue Dec 22 run.
+4. Update this file, `CLAUDE.md` "Current status", and the memory note after each merge.
 
-**Next to build: the playoff bracket view** (owner, 2026-10-05: build now, after the playoff odds merge). A section shown only in playoff weeks, from the `winners_bracket` table (seeds, byes, results as they come in), mobile first per UI_GUIDE.md; tested offline on the real 2025 bracket (in `data/processed/` once `past-seasons` is merged; seasons 2020–2025 give six finished brackets) and the fake 8-team `PlayoffLeague`. Wording to the owner as a draft. Must be on `main` before the Tue Dec 22 run; aim for early December. Start a new branch from `main` after the merges (or from `past-seasons` if History is still pending, and say so).
+**Playoff bracket view: built 2026-10-05** on `bracket-view` (stacked on `past-seasons`, because History was still unmerged), as the owner asked (build now). The Playoffs section (UI_GUIDE.md "Playoffs") shows Sleeper's winners bracket in playoff weeks, each week as of that week, in the odds' place after the ladder. Tested on all six finished brackets (2020–2025), a provisional bracket with no results, 2025's page week by week, and the fake `PlayoffLeague`; checked in the browser at 360, 390, 1024 and 1280px, light and dark. Before building: all 42 games of 2020–2025 have the bracket's winner outscoring its opponent that week. Wording awaits the owner's approval; merge after `past-seasons`.
 
 **Remaining extras** (ask the owner to order them; recommendations in brackets):
 - **Weekly league-chat post** (high value; see the note in section 1 before raising it).
@@ -316,7 +322,7 @@ Ordered by impact on the unattended weekly job.
 **December, already scheduled:** Tue Dec 22 2:00 PM ET, `sleeper-week15-playoff-checks` (section 7): verifies the playoff assumptions on week 15, restores the strict standings checks if they hold, and reports on branch `playoff-week15-checks` without merging. It expects the bracket view to be on `main` by then and reports if it isn't.
 ## 10. Commit history
 
-Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 runs from `487e76c` (season-to-date lineup efficiency) to `8966259 Phase 3: dashboard`; Phase 4 runs from `8dee0e8` (season start date in config) to `df8f4cf Phase 4: automation`; follow-ups `e8a3260` (playoff tests against 2025 behaviour), `86c1486` (either standings standard in playoff weeks), `38e081c` (workflow reconfirmed), `5cc0180` (handoff), `cbd13c7` (run summary), `6a70578` (status bar and stale-data line), `e7534e2` ("Final rankings"), `817c342` (rollback and 90-day retention), `8c9be5e` (runbook), and a second commit named "Phase 4: automation" that closes the phase (docs). From Phase 4 on, `github-actions[bot]` commits refreshed tables ("Weekly refresh: tables through week N"). Phase 5 so far: `90c3190` (playoff odds spec, on `main`); on `playoff-odds`: `15727ea` (playoff odds and winners bracket), `cccbb28` (calibration notebook), `9c3a8de` (page section), `bc995c6` (wording approved), `e600246` (December plan); on `past-seasons`: `8f51743` (seasons 2020–2025), `145f01a` (History section), plus this handoff. Use `git log --oneline` for the full list.
+Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 runs from `487e76c` (season-to-date lineup efficiency) to `8966259 Phase 3: dashboard`; Phase 4 runs from `8dee0e8` (season start date in config) to `df8f4cf Phase 4: automation`; follow-ups `e8a3260` (playoff tests against 2025 behaviour), `86c1486` (either standings standard in playoff weeks), `38e081c` (workflow reconfirmed), `5cc0180` (handoff), `cbd13c7` (run summary), `6a70578` (status bar and stale-data line), `e7534e2` ("Final rankings"), `817c342` (rollback and 90-day retention), `8c9be5e` (runbook), and a second commit named "Phase 4: automation" that closes the phase (docs). From Phase 4 on, `github-actions[bot]` commits refreshed tables ("Weekly refresh: tables through week N"). Phase 5 so far: `90c3190` (playoff odds spec, on `main`); on `playoff-odds`: `15727ea` (playoff odds and winners bracket), `cccbb28` (calibration notebook), `9c3a8de` (page section), `bc995c6` (wording approved), `e600246` (December plan); on `past-seasons`: `8f51743` (seasons 2020–2025), `145f01a` (History section), `03fbd78` (handoff), `bfbdc54` (History wording approved); on `bracket-view`: the Playoffs section. Use `git log --oneline` for the full list.
 
 ## 11. First steps for the new session
 
@@ -326,4 +332,4 @@ Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 r
 4. Confirm the environment on each branch you touch: `.venv\Scripts\python.exe -m pytest -q` (**433** on `main`, **467** on `playoff-odds`, **489** on `past-seasons`; a `test_dependencies` failure means the environment drifted from the pins) and `git status` (clean, in sync).
 5. If the Tue Oct 6 run passed: merge `playoff-odds` (section 9, "Merging", step 1) and check the page.
 6. Merge `past-seasons` (step 2): the History wording is approved.
-7. Then build the playoff bracket view (section 9), and ask the owner to order the remaining extras.
+7. Ask the owner to approve the Playoffs wording (section 1); on approval, merge `bracket-view` (step 3). Then ask the owner to order the remaining extras.

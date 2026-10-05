@@ -22,7 +22,7 @@ import yaml
 from jinja2 import Environment, PackageLoader
 
 from sleeper_dash.config import PROJECT_ROOT
-from sleeper_dash.dashboard import charts, explainer, history, theme
+from sleeper_dash.dashboard import bracket, charts, explainer, history, theme
 
 SITE_DIR = PROJECT_ROOT / "site"
 TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards", "playoff_odds",
@@ -173,7 +173,8 @@ def freshness(run, stale_after_days, schedule):
 def build_view(tables, run, params, fresh=None):
     """Everything the template needs, as plain values and formatted strings. Pure: no file access.
 
-    tables: teams, team_weeks, power_rankings, metrics_season, lineups_optimal, awards. run: the pipeline's run record.
+    tables: teams, team_weeks, power_rankings, metrics_season, lineups_optimal, awards, playoff_odds, managers,
+    winners_bracket. run: the pipeline's run record.
     params: config.yaml metrics (power weights and windows for the ladder; every weight and threshold for "How this works").
     fresh: freshness() for the stale-data line; build_site always passes it. Without it the page has no stale-data line.
     The saved tables hold every season (Phase 5); the page shows the run's season only, except the History
@@ -242,7 +243,8 @@ def build_view(tables, run, params, fresh=None):
         odds_view = None
         if odds is not None and (odds["week"] == week).any():
             odds_view = _odds_section(odds[odds["week"] == week], names, params, run["league"])
-        views.append({"week": week, "title": f"Week {week} power rankings", "ladder": ladder, "odds": odds_view,
+        playoffs = bracket.bracket_view(tables.get("winners_bracket"), team_weeks, names, run["league"], week)
+        views.append({"week": week, "title": f"Week {week} power rankings", "ladder": ladder, "odds": odds_view, "bracket": playoffs,
                       "awards": _award_tiles(awards[awards["week"] == week], teams), "charts": sections})
 
     chart_theme = theme.to_script_json({"layout": theme.base_layout(), "config": theme.CONFIG, "tokens": theme.TOKENS})

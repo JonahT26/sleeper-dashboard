@@ -31,7 +31,7 @@ from test_dashboard import METRICS, RUN, make_tables
 
 MINUS, EN_DASH = "−", "–"
 # The guide's section order (UI_GUIDE.md "Layout"); "How this works" follows, once for the whole page.
-SECTION_ORDER = ["ladder", "odds", "awards", "luck", "efficiency", "consistency", "schedule", "rank-history"]
+SECTION_ORDER = ["ladder", "odds", "bracket", "awards", "luck", "efficiency", "consistency", "schedule", "rank-history"]
 # Bar axes, rounded up to these (UI_GUIDE.md "Ladder row").
 POWER_AXIS_STEPS = [5, 10, 15, 20, 25, 30, 40, 50]
 PART_AXIS_STEPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20]
@@ -122,6 +122,8 @@ def section_keys(node):
             keys.append("ladder")
         elif "odds-section" in section.classes:
             keys.append("odds")
+        elif "bracket-section" in section.classes:
+            keys.append("bracket")
         elif "awards" in section.classes:
             keys.append("awards")
         elif "chart-section" in section.classes:
@@ -234,6 +236,7 @@ def expected_sections(tables, week):
     has = {
         "ladder": True,
         "odds": "playoff_odds" in tables and bool((tables["playoff_odds"]["week"] == week).any()),
+        "bracket": week >= RUN["league"]["playoff_week_start"] and not tables["winners_bracket"].empty,
         "awards": bool((tables["awards"]["week"] == week).any()),
         "luck": not s.empty and bool(s["expected_wins"].notna().all()),
         "efficiency": bool((lineups["week"] <= week).any()),
@@ -288,7 +291,7 @@ def test_every_week_shows_exactly_the_sections_its_data_supports_in_guide_order(
 def test_hidden_sections_leave_nothing_behind(season):
     for week, node in week_nodes(season.doc).items():
         keys = section_keys(node)
-        assert bool(node.all("div", "charts")) == any(k not in ("ladder", "odds", "awards") for k in keys), f"week {week}"
+        assert bool(node.all("div", "charts")) == any(k not in ("ladder", "odds", "bracket", "awards") for k in keys), f"week {week}"
         for section in node.all("section"):
             assert section.text().strip(), f"an empty section in week {week}"
         assert not node.all("ul", "tiles") or node.one("ul", "tiles").all("li", "tile")
@@ -735,3 +738,47 @@ def test_history_matches_every_finished_season_in_the_saved_tables():
     best = weeks.loc[weeks["points"].idxmax()]
     assert lines[2] == (f"{best.points:.1f} by {managers.at[owner[(best.season, best.roster_id)], 'display_name']}, "
                         f"week {best.week} of {best.season}.")
+
+
+# --- Playoffs match last season's real bracket (UI_GUIDE.md "Playoffs") ---------------------------
+
+def test_last_seasons_playoff_weeks_show_the_bracket_and_its_numbers_match_the_tables():
+    """2025's page, built as if it were this season: the section appears in playoff weeks only, each week shows the
+    results played by then, and every score, seed, and winner is the saved one."""
+    stacked, params = stacked_tables(), load_config().metrics
+    last = current_only(stacked, 2025)
+    weeks = sorted(int(w) for w in last["power_rankings"]["week"].unique())
+    start = RUN["league"]["playoff_week_start"]
+    doc = parse(render(build_view(stacked, {**RUN, "season": 2025, "weeks": weeks}, params)))
+    points = last["team_weeks"].set_index(["week", "roster_id"])["points"]
+    roster = last["teams"].set_index("team_name")["roster_id"]
+    bracket = last["winners_bracket"]
+    winners = {(int(g.round), int(g.winner_roster_id)) for g in bracket.itertuples()}
+    final = bracket[bracket["place"] == 1].iloc[0]
+    for week, node in week_nodes(doc).items():
+        keys = section_keys(node)
+        assert keys == expected_sections(last, week) and ("bracket" in keys) == (week >= start), f"week {week}"
+        if week < start:
+            continue
+        section = node.one("section", "bracket-section")
+        rounds = section.all("div", "round")
+        assert len(rounds) == 3
+        for number, block in enumerate(rounds, start=1):
+            played = start + number - 1
+            assert block.one("span", "round-week").text() == f"Week {played}"
+            for slot in block.all("p", "slot"):
+                if "open" in slot.classes:
+                    assert played > week + 1 and slot.text().startswith(("Winner of ", "Loser of "))
+                    continue
+                team = slot.one("span", "t-name").text().removesuffix(", won").removesuffix(", lost")
+                rid = int(roster[team])
+                if played <= week:
+                    assert slot.one("span", "pts").text() == f"{points[(played, rid)]:.1f}"
+                    assert ("won" in slot.classes) == ((number, rid) in winners) and ("lost" in slot.classes) != ("won" in slot.classes)
+                else:
+                    assert not slot.all("span", "pts") and "won" not in slot.classes and "lost" not in slot.classes
+        champion = section.all("p", "champion")
+        assert bool(champion) == (week >= start + 2)
+        if champion:
+            winner = last["teams"].set_index("roster_id").at[int(final.winner_roster_id), "team_name"]
+            assert champion[0].text() == f"{winner} won the 2025 title."

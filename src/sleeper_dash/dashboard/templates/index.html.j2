@@ -89,6 +89,39 @@
   </details>
 </section>
 {% endif %}
+{% if v.bracket %}
+<section class="bracket-section" aria-labelledby="bracket-title-{{ v.week }}">
+  <h2 class="section-title display" id="bracket-title-{{ v.week }}">Playoffs</h2>
+  <p class="sub">{{ v.bracket.subtitle }}</p>
+  {% if v.bracket.champion %}
+  <p class="champion display">{{ v.bracket.champion.team }} won the {{ season }} title.</p>
+  {% endif %}
+  <div class="rounds">
+  {% for r in v.bracket.rounds %}
+    <div class="round">
+      <h3 class="round-head">{{ r.name }} <span class="round-week">Week {{ r.week }}</span></h3>
+      <ol class="games" role="list">
+      {% for g in r.games %}
+        <li class="game">
+          {% if g.label %}<p class="game-label">{{ g.label }}</p>{% endif %}
+          {% for s in g.slots %}
+          {% if s.open %}
+          <p class="slot open"><span class="seed"></span><span class="t-name">{{ s.text }}</span></p>
+          {% else %}
+          <p class="slot{% if s.won == true %} won{% elif s.won == false %} lost{% endif %}"><span class="seed display num"><span class="sr">Seed </span>{{ s.seed }}</span><span class="t-name">{{ s.team }}{% if s.won == true %}<span class="sr">, won</span>{% elif s.won == false %}<span class="sr">, lost</span>{% endif %}</span>{% if s.points %}<span class="pts num">{{ s.points }}</span>{% endif %}</p>
+          {% endif %}
+          {% endfor %}
+        </li>
+      {% endfor %}
+      </ol>
+      {% if r.byes %}
+      <p class="byes">Bye: {% for b in r.byes %}<span class="bye"><span class="sr">seed </span><span class="seed-inline num">{{ b.seed }}</span> {{ b.team }}</span>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
 {% if v.awards %}
 <section class="awards" aria-labelledby="awards-title-{{ v.week }}">
   <h2 class="section-title display" id="awards-title-{{ v.week }}">Weekly awards</h2>
