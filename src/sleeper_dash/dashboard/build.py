@@ -25,7 +25,7 @@ from sleeper_dash.config import PROJECT_ROOT
 from sleeper_dash.dashboard import charts, explainer, theme
 
 SITE_DIR = PROJECT_ROOT / "site"
-TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards"]
+TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards", "playoff_odds"]
 EASTERN = ZoneInfo("America/New_York")
 # The weekly workflow's schedule is the one source for "next update due" (UI_GUIDE.md "Status bar").
 WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "weekly.yml"
@@ -38,6 +38,8 @@ COMPONENT_LABELS = {"season_scoring": "Season scoring", "recent_form": "Recent f
 # Round axis ends for the bars, so one fixed scale serves every week of the season.
 POWER_AXIS_STEPS = [5, 10, 15, 20, 25, 30, 40, 50]
 PART_AXIS_STEPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20]
+SEEDS = [1, 2, 3, 4, 5, 6]  # playoff_odds seed columns (METRICS_SPEC.md section 8: the verified 6-team format)
+BYES = 2
 # How each award's value is shown on its tile (points to 1 dp unless listed).
 AWARD_FORMATS = {"perfect_lineup": "percent", "asleep_at_the_wheel": "count"}
 
@@ -97,6 +99,19 @@ def award_value(award, value):
     if kind == "count":
         return str(int(value))
     return one_dp(value)
+
+
+def chance(p, certain=False):
+    """A probability as a whole percentage. Unless it is certain, a value that rounds to 0% or 100% says "<1%" or ">99%"
+    (METRICS_SPEC.md section 8, Display): a simulation that never saw something doesn't prove it can't happen."""
+    if certain:
+        return f"{round(p * 100)}%"
+    whole = round(p * 100)
+    if whole == 0:
+        return "<1%"
+    if whole == 100:
+        return ">99%"
+    return f"{whole}%"
 
 
 def updated_text(finished_at):
@@ -217,7 +232,11 @@ def build_view(tables, run, params, fresh=None):
         sections += [section for section in later if section]  # a chart without data yet is left out
         for section in sections:
             section["figure_json"] = theme.to_script_json(section["figure"])
-        views.append({"week": week, "title": f"Week {week} power rankings", "ladder": ladder,
+        odds = tables.get("playoff_odds")
+        odds_view = None
+        if odds is not None and (odds["week"] == week).any():
+            odds_view = _odds_section(odds[odds["week"] == week], names, params, run["league"])
+        views.append({"week": week, "title": f"Week {week} power rankings", "ladder": ladder, "odds": odds_view,
                       "awards": _award_tiles(awards[awards["week"] == week], teams), "charts": sections})
 
     chart_theme = theme.to_script_json({"layout": theme.base_layout(), "config": theme.CONFIG, "tokens": theme.TOKENS})
@@ -239,6 +258,36 @@ def _component_detail(component, raw, standings, recent):
     games = int(standings.h2h_wins + standings.h2h_losses + standings.h2h_ties)
     text = f"Won {int(standings.h2h_wins)} of {games}"
     return text + (f", tied {int(standings.h2h_ties)}" if standings.h2h_ties else "")
+
+
+def _odds_section(rows, names, params, league):
+    """Playoff odds for one week: one row per team, most likely playoff team first (METRICS_SPEC.md section 8).
+
+    "Clinched" and "Out" are shown only when proved. After the last regular-season week the standings are final,
+    so playoff and bye odds are certain; title odds are always simulated, and certain only for a team that is out.
+    """
+    sims = params["playoff_odds"]["simulations"]
+    final = int(rows["week"].iloc[0]) == league["playoff_week_start"] - 1
+    places = league["playoff_teams"]
+    ordered = rows.sort_values(["p_playoffs", "p_bye", "avg_wins", "roster_id"], ascending=[False, False, False, True])
+    table = []
+    for r in ordered.itertuples():
+        playoffs = "Clinched" if r.clinched else "Out" if r.out else chance(r.p_playoffs)
+        table.append({
+            "roster_id": int(r.roster_id), "team": names[r.roster_id],
+            "record": f"{r.avg_wins:.1f}{EN_DASH}{r.avg_losses:.1f}",
+            "playoffs": playoffs, "bar": f"{r.p_playoffs * 100:.1f}",
+            "bye": chance(r.p_bye, certain=final or r.out), "title": chance(r.p_title, certain=r.out),
+            "seeds": [{"text": chance(getattr(r, f"p_seed_{s}"), certain=final or r.out),
+                       "shade": f"{getattr(r, f'p_seed_{s}'):.2f}"} for s in SEEDS],
+        })
+    if final:
+        subtitle = (f"The regular season is over and the top {places} are in; the top {BYES} have a first-round bye. "
+                    f"Title odds come from {sims:,} simulations of the playoffs.")
+    else:
+        subtitle = (f"Chances from {sims:,} simulations of the rest of the season. The top {places} make the playoffs, "
+                    f"and the top {BYES} get a first-round bye.")
+    return {"subtitle": subtitle, "rows": table, "seeds": SEEDS}
 
 
 def _award_tiles(week_awards, teams):

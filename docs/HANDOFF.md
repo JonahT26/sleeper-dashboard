@@ -11,7 +11,7 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 a
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
 | 4 · Automation (weekly GitHub Action, GitHub Pages, monitoring, rollback, runbook) | **Complete** (2026-10-03) |
-| 5 · Extras | **In progress** (2026-10-05): playoff odds spec confirmed (METRICS_SPEC.md section 8), not built yet. Order of the other extras not confirmed (section 9) |
+| 5 · Extras | **In progress** (2026-10-05): playoff odds built on the `playoff-odds` branch (metric, checks, calibration notebook, page section); not merged. Order of the other extras not confirmed (section 9) |
 
 As of 2026-10-03, end of session (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
 
@@ -199,6 +199,9 @@ Dev/
 | 2026-10-03 | Phase 4 closed; Phase 5 plan written with the extras ordered by value and effort (section 9), order awaiting the owner's confirmation; CLAUDE.md rules 11–13 added (publish only through the workflows, keep the runbook true, explain a failed run before fixing) | Owner (request), Claude (order, rule wording) | CLAUDE.md, section 9 |
 | 2026-10-03 | Failure email and failed-run summary tested with a throwaway branch (`test-failure-email`, deleted after) whose run failed on purpose; nothing published | Owner (approved), Claude | — |
 | 2026-10-05 | Phase 5 starts with the playoff odds spec (owner asked for the interview); the order of the other extras is still to confirm | Owner | section 9 |
+| 2026-10-05 | Playoff odds built on a branch (`playoff-odds`), not `main`: the first scheduled run (Tue Oct 6) should be checked on unchanged code, and the page wording needs the owner's approval before the next run publishes it | Claude (rule 11; owner to confirm the merge) | section 9 |
+| 2026-10-05 | Per-seed probabilities added to playoff odds (`p_seed_1` … `p_seed_6`) and shown in a folded "Chance of each seed" table | Owner (request), Claude (display) | METRICS_SPEC.md section 8, UI_GUIDE.md |
+| 2026-10-05 | A tie on wins and points for at the end of the regular season stops the run only when it affects seeding (inside or straddling the top 6); "Seeding matches Sleeper's bracket" is a stopping check like the other Sleeper reconciliations, and passes with "nothing to compare" when Sleeper has no filled-in bracket | Claude's reading, flagged to the owner | METRICS_SPEC.md section 8 |
 | 2026-10-05 | Playoff odds definition, every recommended option accepted: normal model on scores relative to the week's league mean; team means shrunk toward the league mean with fixed `shrink_weeks` 6 (2025 calibration 6.5) and posterior uncertainty drawn once per simulated season; one pooled score SD; no recency weighting; median game decided from the same simulated scores; seeding by wins then points for, verified format only (anything else stops the run); a new check that our seeding matches Sleeper's provisional `winners_bracket`; 10,000 simulations; a seed per (season, week); outputs playoff, bye, and title odds and average final record from week 3; "Clinched"/"Out" only when a bound proves it, otherwise "<1%"/">99%" | Owner | METRICS_SPEC.md section 8 |
 
 ## 7. Open questions and assumptions to verify
@@ -280,6 +283,9 @@ What each needs:
    - **Copy and size:** the wording needs approval (tone: trash talk only in the awards, UI_GUIDE.md). It's about one session.
 2. **Playoff odds.**
    - **Spec: done** (owner, 2026-10-05): METRICS_SPEC.md section 8, with the 2025 calibration and backtest behind each choice. Target: live by the Tuesday Oct 27 run (week 7 data; week 6 lands Oct 20). One extra API call (`winners_bracket`) for the seeding check.
+   - **Built: done** (2026-10-05) on the `playoff-odds` branch: `metrics/playoff_odds.py`, `playoff_odds` and `winners_bracket` tables, two checks (16 in all), `notebooks/04_playoff_odds_calibration.ipynb`, the page section after the ladder, and a "How this works" paragraph. 467 tests. Real league through week 3: 16 of 16 checks; Sleeper's provisional bracket agrees with our seeding.
+   - **Before merging:** (1) the owner approves the section's wording and the "How this works" paragraph (UI_GUIDE.md "Playoff odds"; `python -m sleeper_dash.dashboard.explainer` prints the copy); (2) the Tuesday Oct 6 run is checked on `main`; (3) merge, `git pull`, run the pipeline (week 4 odds), and check the page at 360, 390, 1024 and 1280px.
+   - **Calibration finding for the owner** (2025, notebook 04): playoff Brier 0.134 vs 0.250 (everyone 50%) and 0.222 ("top 6 right now"), both gaps holding when teams are resampled; bye odds no better than a flat 2/12 (0.142 vs 0.139); more shrinkage scored better in-sample (k = 20: 0.128 vs 0.134 at k = 6), the opposite direction from the score-level calibration (k = 6.5). One season, 12 outcomes: worth a decision on `shrink_weeks` after 2026's week 14, not now.
    - **Data:** the remaining schedule is already in `schedule`.
    - **Build:** a new table with metric checks (odds between 0 and 1, six playoff spots shared out across the league each week), a section after the ladder (UI_GUIDE.md), and "How this works" copy, which needs approval.
    - **Rules:** use a fixed random seed so reruns give the same numbers (rule 1: every run is a full recompute).

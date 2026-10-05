@@ -3,6 +3,7 @@
 Tables are synthetic, so nothing depends on this season's data; nothing touches the network.
 """
 
+import html as html_lib
 import json
 import re
 from datetime import datetime
@@ -18,9 +19,15 @@ from sleeper_dash.dashboard.build import (
 WEIGHTS = {"season_scoring": 0.35, "recent_form": 0.25, "roster_strength": 0.20, "results": 0.20}
 METRICS = {"power": {"weights": WEIGHTS, "recent_weeks": 3, "scale": 15, "shrink_weeks": 3},
            "consistency": {"min_weeks": 3, "floor_pct": 0.10, "ceiling_pct": 0.90, "boom_margin": 20, "bust_margin": 20},
-           "schedule": {"min_weeks": 3}}
+           "schedule": {"min_weeks": 3},
+           "playoff_odds": {"simulations": 10000, "seed": 2026, "shrink_weeks": 6, "min_weeks": 3}}
 RUN = {"finished_at": "2026-10-06T13:00:00+00:00", "league_name": "Test League", "season": 2026, "weeks": [1, 2, 3],
-       "league": {"teams": 12, "median_game": True, "playoff_week_start": 15}}
+       "league": {"teams": 12, "median_game": True, "playoff_week_start": 15, "playoff_teams": 6}}
+# Synthetic playoff odds for teams 1-12 (each column sums like the real table: 6 playoff spots, 2 byes, 1 title).
+ODDS_PLAYOFFS = [1.0, 0.999, 0.97, 0.85, 0.7, 0.55, 0.45, 0.3, 0.12, 0.05, 0.011, 0.0]
+ODDS_BYE = [0.9, 0.6, 0.3, 0.12, 0.05, 0.02, 0.008, 0.002, 0.0, 0.0, 0.0, 0.0]
+ODDS_TITLE = [0.4, 0.2, 0.15, 0.1, 0.06, 0.04, 0.025, 0.015, 0.007, 0.003, 0.0, 0.0]
+ODDS_PROVEN_FROM = 10  # team 1 is Clinched and team 12 Out from this week (before it: ">99%" and "<1%")
 
 
 def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining=False):
@@ -71,7 +78,23 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining
             ]
     return {"teams": teams, "team_weeks": pd.DataFrame(team_weeks), "lineups_optimal": pd.DataFrame(lineups),
             "power_rankings": pd.DataFrame(power), "metrics_season": pd.DataFrame(season),
-            "awards": pd.DataFrame(awards, columns=["season", "week", "award", "award_name", "roster_id", "value", "caption", "player_id"])}
+            "awards": pd.DataFrame(awards, columns=["season", "week", "award", "award_name", "roster_id", "value", "caption", "player_id"]),
+            "playoff_odds": make_odds(range(3, min(weeks, 14) + 1), n)}
+
+
+def make_odds(weeks, n=12):
+    """playoff_odds rows for the given weeks (METRICS_SPEC.md section 8 columns), from the ODDS_ vectors."""
+    rows = []
+    for week in weeks:
+        for i in range(1, n + 1):
+            p, bye, title = ODDS_PLAYOFFS[i - 1], ODDS_BYE[i - 1], ODDS_TITLE[i - 1]
+            rest = (p - bye) / 4
+            rows.append({"season": 2026, "week": week, "roster_id": i, "strength": 10.0 - i, "strength_sd": 7.0, "score_sd": 21.0,
+                         "p_playoffs": p, "p_bye": bye, "p_seed_1": bye * 0.6, "p_seed_2": bye * 0.4,
+                         **{f"p_seed_{s}": rest for s in range(3, 7)}, "p_title": title,
+                         "avg_wins": 26.0 - 2 * i + 0.25, "avg_losses": 2.0 + 2 * i - 0.25,
+                         "clinched": i == 1 and week >= ODDS_PROVEN_FROM, "out": i == n and week >= ODDS_PROVEN_FROM})
+    return pd.DataFrame(rows)
 
 
 def page(**kwargs):
@@ -300,3 +323,37 @@ def test_no_power_rankings_stops_with_a_clear_message():
     tables["power_rankings"] = tables["power_rankings"].iloc[0:0]
     with pytest.raises(DashboardError, match="pipeline"):
         build_view(tables, RUN, METRICS)
+
+
+# --- Playoff odds (METRICS_SPEC.md section 8; UI_GUIDE.md "Playoff odds") -----------------------
+
+def odds_rows(html, week):
+    shown, templates = split(html)
+    part = shown if week == max([week, *templates]) and week not in templates else templates[week]
+    section = re.search(r'<section class="odds-section".*?</section>', part, re.S)
+    return section and html_lib.unescape(section.group(0))  # "&gt;99%" in the HTML is ">99%" on screen
+
+
+def test_playoff_odds_sit_after_the_ladder_from_week_3_only():
+    html = page(weeks=5)
+    shown, templates = split(html)
+    assert odds_rows(html, 1) is None and odds_rows(html, 2) is None  # min_weeks 3: hidden before
+    for week in (3, 4, 5):
+        part = shown if week == 5 else templates[week]
+        assert part.index('class="ladder-section"') < part.index('class="odds-section"') < part.index('class="awards"')
+
+
+def test_odds_extremes_say_less_than_1_percent_until_a_bound_proves_them():
+    html = page(weeks=12)
+    early, late = odds_rows(html, 9), odds_rows(html, 10)
+    first, last = (re.findall(r'<tr data-roster="(\d+)">.*?<span class="po-val">(.+?)</span>', part, re.S) for part in (early, late))
+    assert first[0] == ("1", ">99%") and first[-1] == ("12", "<1%")  # p = 1.0 and 0.0, not proved yet
+    assert last[0] == ("1", "Clinched") and last[-1] == ("12", "Out")
+    assert ("2", ">99%") in first  # 0.999 rounds to 100%, so it can't say 100%
+
+
+def test_the_last_regular_season_week_says_the_field_is_set():
+    html = page(weeks=15)
+    assert "The regular season is over and the top 6 are in" in odds_rows(html, 14)
+    assert "Chances from 10,000 simulations" in odds_rows(html, 13)
+    assert odds_rows(html, 15) is None  # playoff weeks: the table ends at week 14

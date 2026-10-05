@@ -57,15 +57,15 @@ Section order, top to bottom:
 
 1. **Masthead:** league name, "Week 5 power rankings", and the week selector, then the **status bar**: "Updated Tue Oct 6, 9:00 AM ET", pinned to the top of the screen while scrolling, and the stale-data line when it applies (Components, "Status bar"). "Updated" is the time the pipeline ran, which the pipeline records; never a file date.
 2. **Power rankings ladder:** the hero. No separate hero card above it; the rankings are the first thing anyone sees.
-3. **Weekly awards**
-4. **Luck:** actual wins vs expected wins
-5. **Lineup efficiency:** actual vs optimal points
-6. **Consistency:** weekly score spread per team
-7. **Strength of schedule:** played and remaining
-8. **Rank history:** bump chart across weeks
-9. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section. **The owner reviews this copy before it is published** (decision 2026-10-02). Approved with no edits on 2026-10-02; the text lives in `dashboard/explainer.py` with every number filled in from `config.yaml`, so any wording change needs the owner's approval again. One section for the whole page (not per week), after the charts, in a reading column under 75 characters.
+3. **Playoff odds** (Phase 5): from `metrics.playoff_odds.min_weeks` (week 3) to the last regular-season week (Components, "Playoff odds")
+4. **Weekly awards**
+5. **Luck:** actual wins vs expected wins
+6. **Lineup efficiency:** actual vs optimal points
+7. **Consistency:** weekly score spread per team
+8. **Strength of schedule:** played and remaining
+9. **Rank history:** bump chart across weeks
+10. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section. **The owner reviews this copy before it is published** (decision 2026-10-02). Approved with no edits on 2026-10-02; the text lives in `dashboard/explainer.py` with every number filled in from `config.yaml`, so any wording change needs the owner's approval again. One section for the whole page (not per week), after the charts, in a reading column under 75 characters.
 
-Phase 5 adds a **Playoff odds** section after the ladder.
 
 ### Mobile (360–430px)
 
@@ -96,6 +96,7 @@ Phase 5 adds a **Playoff odds** section after the ladder.
 ├──────────────────────────────────┬───────────────────────────┤
 │ Rankings ladder (12 rows)         │ Weekly awards (stacked)   │
 │                                   │                           │
+│ Playoff odds (table)              │                           │
 ├──────────────────────────────────┴───────────────────────────┤
 │ Luck chart                     │ Efficiency chart             │
 ├────────────────────────────────┼──────────────────────────────┤
@@ -156,6 +157,17 @@ Added 2026-10-03 (owner request: stale data must be impossible to mistake for fr
   with no next update, since none will bring new data.
 - Checked in the browser, not at build time, because a page that has stopped updating can't rebuild itself. Without JavaScript the line never shows; the "Updated" time always does.
 - No pylon and no icon: the plain sentence in the masthead's brightest text is the warning (pylon stays the single accent for #1 and highlights).
+
+### Playoff odds
+
+Added 2026-10-05 (Phase 5; definitions in `METRICS_SPEC.md` section 8). **The section's wording and its "How this works" paragraph are drafts awaiting the owner's approval**; the layout follows this guide.
+
+- A section after the ladder, titled "Playoff odds", with a one-line subtitle: "Chances from 10,000 simulations of the rest of the season. The top 6 make the playoffs, and the top 2 get a first-round bye." After the last regular-season week: "The regular season is over and the top 6 are in; the top 2 have a first-round bye. Title odds come from 10,000 simulations of the playoffs." Numbers come from `config.yaml` and the league settings.
+- **A table, not a chart**, one row per team, the most likely playoff team first (playoff odds, then bye odds, then average final wins). Columns: Team, Projected record (average final record to 1 decimal, e.g. "16.2–11.8", head-to-head plus median games), Playoffs (bold, with a thin `--bar` bar from 0 to 100% under it on a `--hash` track), Bye, Title. Team names wrap; numbers right-aligned and tabular.
+- **Percentages are whole numbers.** "Clinched" and "Out" replace the playoff number only when a bound proves them (never because the simulation happened to say 100% or 0%). Otherwise a value that rounds to 0% shows as "<1%" and one that rounds to 100% as ">99%". Values known for certain show plainly: bye and seed odds after the last regular-season week, and 0% for every column of a team that is Out.
+- **"Chance of each seed"** sits below in a closed `<details>`: the same rows with seeds 1–6, each cell its percentage on a `--bar` tint whose strength follows the probability (at most 60%), so the numbers carry the meaning and the tint only helps scanning. It opens instantly: the ladder's breakdown stays the page's one expand animation.
+- **Layout:** on phones it follows the ladder at full width; both tables fit at 360px (checked 2026-10-05), and a table scrolls sideways inside its own box if it ever has to. From 1024px it sits under the ladder in the left column while the awards column spans both.
+- **Hidden** before `min_weeks` and in playoff weeks (the table ends with the regular season; the playoff bracket is a separate Phase 5 extra).
 
 ### Week selector
 
