@@ -172,7 +172,7 @@ Added 2026-10-05 (Phase 5; definitions in `METRICS_SPEC.md` section 8). The sect
 
 ### Playoffs
 
-Added 2026-10-05 (Phase 5). **The wording is a draft awaiting the owner's approval.** Built by `dashboard/bracket.py` from Sleeper's `winners_bracket`, the week's `team_weeks` scores, and our seeding of the final regular-season standings (the seeding the pipeline checks against Sleeper's bracket).
+Added 2026-10-05 (Phase 5). Wording approved by the owner as drafted, 2026-10-05; the champion's name stays in ink (pylon offered and declined). Built by `dashboard/bracket.py` from Sleeper's `winners_bracket`, the week's `team_weeks` scores, and our seeding of the final regular-season standings (the seeding the pipeline checks against Sleeper's bracket).
 
 - **Shown only in playoff weeks** (from the league's `playoff_week_start`), in the playoff odds' place after the ladder; on desktop it sits under the ladder in the left column, beside the awards.
 - Title "Playoffs"; subtitle "Seeded by the final regular-season standings, one round a week. The top 2 seeds skip the first round." Once the final is played, a 28px bold line: "‹Team› won the 2026 title." (ink, not pylon: pylon text stays the #1 rank numeral's).

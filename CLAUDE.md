@@ -86,7 +86,7 @@ Keep this list current as commands are added.
 
 ## Current status
 
-**Phase 4 — Automation: complete (2026-10-03),** including monitoring (run summaries, failure emails tested, the stale-data line), rollback, and the runbook. Phase 5 — Extras is in progress: playoff odds (`docs/METRICS_SPEC.md` section 8) are built on the `playoff-odds` branch (2026-10-05) and the page wording is approved; the branch is merged to `main` once the Tuesday Oct 6 run is checked (`docs/HANDOFF.md` section 9). Past seasons and History (wording approved) follow on `past-seasons`, and the playoff bracket (the Playoffs section, wording awaiting my approval) on `bracket-view`, merged in that order. The plan for the other extras is in section 9 too. Update this section at the end of every phase.
+**Phase 4 — Automation: complete (2026-10-03),** including monitoring (run summaries, failure emails tested, the stale-data line), rollback, and the runbook. Phase 5 — Extras is in progress: playoff odds (`docs/METRICS_SPEC.md` section 8) are built on the `playoff-odds` branch (2026-10-05) and the page wording is approved; the branch is merged to `main` once the Tuesday Oct 6 run is checked (`docs/HANDOFF.md` section 9). Past seasons and History (wording approved) follow on `past-seasons`, and the playoff bracket (the Playoffs section, wording approved) on `bracket-view`, merged in that order. The plan for the other extras is in section 9 too. Update this section at the end of every phase.
 
 **Starting a new session? Read `docs/HANDOFF.md` first.** It covers working style, environment quirks, the decisions log, open questions, and the next steps.
 
