@@ -138,3 +138,67 @@ jobs:
           else
             echo "## Publish: FAILED. The last good page stays live." >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  # The weekly league-chat post (config.yaml chat.mode: "off", "dry-run", or "on"; docs/RUNBOOK.md section 7).
+  # Runs only after the page is published. Each week is posted at most once: it is recorded in
+  # data/chat_posts.csv and pushed *before* the message is sent, so a rerun or the Thursday run skips it.
+  # The GroupMe bot ID is the one approved secret (CLAUDE.md rule 7), passed only to the steps that need it.
+  post:
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # record the posted week in data/chat_posts.csv
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }} # the latest commit, including this run's refreshed tables
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install
+        run: |
+          pip install -r requirements-ci.txt
+          pip install --no-deps -e .
+
+      # Prints the message in a dry run; decides whether this week still needs posting.
+      - name: Chat post (decide)
+        id: claim
+        env:
+          GROUPME_BOT_ID: ${{ secrets.GROUPME_BOT_ID }} # only checked for presence here
+        run: python -m sleeper_dash.chat claim
+
+      - name: Record the week before sending
+        if: steps.claim.outputs.send == 'true'
+        env:
+          WEEK: ${{ steps.claim.outputs.week }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/chat_posts.csv
+          git commit -m "Chat post: week $WEEK"
+          git pull --rebase
+          git push
+
+      - name: Send to the league chat
+        id: send
+        if: steps.claim.outputs.send == 'true'
+        env:
+          GROUPME_BOT_ID: ${{ secrets.GROUPME_BOT_ID }}
+        run: python -m sleeper_dash.chat send
+
+      # The send failed after the week was recorded: un-record it so the next run tries again.
+      - name: Un-record after a failed send
+        if: failure() && steps.send.outcome == 'failure'
+        env:
+          WEEK: ${{ steps.claim.outputs.week }}
+        run: |
+          python -m sleeper_dash.chat release
+          git add data/chat_posts.csv
+          git commit -m "Chat post failed: week $WEEK un-recorded for the next run"
+          git pull --rebase
+          git push
