@@ -17,7 +17,7 @@ As of **Monday 2026-10-05, end of session** (NFL week 4's Monday game is tonight
 
 **What's live (`main`) hasn't changed since 2026-10-03.** https://jonaht26.github.io/sleeper-dashboard/ shows weeks 1–3: ladder, awards, five charts, "How this works". **No scheduled run has happened yet: the first is Tuesday Oct 6, 12:17 PM ET** (should bring week 4), then Thursday Oct 8 (section 7). The only Phase 5 commit on `main` is the playoff odds spec (`90c3190`, docs only).
 
-**Five branches** (all pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
+**Six branches** (all pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
 
 | Branch | Head | Adds | Tests | State |
 |---|---|---|---|---|
@@ -25,9 +25,11 @@ As of **Monday 2026-10-05, end of session** (NFL week 4's Monday game is tonight
 | `playoff-odds` | `e600246` | Playoff odds (metric, `playoff_odds` and `winners_bracket` tables, 2 checks → 16), calibration notebook 04, the Playoff odds section after the ladder, "How this works" paragraph | 467 | **Owner-approved, wording included.** Merge after the Tue Oct 6 run is checked |
 | `past-seasons` | `bfbdc54` | Stacked on `playoff-odds`: seasons 2020–2025 in the pipeline, `managers` table (17 checks), three owner rules from past data, the History section | 489 | Built and checked; **History wording approved** (2026-10-05). Merge after `playoff-odds` |
 | `bracket-view` | `0b586e1` | Stacked on `past-seasons`: the Playoffs section (`dashboard/bracket.py`), shown in playoff weeks in the odds' place | 515 | Built and checked on 2020–2025's brackets; **wording approved** (2026-10-05). Merge after `past-seasons`. |
-| `transaction-metrics` | see `git log` | Stacked on `bracket-view`: transaction metrics (METRICS_SPEC.md section 9): `trade_assets` table, `start_credits`, `pickups`, `trades`, six `metrics_season` columns, 2 checks (19 in all), FAAB balance report, the Roster moves section (`dashboard/moves.py`) | 535 | Spec confirmed and built; Roster moves section built; **layout, wording and "How this works" paragraph approved** (2026-10-05). Merge after `bracket-view`. The local checkout is on this branch |
+| `transaction-metrics` | `1a0ea33` | Stacked on `bracket-view`: transaction metrics (METRICS_SPEC.md section 9): `trade_assets` table, `start_credits`, `pickups`, `trades`, six `metrics_season` columns, 2 checks (19 in all), FAAB balance report, the Roster moves section (`dashboard/moves.py`) | 535 | Spec confirmed and built; Roster moves section built; **layout, wording and "How this works" paragraph approved** (2026-10-05). Merge after `bracket-view`. |
+| `boom-bust` | see `git log` | Stacked on `transaction-metrics`: boom and bust weeks as ▲/▼ on the Consistency chart; the owner's order for the remaining extras | 535 | Built (design approved: 1a 2a 3 4); **subtitle and summary wording awaiting the owner's approval**. The local checkout is on this branch |
 
 **Owner input still pending:**
+- **Boom/bust wording** (UI_GUIDE.md "Charts", Consistency row), drafted 2026-10-05 on `boom-bust`: the subtitle sentence, tooltips, and summary lines.
 - **League-chat post:** the owner started a request for an automatic weekly post (webhook as a GitHub secret, dry-run mode, never posting a week twice, a CLAUDE.md rule 7 exception) and then said to **ignore it** in the same message. Nothing was built or asked. Don't act on it unless the owner raises it again.
 
 **Scheduled:** a one-time Claude desktop session, `sleeper-week15-playoff-checks`, Tue Dec 22 2026 at 2:00 PM ET (section 7).
@@ -231,6 +233,7 @@ Dev/
 | 2026-10-05 | Transaction metrics (METRICS_SPEC.md section 9), every recommended option: `trade_assets` holds FAAB and picks in one table (1a); the FAAB balance comparison with Sleeper is a printed report, not a stopping check (2a); each start is credited to the team's latest acquisition of the player (3); regular season only (4a); every position in pickup value, kickers and defenses included (5a); FAAB efficiency = all waiver-claim points ($0 claims included) ÷ dollars bid, shown from $10 spent (6a); trade sides score starts of players received, FAAB listed beside, FAAB-only trades left out (7); every season 2020–2026 (8a) | Owner (1a 2a 3 agree 4a 5a 6a $10 7 agree 8a) | METRICS_SPEC.md section 9, config.yaml |
 | 2026-10-05 | Roster moves on the page: one per-week section after Rank history (1a); top 5 pickups (2a); a FAAB table of spent, points and points per dollar, no "FAAB left" (3a); trades newest first, 3 shown and the rest folded, "ahead by" then "won by" (4a); a "How this works" paragraph (5) | Owner (1a 2a 3a 4a 5 agree); wording and the "How this works" paragraph approved as drafted (1–5 approve) | UI_GUIDE.md "Roster moves" |
 | 2026-10-05 | Order of the remaining extras: boom/bust display, then season rollover, then the small items (self-hosted fonts; "Final rankings" right after the season) | Owner | section 9 |
+| 2026-10-05 | Boom/bust display: ▲/▼ markers on the Consistency chart, not a separate table (1a); counts in tooltips and the text summary, not the ± label (2a); one subtitle sentence with the margins from config (3); playoff and consolation weeks count, as in the spec (4) | Owner (1a 2a 3 agree 4 agree); wording drafted by Claude | UI_GUIDE.md "Charts" |
 | 2026-10-05 | History wording approved as drafted (subtitle, headings, column headers, luck and high-score lines), with the season count under each manager's name rather than its own column, so the table fits 360px; merge `past-seasons` right after `playoff-odds` | Owner | UI_GUIDE.md "History" |
 | 2026-10-05 | Playoff odds wording approved as drafted (section subtitle, column headers, "Clinched"/"Out"/"<1%"/">99%", the "How this works" paragraph); per-seed odds in the spec, the tie reading, and the stopping bracket check confirmed; merge after the Tue Oct 6 run is checked | Owner (1 approve, 2–4 agree) | UI_GUIDE.md "Playoff odds", METRICS_SPEC.md section 8 |
 | 2026-10-05 | Playoff odds definition, every recommended option accepted: normal model on scores relative to the week's league mean; team means shrunk toward the league mean with fixed `shrink_weeks` 6 (2025 calibration 6.5) and posterior uncertainty drawn once per simulated season; one pooled score SD; no recency weighting; median game decided from the same simulated scores; seeding by wins then points for, verified format only (anything else stops the run); a new check that our seeding matches Sleeper's provisional `winners_bracket`; 10,000 simulations; a seed per (season, week); outputs playoff, bye, and title odds and average final record from week 3; "Clinched"/"Out" only when a bound proves it, otherwise "<1%"/">99%" | Owner | METRICS_SPEC.md section 8 |
@@ -254,7 +257,7 @@ Dev/
 **Open product questions:**
 - The order of the remaining Phase 5 extras (section 9).
 - Where league members see updates: bookmark only, or also a weekly league-chat post (Phase 5 item 1). The owner is posting an introduction to the league by hand (2026-10-03).
-- Boom/bust weeks are explained in "How this works" but not displayed yet (owner wants them kept for a future display).
+- Boom/bust weeks: displayed on the Consistency chart on `boom-bust` (2026-10-05), wording awaiting approval.
 
 ## 7a. Running the weekly job
 
@@ -320,7 +323,7 @@ Ordered by impact on the unattended weekly job.
 
 **Remaining extras, in the owner's order (2026-10-05): boom/bust display, then season rollover, then the small items.** The weekly league-chat post isn't in the order (see the note in section 1). Work on `boom-bust`, stacked on `transaction-metrics`:
 - **Weekly league-chat post** (high value; see the note in section 1 before raising it).
-- **Boom/bust display** (low effort; data and copy already exist).
+- **Boom/bust display: built 2026-10-05** on `boom-bust` as ▲/▼ on the Consistency chart; wording awaiting approval. Merge after `transaction-metrics`.
 - **Season rollover** (required before the 2027 preseason, about August 2027): what the page shows between rollover and week 1 (the build stops on a season with no completed week, section 7), then the checklist in section 7a. With past seasons in the pipeline, 2026 simply becomes a past season: move `season` and `league_id` to 2027 and add its start date; `history_from` stays.
 - Smaller, any time: self-host the fonts (risk 8); the "Final rankings" line immediately after the season instead of after 8 days (one line; owner chose 8 days).
 
@@ -339,4 +342,4 @@ Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 r
 6. Merge `past-seasons` (step 2): the History wording is approved.
 7. Merge `bracket-view` (step 3): the Playoffs wording is approved.
 8. Merge `transaction-metrics` (step 4): everything on it is approved.
-9. Remaining extras in the owner's order (section 9): boom/bust display (design proposed 2026-10-05 on `boom-bust`), season rollover, the small items.
+9. Remaining extras in the owner's order (section 9): boom/bust display (built on `boom-bust`; get the wording approved, then merge after `transaction-metrics`), then season rollover, then the small items.

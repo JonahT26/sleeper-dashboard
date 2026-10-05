@@ -600,6 +600,22 @@ def test_consistency_chart_matches_metrics_season(season):
         steady, swingy = s.loc[top_down[0]], s.loc[top_down[-1]]
         assert f"Steadiest: {names[top_down[0]]} (±{steady.volatility:.1f} points)" in text
         assert f"Swingiest: {names[top_down[-1]]} (±{swingy.volatility:.1f})" in text
+        # Boom weeks are ▲ and bust weeks ▼ (owner, 2026-10-05), exactly as metrics_team_weeks flags them.
+        flags = season.tables["metrics_team_weeks"]
+        flags = flags[flags["week"] <= week].sort_values(["roster_id", "week"])
+        expected = ["triangle-up" if b else "triangle-down" if u else "circle" for b, u in zip(flags["is_boom"], flags["is_bust"])]
+        dots = fig["data"][1]
+        assert dots["marker"]["symbol"] == expected and dots["meta"]["rosters"] == flags["roster_id"].tolist(), f"week {week}"
+        assert sum(t.endswith(", a boom") for t in dots["hovertext"]) == int(flags["is_boom"].sum())
+        for column, label in (("boom_weeks", "booms"), ("bust_weeks", "busts")):
+            top = int(s[column].max())
+            tied = sorted(s.index[s[column] == top])
+            leaders = f"{len(tied)} teams with {top}" if len(tied) > 2 else " and ".join(names[r] for r in tied) + f" ({top})"
+            assert (f"Most {label}: {leaders}." if top else f"No {label} yet.") in text, f"week {week}"
+        margins = season.params["consistency"]
+        assert (f"▲ is a boom week, {margins['boom_margin']:g} or more points above that week's median; "
+                f"▼ a bust, {margins['bust_margin']:g} or more below.") in node.one(
+            "section", "chart-section", **{"aria-labelledby": f"consistency-{week}-title"}).one("p", "sub").text()
 
 
 def test_schedule_chart_matches_metrics_season(season):
