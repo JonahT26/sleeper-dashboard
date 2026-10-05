@@ -82,7 +82,7 @@ def test_a_message_too_long_for_groupme_drops_the_captions_then_stops():
 def test_this_seasons_message_matches_the_saved_tables():
     config = load_config()
     tables = load_tables(PROCESSED_DIR, names=["power_rankings", "teams", "awards"])
-    message = chat.compose(tables, config.season, config.chat)
+    message = chat.compose(tables, config.season, {**config.chat, "page_url": config.dashboard["page_url"]})
     power = tables["power_rankings"][tables["power_rankings"]["season"] == config.season]
     week = power["week"].max()
     names = tables["teams"][tables["teams"]["season"] == config.season].set_index("roster_id")["team_name"]
@@ -90,7 +90,7 @@ def test_this_seasons_message_matches_the_saved_tables():
     lines = message["text"].split("\n")
     assert message["week"] == week and lines[0] == f"Week {week} power rankings"
     assert lines[1:4] == [f"{r.rank}. {names[r.roster_id]} ({r.power_score:.1f})" for r in top.itertuples()]
-    assert lines[-1] == f"Full rankings: {config.chat['page_url']}" and len(message["text"]) <= chat.MAX_LENGTH
+    assert lines[-1] == f"Full rankings: {config.dashboard['page_url']}" and len(message["text"]) <= chat.MAX_LENGTH
     assert sum(line.split(":")[0] in {"Top score", "Heartbreaker", "Blowout", "Bench blunder"} for line in lines) == 2
 
 

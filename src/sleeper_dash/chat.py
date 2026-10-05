@@ -47,7 +47,7 @@ def check_params(params):
     if not isinstance(params.get("awards"), list) or not params.get("awards"):
         problems.append("chat.awards must list award keys, in order of preference")
     if not str(params.get("page_url", "")).startswith("https://"):
-        problems.append("chat.page_url must be the page's https:// address")
+        problems.append("dashboard.page_url must be the page's https:// address")
     if problems:
         raise ChatError("config.yaml: " + "; ".join(problems))
 
@@ -231,8 +231,9 @@ def release(message, posted_path=None):
 def _current_message(config):
     from sleeper_dash.validate import load_tables
 
-    check_params(config.chat)
-    return compose(load_tables(names=["power_rankings", "teams", "awards"]), config.season, config.chat)
+    params = {**config.chat, "page_url": config.dashboard.get("page_url", "")}  # one address for the page and the post
+    check_params(params)
+    return compose(load_tables(names=["power_rankings", "teams", "awards"]), config.season, params)
 
 
 def main(argv=None):
