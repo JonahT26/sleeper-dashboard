@@ -160,7 +160,7 @@ Added 2026-10-03 (owner request: stale data must be impossible to mistake for fr
 
 ### Playoff odds
 
-Added 2026-10-05 (Phase 5; definitions in `METRICS_SPEC.md` section 8). **The section's wording and its "How this works" paragraph are drafts awaiting the owner's approval**; the layout follows this guide.
+Added 2026-10-05 (Phase 5; definitions in `METRICS_SPEC.md` section 8). The section's wording and its "How this works" paragraph were approved by the owner as drafted, 2026-10-05; wording changes need approval again.
 
 - A section after the ladder, titled "Playoff odds", with a one-line subtitle: "Chances from 10,000 simulations of the rest of the season. The top 6 make the playoffs, and the top 2 get a first-round bye." After the last regular-season week: "The regular season is over and the top 6 are in; the top 2 have a first-round bye. Title odds come from 10,000 simulations of the playoffs." Numbers come from `config.yaml` and the league settings.
 - **A table, not a chart**, one row per team, the most likely playoff team first (playoff odds, then bye odds, then average final wins). Columns: Team, Projected record (average final record to 1 decimal, e.g. "16.2–11.8", head-to-head plus median games), Playoffs (bold, with a thin `--bar` bar from 0 to 100% under it on a `--hash` track), Bye, Title. Team names wrap; numbers right-aligned and tabular.

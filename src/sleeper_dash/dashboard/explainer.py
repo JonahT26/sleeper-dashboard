@@ -124,7 +124,7 @@ def sections(params, league):
         ]},
     ]
     odds = params.get("playoff_odds")
-    if odds and league.get("playoff_teams"):  # DRAFT, 2026-10-05: awaiting the owner's approval
+    if odds and league.get("playoff_teams"):  # owner-approved as drafted, 2026-10-05
         places, sims, k = league["playoff_teams"], odds["simulations"], odds["shrink_weeks"]
         out.append({"heading": "Playoff odds", "paragraphs": [
             f"Each update plays out the rest of the regular season and the playoffs {sims:,} times. A team's playoff odds are "
