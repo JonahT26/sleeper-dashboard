@@ -195,7 +195,7 @@ Added 2026-10-05 (Phase 5; metrics in `METRICS_SPEC.md` section 9). Layout, cont
 
 ### League-chat post
 
-Added 2026-10-05 (Phase 5; `chat.py`, RUNBOOK.md section 7). **Wording is a draft awaiting the owner's approval.** Plain text (GroupMe shows no formatting), at most 1,000 characters, one line each:
+Added 2026-10-05 (Phase 5; `chat.py`, RUNBOOK.md section 7). Wording and the award choice approved by the owner, 2026-10-05; changes need approval again. Plain text (GroupMe shows no formatting), at most 1,000 characters, one line each:
 
 - "Week 3 power rankings", then "1. ‹team› (57.8)" for the top 3 (power score to 1 decimal).
 - "Biggest riser: ‹team›, up 4 to #5" and "Biggest faller: ‹team›, down 3 to #9"; ties "Biggest risers: A (to #2) and B (to #6), up 1 each"; left out when nobody moved (week 1).
