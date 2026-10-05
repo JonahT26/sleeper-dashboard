@@ -64,7 +64,8 @@ Section order, top to bottom:
 7. **Consistency:** weekly score spread per team
 8. **Strength of schedule:** played and remaining
 9. **Rank history:** bump chart across weeks
-10. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section. **The owner reviews this copy before it is published** (decision 2026-10-02). Approved with no edits on 2026-10-02; the text lives in `dashboard/explainer.py` with every number filled in from `config.yaml`, so any wording change needs the owner's approval again. One section for the whole page (not per week), after the charts, in a reading column under 75 characters.
+10. **History** (Phase 5): every finished season, once for the whole page, not per week (Components, "History")
+11. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section. **The owner reviews this copy before it is published** (decision 2026-10-02). Approved with no edits on 2026-10-02; the text lives in `dashboard/explainer.py` with every number filled in from `config.yaml`, so any wording change needs the owner's approval again. One section for the whole page (not per week), after the charts, in a reading column under 75 characters.
 
 
 ### Mobile (360–430px)
@@ -168,6 +169,18 @@ Added 2026-10-05 (Phase 5; definitions in `METRICS_SPEC.md` section 8). The sect
 - **"Chance of each seed"** sits below in a closed `<details>`: the same rows with seeds 1–6, each cell its percentage on a `--bar` tint whose strength follows the probability (at most 60%), so the numbers carry the meaning and the tint only helps scanning. It opens instantly: the ladder's breakdown stays the page's one expand animation.
 - **Layout:** on phones it follows the ladder at full width; both tables fit at 360px (checked 2026-10-05), and a table scrolls sideways inside its own box if it ever has to. From 1024px it sits under the ladder in the left column while the awards column spans both.
 - **Hidden** before `min_weeks` and in playoff weeks (the table ends with the regular season; the playoff bracket is a separate Phase 5 extra).
+
+### History
+
+Design approved by the owner 2026-10-05 (pieces, rows, names, record scale). **The wording is a draft awaiting the owner's approval.** Built by `dashboard/history.py` from every saved season; a season counts once Sleeper's bracket names its champion.
+
+- One section for the whole page, after Rank history and before "How this works", the same whatever week is selected, at most 760px wide. Hidden until a season has finished.
+- Subtitle: "Every finished season, 2020–2025. Records are regular-season records, median games included; playoff results count as appearances and titles."
+- **Champions:** newest first, the season in Barlow Condensed 700 beside the manager's name; two columns on phones, three from 768px.
+- **All-time records:** a table of the managers in the current season, sorted by win % (2020 was a shorter season), then titles, then wins. Columns: Manager, Record (overall regular-season record, median games included, as on the ladder), Win % (whole number), Playoffs (seeded 1–6 in the winners bracket), Titles. The manager cell shows the Sleeper username, with "6 seasons; now ‹current team name›" under it: the season count shares that cell so the table fits a 360px phone (checked 2026-10-05; a separate Seasons column overflowed by 20px at 390px). Former managers are folded below in a closed `<details>`, "Former managers (2)", same columns, "5 seasons" under the name; it opens instantly.
+- **‹Last season› luck:** two lines, "Luckiest: **jryan7**, 20–8 with 18.2 expected wins (+1.8)." and "Unluckiest: …", from that season's final regular-season `metrics_season` row.
+- **Highest weekly score:** "**201.7** by jryan7, week 2 of 2021." over every week of the finished seasons, playoffs included.
+- Names are Sleeper usernames: managers are matched across seasons by owner ID, and team names change.
 
 ### Week selector
 

@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 
 from sleeper_dash.dashboard import build
+from sleeper_dash import seasons
 from sleeper_dash.dashboard.build import (
     DashboardError, award_value, bar, build_site, build_view, movement, nice_axis, record, render, signed, updated_text,
 )
@@ -36,7 +37,7 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining
     Contributions are exact (w × (50 + gap)), so they sum to the power score.
     """
     award_weeks = range(1, weeks + 1) if award_weeks is None else award_weeks
-    teams = pd.DataFrame({"season": 2026, "roster_id": range(1, n + 1),
+    teams = pd.DataFrame({"season": 2026, "roster_id": range(1, n + 1), "owner_id": [f"9{i:02d}" for i in range(1, n + 1)],
                           "team_name": team_names or [f"Team {i}" for i in range(1, n + 1)],
                           "display_name": [f"user{i}" for i in range(1, n + 1)]})
     power, season, awards, team_weeks, lineups = [], [], [], [], []
@@ -79,7 +80,41 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining
     return {"teams": teams, "team_weeks": pd.DataFrame(team_weeks), "lineups_optimal": pd.DataFrame(lineups),
             "power_rankings": pd.DataFrame(power), "metrics_season": pd.DataFrame(season),
             "awards": pd.DataFrame(awards, columns=["season", "week", "award", "award_name", "roster_id", "value", "caption", "player_id"]),
-            "playoff_odds": make_odds(range(3, min(weeks, 14) + 1), n)}
+            "playoff_odds": make_odds(range(3, min(weeks, 14) + 1), n),
+            "managers": seasons.build_managers(teams),
+            "winners_bracket": pd.DataFrame(columns=["season", "round", "matchup_id", "t1_roster_id", "t2_roster_id", "t1_from",
+                                                     "t2_from", "winner_roster_id", "loser_roster_id", "place"])}
+
+
+def with_history(tables, n=12):
+    """make_tables plus a finished 2025 season: team i is manager i except roster 12, a former manager (owner 999).
+
+    Seeds follow roster order; roster 3 wins the final. 2025 records: team i wins 28 − 2i of 28 games.
+    """
+    past = make_tables(weeks=14, n=n)
+    for name in ("teams", "team_weeks", "metrics_season"):
+        past[name] = past[name].assign(season=2025)
+    past["teams"].loc[past["teams"]["roster_id"] == n, ["owner_id", "display_name"]] = ["999", "gone"]
+    final = past["metrics_season"]["through_week"] == 14
+    ids = past["metrics_season"]["roster_id"]
+    past["metrics_season"].loc[final, "wins"] = 28 - 2 * ids[final]
+    past["metrics_season"].loc[final, "losses"] = 2 * ids[final]
+    past["metrics_season"].loc[final, "luck"] = (ids[final] - 6.5) / 2
+    past["metrics_season"].loc[final, "expected_wins"] = past["metrics_season"].loc[final, "wins"] - past["metrics_season"].loc[final, "luck"]
+    past["team_weeks"].loc[(past["team_weeks"]["week"] == 2) & (past["team_weeks"]["roster_id"] == 5), "points"] = 210.55
+    bracket = pd.DataFrame([
+        {"season": 2025, "round": 1, "matchup_id": 1, "t1_roster_id": 4, "t2_roster_id": 5, "t1_from": None, "t2_from": None},
+        {"season": 2025, "round": 1, "matchup_id": 2, "t1_roster_id": 3, "t2_roster_id": 6, "t1_from": None, "t2_from": None},
+        {"season": 2025, "round": 2, "matchup_id": 3, "t1_roster_id": 1, "t2_roster_id": 4, "t1_from": None, "t2_from": "W1"},
+        {"season": 2025, "round": 2, "matchup_id": 4, "t1_roster_id": 2, "t2_roster_id": 3, "t1_from": None, "t2_from": "W2"},
+        {"season": 2025, "round": 3, "matchup_id": 6, "t1_roster_id": 1, "t2_roster_id": 3, "t1_from": "W3", "t2_from": "W4",
+         "winner_roster_id": 3, "loser_roster_id": 1, "place": 1},
+    ])
+    out = {name: pd.concat([past[name], table], ignore_index=True) if name in ("teams", "team_weeks", "metrics_season") else table
+           for name, table in tables.items()}
+    out["winners_bracket"] = bracket
+    out["managers"] = seasons.build_managers(out["teams"])
+    return out
 
 
 def make_odds(weeks, n=12):
@@ -357,3 +392,33 @@ def test_the_last_regular_season_week_says_the_field_is_set():
     assert "The regular season is over and the top 6 are in" in odds_rows(html, 14)
     assert "Chances from 10,000 simulations" in odds_rows(html, 13)
     assert odds_rows(html, 15) is None  # playoff weeks: the table ends at week 14
+
+
+# --- History (UI_GUIDE.md "History") ------------------------------------------------------------
+
+def history_section(html):
+    found = re.search(r'<section class="history".*?</section>', html, re.S)
+    return found and html_lib.unescape(found.group(0))
+
+
+def test_history_is_hidden_until_a_season_has_finished():
+    assert history_section(page()) is None
+
+
+def test_history_shows_champions_records_luck_and_the_high_score():
+    html = render(build_view(with_history(make_tables()), RUN, METRICS))
+    section = history_section(html)
+    assert "Every finished season, 2025." in section
+    assert re.search(r'<span class="c-season[^"]*">2025</span> <span class="c-name">user3</span>', section)
+    current, former = section.split('<details class="former">')
+    names = re.findall(r'<span class="h-name">([^<]+)</span>', current)
+    assert names == [f"user{i}" for i in range(1, 12)]  # by win %: team i won 28 − 2i of 28
+    assert "Former managers (1)" in former and '<span class="h-name">gone</span>' in former
+    assert "1 season; now Team 1" in current and "1 season</span>" in former
+    row = re.search(r'<span class="h-name">user3</span>.*?</tr>', current, re.S).group(0)
+    assert [td for td in re.findall(r'<td class="num">([^<]+)</td>', row)] == ["22–6", "79%", "1", "1"]  # playoffs, titles
+    assert "Luckiest: <strong>gone</strong>, 4–24 with 1.2 expected wins (+2.8)." in section
+    assert "Unluckiest: <strong>user1</strong>, 26–2 with 28.8 expected wins (−2.8)." in section
+    assert "<strong>210.6</strong> by user5, week 2 of 2025." in section
+    assert html.index('class="history"') < html.index('id="how-title"')
+    assert "<template" not in section  # once for the whole page, not per week

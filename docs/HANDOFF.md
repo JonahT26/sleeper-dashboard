@@ -11,7 +11,7 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 a
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
 | 4 · Automation (weekly GitHub Action, GitHub Pages, monitoring, rollback, runbook) | **Complete** (2026-10-03) |
-| 5 · Extras | **In progress** (2026-10-05): playoff odds built on the `playoff-odds` branch (metric, checks, calibration notebook, page section) and approved; merge after the Tue Oct 6 run is checked. Past seasons (2020–2025) built on `past-seasons`, stacked on it; History section proposed, awaiting approval. Order of the other extras not confirmed (section 9) |
+| 5 · Extras | **In progress** (2026-10-05): playoff odds built on the `playoff-odds` branch (metric, checks, calibration notebook, page section) and approved; merge after the Tue Oct 6 run is checked. Past seasons (2020–2025) and the History section built on `past-seasons`, stacked on it; History wording awaiting approval. Order of the other extras not confirmed (section 9) |
 
 As of 2026-10-03, end of session (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
 
@@ -202,6 +202,7 @@ Dev/
 | 2026-10-05 | Playoff odds built on a branch (`playoff-odds`), not `main`: the first scheduled run (Tue Oct 6) should be checked on unchanged code, and the page wording needs the owner's approval before the next run publishes it | Claude (rule 11; owner to confirm the merge) | section 9 |
 | 2026-10-05 | Per-seed probabilities added to playoff odds (`p_seed_1` … `p_seed_6`) and shown in a folded "Chance of each seed" table | Owner (request), Claude (display) | METRICS_SPEC.md section 8, UI_GUIDE.md |
 | 2026-10-05 | A tie on wins and points for at the end of the regular season stops the run only when it affects seeding (inside or straddling the top 6); "Seeding matches Sleeper's bracket" is a stopping check like the other Sleeper reconciliations, and passes with "nothing to compare" when Sleeper has no filled-in bracket | Claude's reading, flagged to the owner | METRICS_SPEC.md section 8 |
+| 2026-10-05 | History section design: champions, all-time records, last season's luckiest and unluckiest, highest weekly score; current managers with former ones folded; Sleeper usernames with the current team name; regular-season records including median games. Built with the season count under each name instead of its own column, so the table fits 360px (Claude, to flag); wording awaiting approval | Owner (1–4 agree) | UI_GUIDE.md "History" |
 | 2026-10-05 | Past seasons: every season Sleeper has (2020–2025, `history_from: 2020`), re-downloaded every run (rule 1); start dates the Wednesday before kickoff; past usernames, team names and owner IDs committed publicly like 2026's; managers matched by owner ID | Owner (1–4 agree) | config.yaml, CODEBASE.md |
 | 2026-10-05 | Sleeper's stale season totals in 2020, 2021 and 2023 (13 teams, one game each) listed in `config.yaml` `sleeper_points_gaps`; the points check allows exactly these (option 1a over warning-only or dropping those seasons) | Owner | config.yaml, CODEBASE.md "Known quirks" |
 | 2026-10-05 | A player may fill the single-position slot he actually started in that week, as well as his positions today (changes one past team-week, 2021 week 8, and nothing in 2026) | Owner | METRICS_SPEC.md section 3 |
@@ -302,7 +303,7 @@ What each needs:
    - **Design:** choose a form with the owner, such as a count beside each team or a small table. The data and its explanation already exist.
    - **Rules to follow:** UI_GUIDE.md's hidden-section rule (weeks with no data show nothing), and a `test_page` check that the numbers equal `metrics_season`.
 4. **Past seasons.**
-   - **Data: done** (2026-10-05, branch `past-seasons`, stacked on `playoff-odds`): every season 2020–2025 rebuilt on each run with the 2026 code, all 17 checks passing in every season; `managers` table. The History section is proposed to the owner and not built yet.
+   - **Data: done** (2026-10-05, branch `past-seasons`, stacked on `playoff-odds`): every season 2020–2025 rebuilt on each run with the 2026 code, all 17 checks passing in every season; `managers` table. The History section is built (design approved; wording awaiting approval).
    - **Data:** the previous league is `1243747994637963265` (reached through `previous_league_id`).
    - **Already proven:** on 2026-10-03 the real pipeline and page build ran on all 17 weeks of 2025 in a scratch folder (14 of 14 checks; page 1.3 MB raw). It worked by pointing the module paths at a temporary folder and passing a `Config` for 2025, the same pattern as the `run_pipeline` fixture in `tests/test_pipeline_offline.py`.
    - **Still needed:**

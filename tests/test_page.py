@@ -176,31 +176,50 @@ def assert_bar(span, gap, axis_end):
 
 # --- The two pages ----------------------------------------------------------------------------
 
-def built(tables, params):
+def built(tables, params, page_tables=None):
+    """Build a page. tables: what the expectations read; page_tables: what the page is built from, if different
+    (this season's page is built from every saved season, which only the History section uses)."""
     weeks = sorted(int(w) for w in tables["power_rankings"]["week"].unique())
-    html = render(build_view(tables, {**RUN, "weeks": weeks}, params, build.freshness(RUN, 8, build.workflow_schedule())))
+    html = render(build_view(page_tables if page_tables is not None else tables, {**RUN, "weeks": weeks}, params,
+                             build.freshness(RUN, 8, build.workflow_schedule())))
     return SimpleNamespace(tables=tables, params=params, html=html, doc=parse(html))
 
 
+def stacked_tables():
+    """Every saved season, as the page reads them."""
+    return load_tables(PROCESSED_DIR, names=build.TABLES)
+
+
+def current_only(tables, season):
+    return {n: t[t["season"] == season].reset_index(drop=True) if "season" in t.columns else t for n, t in tables.items()}
+
+
 def this_season():
-    """The saved tables hold every season (Phase 5); the page shows the configured one, so the expectations do too."""
+    """The saved tables hold every season (Phase 5); the weekly sections show the configured one, so the expectations do too."""
     config = load_config()
-    tables = load_tables(PROCESSED_DIR, names=build.TABLES)
-    return {n: t[t["season"] == config.season].reset_index(drop=True) for n, t in tables.items()}, config.metrics
+    return current_only(stacked_tables(), config.season), config.metrics
 
 
-def test_the_page_shows_only_the_current_season_from_the_stacked_tables():
+def without_history(html):
+    return re.sub(r'<section class="history".*?</section>\n?', "", html, flags=re.S)
+
+
+def test_the_weekly_sections_show_only_the_current_season_from_the_stacked_tables():
     config = load_config()
-    stacked = load_tables(PROCESSED_DIR, names=build.TABLES)
+    stacked = stacked_tables()
     assert stacked["team_weeks"]["season"].nunique() == len(config.seasons)  # every season is saved
     current, params = this_season()
-    assert built(stacked, params).html == built(current, params).html
+    with_past = built(current, params, page_tables=stacked).html
+    assert 'class="history"' in with_past and 'class="history"' not in built(current, params).html
+    assert without_history(with_past) == built(current, params).html
 
 
 @pytest.fixture(scope="module", params=["this season", "synthetic 17 weeks"])
 def season(request):
-    tables, params = this_season() if request.param == "this season" else (make_tables(weeks=17), METRICS)
-    return built(tables, params)
+    if request.param == "this season":
+        tables, params = this_season()
+        return built(tables, params, page_tables=stacked_tables())
+    return built(make_tables(weeks=17), METRICS)
 
 
 def standings(tables, week):
@@ -659,3 +678,60 @@ def test_playoff_odds_numbers_match_the_table_for_every_week(season):
                                                                for s in range(1, 7)]
             checked += 1
     assert checked == len(odds[odds["week"].isin(week_nodes(season.doc))])
+
+
+# --- History matches the saved tables (UI_GUIDE.md "History") ------------------------------------
+
+def test_history_matches_every_finished_season_in_the_saved_tables():
+    config = load_config()
+    stacked = stacked_tables()
+    current, params = this_season()
+    doc = built(current, params, page_tables=stacked).doc
+    section = doc.one("section", "history")
+    teams, managers, bracket = stacked["teams"], stacked["managers"].set_index("owner_id"), stacked["winners_bracket"]
+    owner = {(t.season, t.roster_id): t.owner_id for t in teams.itertuples()}
+    finals = bracket[(bracket["place"] == 1) & bracket["winner_roster_id"].notna()]
+    seasons = sorted(finals["season"].tolist())
+    assert seasons == list(range(config.seasons[0], config.season))  # every past season, not the one under way
+    assert f"{seasons[0]}{EN_DASH}{seasons[-1]}" in section.one("p", "sub").text()
+
+    champions = [(int(li.one("span", "c-season").text()), li.one("span", "c-name").text()) for li in section.one("ol", "champions").all("li")]
+    assert champions == [(int(g.season), managers.at[owner[(g.season, int(g.winner_roster_id))], "display_name"])
+                         for g in finals.sort_values("season", ascending=False).itertuples()]
+
+    # All-time records, worked out here from metrics_season's final regular-season rows.
+    ms = stacked["metrics_season"]
+    ms = ms[ms["season"].isin(seasons)]
+    final = ms[ms["through_week"] == ms.groupby("season")["through_week"].transform("max")]
+    totals = {}
+    for r in final.itertuples():
+        t = totals.setdefault(owner[(r.season, r.roster_id)], [0, 0, 0, 0])
+        t[0] += r.wins; t[1] += r.losses; t[2] += r.ties; t[3] += 1
+    tables = section.all("table", "alltime")
+    rows = [tr for table in tables for tr in table.one("tbody").all("tr")]
+    assert len(rows) == len(totals) == len(managers)
+    current_owners = set(teams.loc[teams["season"] == config.season, "owner_id"])
+    assert len(tables[0].one("tbody").all("tr")) == len(current_owners)  # current managers first; former ones folded below
+    for tr in rows:
+        name = tr.one("span", "h-name").text()
+        oid = managers.index[managers["display_name"] == name][0]
+        w, l, t, n = totals[oid]
+        cells = [td.text() for td in tr.all("td")]
+        assert cells[0] == EN_DASH.join(str(x) for x in ((w, l, t) if t else (w, l)))
+        assert cells[1] == f"{round((w + t / 2) / (w + l + t) * 100)}%"
+        assert cells[3] == str(sum(owner[(int(g.season), int(g.winner_roster_id))] == oid for g in finals.itertuples()))
+        assert tr.one("span", "h-team").text().startswith(f"{n} season")
+    pcts = [int(tr.all("td")[1].text().rstrip("%")) for tr in tables[0].one("tbody").all("tr")]
+    assert pcts == sorted(pcts, reverse=True)
+
+    # Last season's luck and the highest weekly score
+    last = final[final["season"] == seasons[-1]]
+    lines = [p.text() for p in section.all("p", "h-line")]
+    luckiest, unluckiest = last.loc[last["luck"].idxmax()], last.loc[last["luck"].idxmin()]
+    assert lines[0].startswith(f"Luckiest: {managers.at[owner[(luckiest.season, luckiest.roster_id)], 'display_name']},")
+    assert lines[1].startswith(f"Unluckiest: {managers.at[owner[(unluckiest.season, unluckiest.roster_id)], 'display_name']},")
+    assert f"({MINUS}{abs(unluckiest.luck):.1f})" in lines[1]
+    weeks = stacked["team_weeks"][stacked["team_weeks"]["season"].isin(seasons)]
+    best = weeks.loc[weeks["points"].idxmax()]
+    assert lines[2] == (f"{best.points:.1f} by {managers.at[owner[(best.season, best.roster_id)], 'display_name']}, "
+                        f"week {best.week} of {best.season}.")
