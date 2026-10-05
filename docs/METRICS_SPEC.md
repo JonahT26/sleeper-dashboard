@@ -13,8 +13,9 @@ The source of truth for every metric. Code follows this file, not the other way 
 | 5 | Strength of schedule | **Confirmed** 2026-10-02 |
 | 6 | Power score | **Confirmed** 2026-10-02 |
 | 7 | Weekly awards | **Confirmed** 2026-10-02 |
+| 8 | Playoff odds | **Confirmed** 2026-10-05 (Phase 5), not built yet |
 
-All seven definitions are confirmed. Next: build them in the order of `docs/CODEBASE.md` "Adding a new metric" (pure function, invariant tests, pipeline wiring, docs update).
+Metrics 1–7 are confirmed and built (Phase 2). Metric 8 was confirmed in the Phase 5 interview and is built next, in the order of `docs/CODEBASE.md` "Adding a new metric" (pure function, invariant tests, pipeline wiring, docs update).
 
 ## Conventions that apply to every metric
 
@@ -464,3 +465,123 @@ Pickup of the Week has **no recency limit** (owner decision): any waiver or free
 5. The `mvp` player was a starter for the winning team that week, and no starter that week scored more.
 6. The `pickup_of_the_week` player was a starter for the winning team, and that team's most recent add of him (at or before that week) was a `waiver` or `free_agent` transaction.
 7. Every key in `metrics.awards.enabled` is one of the keys above.
+
+---
+
+## 8. Playoff odds
+
+**Status:** confirmed by the owner, 2026-10-05 (Phase 5 interview; every recommended option accepted).
+
+**Meaning.** Each team's chance of making the playoffs, earning a first-round bye, and winning the championship, plus its average final record, from simulating the rest of the season many times. Recomputed after every completed regular-season week, so the odds have a week-by-week history.
+
+**League format** (read from league settings at runtime; values for 2026, identical to 2025):
+
+| Setting | Value | Meaning |
+|---|---|---|
+| `playoff_teams` | 6 | Top 6 qualify |
+| `playoff_week_start` | 15 | Regular season is weeks 1 to *R* = 14; playoffs weeks 15–17 |
+| `playoff_round_type` | 0 | One week per round |
+| `playoff_seed_type` | 0 | Fixed bracket, no reseeding |
+| `league_average_match` | 1 | Weekly median game on |
+
+Bracket: week 15, seed 3 v 6 and 4 v 5, seeds 1 and 2 on a bye; week 16, seed 1 v the 4-v-5 winner and seed 2 v the 3-v-6 winner; week 17, the final. **Seeding:** overall wins (head-to-head plus median; a tied game is half a win), then points for. Evidence (2026-10-05): in 2025, two teams finished 14–14 and the one with more points for took the 6th seed (their head-to-head was 1–1, so that case alone doesn't rule out a head-to-head tiebreaker); seed 1 met seed 5 although seed 6 also advanced, so there is no reseeding; Sleeper's provisional 2026 bracket after week 3 matches wins-then-points-for exactly, including a four-way tie at 3–3 sorted by points for.
+
+**Formula.** Odds are computed through each regular-season week *t* from `min_weeks` to *R*. Let *N* be the number of teams, *G* = *R* − *t* the regular-season weeks left, and *P* = `playoff_teams`.
+
+*Step 1: relative scores.* *d₍ᵢ,w₎* = *p₍ᵢ,w₎* − *p̄₍w₎*, where *p̄₍w₎* is the mean points of all teams in week *w*. A league-wide swing moves every team equally, so it cannot change a head-to-head result, a median result, or the points-for order; modelling scores relative to the week removes it (the SD of weekly league means was 6.4 in 2025).
+
+*Step 2: estimate each team's strength* (normal model, team means shrunk toward the league mean, owner decision). With *k* = `shrink_weeks` and *d̄ᵢ* the team's mean relative score over weeks 1…*t*:
+
+| Quantity | Definition |
+|---|---|
+| Score SD *σ̂* | pooled within-team SD of relative scores this season: √( Σᵢ Σ₍w≤t₎ (*d₍ᵢ,w₎* − *d̄ᵢ*)² ÷ (*N*(*t* − 1)) ). One value for every team (owner decision: the 2025 team SDs differed no more than chance) |
+| Strength estimate *m̂ᵢ* | *t* ÷ (*t* + *k*) · *d̄ᵢ*: the posterior mean under a prior N(0, *σ̂*²/*k*) on a team's true mean |
+| Strength uncertainty *vᵢ* | *σ̂*² ÷ (*t* + *k*): the posterior variance |
+
+Every completed week counts equally; recent weeks get no extra weight (owner decision).
+
+*Step 3: simulate*, `simulations` times. In simulation *s*:
+1. Draw each team's true mean once for the whole simulated season: *μᵢ*⁽ˢ⁾ ~ N(*m̂ᵢ*, *vᵢ*). Drawing it once makes a team's remaining weeks move together, so the odds carry the uncertainty about how good each team really is.
+2. For every remaining week, regular season and playoffs: *d₍ᵢ,w₎*⁽ˢ⁾ = *μᵢ*⁽ˢ⁾ + *ε*, *ε* ~ N(0, *σ̂*²), independently for each team and week.
+3. Regular-season weeks *t* + 1 … *R*: head-to-head games from the published schedule (`schedule` table); the higher simulated score wins. When the league plays a median game, the top *N*/2 simulated scores that week each win it and the rest lose it.
+4. Final standings: wins = actual overall wins through *t* (ties count ½) + simulated wins; points for = actual points for through *t* + the sum of simulated relative scores. (Adding the same weekly league mean to every team would not change the order, so it is left out.) Rank by wins, then points for; the top *P* qualify.
+5. Playoffs: play the bracket above with the simulated playoff-week scores; the final's winner is champion.
+
+*Step 4: summarise*, per team:
+
+| Output | Definition |
+|---|---|
+| Playoff odds | share of simulations in which the team is seeded 1…*P* |
+| Bye odds | share seeded 1 or 2 |
+| Title odds | share in which it wins the final |
+| Average final record | mean final wins, counting whole wins only (actual + simulated); losses = games − wins − actual ties, with 2*R* games per team with a median game and *R* without |
+| Clinched | **proved** by a bound, not the simulation: at most *P* − 1 other teams can still reach this team's current wins (another team's maximum = its current wins + 2*G*, or + *G* without a median game) |
+| Out | **proved**: at least *P* other teams already have more wins than this team's maximum |
+
+Both bounds ignore that remaining opponents play each other, so they are conservative: a team may be mathematically safe or out before they say so. When no regular-season games remain (*t* = *R*), the standings are final and every team is Clinched or Out.
+
+Display (details and design go in `UI_GUIDE.md` when the section is built): percentages as whole numbers; "Clinched" and "Out" only when proved; otherwise a value that rounds to 0% shows as "<1%" and one that rounds to 100% as ">99%". The section appears from week `min_weeks`, hidden before, like consistency and strength of schedule.
+
+*Reproducibility.* Each week's simulation has its own seed, derived from (`seed`, season, *t*) with numpy's `SeedSequence` and the PCG64 generator. Teams are always processed in `roster_id` order, and the draw order is fixed in code (changing it changes the numbers, so it counts as a model change). Probabilities are counts ÷ `simulations`, so they are identical on Windows and on GitHub's Linux machines; averages are stored rounded to 4 decimal places. Two runs on the same data give byte-identical output; a stat correction changes the inputs and so the numbers, as intended. Every completed week's odds are recomputed on every run (full refresh).
+
+Owner decisions (2026-10-05):
+- Normal model with shrinkage and posterior uncertainty, over a bootstrap of each team's own scores (3–13 values per team, no shrinkage, can never produce a score the team hasn't posted) and over a power-score-driven model (the power score is a 0–100 index rather than points, and it contains head-to-head wins, which would feed past luck into the odds).
+- One pooled *σ̂* rather than one per team.
+- A fixed *k* in `config.yaml` rather than re-estimated each week (with 3 weeks the estimate is 4.9; if the estimated between-team spread comes out at 0, *k* is infinite).
+- No recency weighting.
+- The median game decided from the same simulated scores.
+- 10,000 simulations; a seed per (season, week).
+- Championship odds included, because the bracket is verified and playoff-week scores come from the same model.
+
+**Calibration** (2025 regular season, 168 team-weeks; checked 2026-10-05):
+
+| Quantity | Value |
+|---|---|
+| Within-team SD *σ* | 20.8 |
+| SD of teams' true means *τ* | 8.1 |
+| *k* = *σ*²/*τ*² | 6.5 weeks, so *m̂* puts weight 0.32 on a team's own mean after 3 weeks, 0.52 after 7, 0.67 after 13 |
+| Residual shape | close to normal: skew 0.08, excess kurtosis 0.42, Shapiro p = 0.67 |
+| Team SDs | 13.5–29.0; spread no larger than chance under one common SD (p = 0.15) |
+
+Backtest, predicting each team's next-week relative score from earlier weeks only (weeks 4–14, 132 predictions), RMSE: league average 23.35; own mean unshrunk 22.95; **own mean shrunk 22.60**; last 3 weeks unshrunk 24.28; recency-weighted with a 3-week half-life, shrunk, 22.49 (0.5% better than equal weights, within noise). Team strength explains a small share of weekly scores, so honest odds stay fairly open until late in the season. 2026 weeks 1–3 give *σ* 21.3, *τ* 9.6, *k* 4.9. Recheck *k* on 2026's 14 weeks after week 14.
+
+**Inputs.** `team_weeks`: `week`, `roster_id`, `points`, `result`, `median_result`, `is_playoff`. `schedule`: remaining regular-season pairings. League settings: `num_teams`, `playoff_week_start`, `playoff_teams`, `playoff_round_type`, `playoff_seed_type`, `league_average_match`. **New data:** Sleeper's `winners_bracket` (1 API call per run), used only by sanity check 8.
+
+**Output table** `playoff_odds`, one row per team per week *t*: `season`, `week`, `roster_id`, `strength` (*m̂ᵢ*, points per week above the league average), `strength_sd` (√*vᵢ*), `score_sd` (*σ̂*, same for every team that week), `p_playoffs`, `p_bye`, `p_title`, `avg_wins`, `avg_losses`, `clinched`, `out`. Schema details go in `docs/CODEBASE.md` when built.
+
+**Parameters** (`config.yaml`):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `metrics.playoff_odds.simulations` | 10000 | Simulated seasons per week. Monte Carlo error on any probability is at most 0.5 percentage points (one SE) |
+| `metrics.playoff_odds.seed` | 2026 | Base random seed; each week's seed is derived from it, the season, and the week |
+| `metrics.playoff_odds.shrink_weeks` | 6 | *k*: the prior counts as this many weeks of data (2025 calibration 6.5) |
+| `metrics.playoff_odds.min_weeks` | 3 | First week with odds; must be at least 2, because *σ̂* needs two weeks per team, or the run stops |
+
+`simulations` must be a positive integer and `shrink_weeks` greater than 0, or the run stops.
+
+**Edge cases.**
+
+| Case | Rule |
+|---|---|
+| Weeks before `min_weeks` | No rows; the section is hidden |
+| Playoff weeks | No new rows in v1: the table ends at week *R*, where playoff and bye odds are final and title odds are the pre-playoff simulation. Updating title odds during the playoffs needs the real bracket results and belongs with the playoff bracket extra |
+| Playoff settings other than the verified format | The run stops with a message naming the setting (e.g. reseeding, two-week rounds, a different `playoff_teams`), rather than guessing a bracket |
+| League without a median game | Step 3 skips the median game; a team plays *R* games and its maximum adds *G* |
+| Actual head-to-head ties | Half a win in the standings, as Sleeper's record counts them. Simulated scores are continuous, so simulated ties have zero probability |
+| Teams level on wins and points for to 2 decimal places at the end of the regular season | The run stops with a clear message: no tie rule is known (same approach as median ties) |
+| Stat corrections, schedule changes | Recomputed every run (full refresh); the remaining schedule is re-read from Sleeper |
+| Trades, injuries, roster changes | Not modelled: the model sees scores only. A team that just traded for a star is valued on its past scores until new weeks arrive |
+| Empty starting slots, players added mid-week | No adjustment. Actual scores stand |
+
+**Expected range.** Probabilities between 0 and 1. Early in the season most playoff odds sit between about 20% and 80% (the league-wide average is *P*/*N* = 50%), spreading towards 0 and 1 as weeks pass. Strength estimates mostly within ±15 points per week. Average final wins between current wins and current wins + 2*G*.
+
+**Sanity checks.**
+1. Every probability is between 0 and 1, and for every team title odds ≤ playoff odds and bye odds ≤ playoff odds.
+2. Every week, the playoff odds sum to exactly *P*, bye odds to 2, and title odds to 1 (exact, since they are counts).
+3. Every week, the league's average final wins sum to the regular season's total wins: *N* · *R* with a median game (*N* · *R* ÷ 2 without), minus one for each tied head-to-head game so far (±0.000001).
+4. A Clinched team has playoff odds 1; an Out team has playoff, bye, and title odds 0.
+5. At *t* = *R*, playoff and bye odds are all 0 or 1 and match the actual final seeding.
+6. Two runs on the same data give identical tables; a different `seed` moves each probability by no more than Monte Carlo error (4 standard errors).
+7. With the same seed, adding a constant to every past score of one team never lowers its playoff or bye odds. (Title odds are excluded: a better seed can mean a different, stronger first opponent in some simulations.)
+8. **Seeding matches Sleeper:** in the latest completed regular-season week, our seeding (wins, then points for) gives the same bye teams and the same first-round pairings as Sleeper's provisional `winners_bracket`. This checks the tiebreaker against Sleeper every week.

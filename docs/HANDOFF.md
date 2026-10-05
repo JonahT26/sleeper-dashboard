@@ -11,7 +11,7 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 a
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
 | 4 · Automation (weekly GitHub Action, GitHub Pages, monitoring, rollback, runbook) | **Complete** (2026-10-03) |
-| 5 · Extras | Planned, not started. Ask the owner to confirm the order in section 9 |
+| 5 · Extras | **In progress** (2026-10-05): playoff odds spec confirmed (METRICS_SPEC.md section 8), not built yet. Order of the other extras not confirmed (section 9) |
 
 As of 2026-10-03, end of session (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
 
@@ -133,6 +133,7 @@ Dev/
 - **Weekly median game is on**; records include it.
 - **Calendar:** playoffs from week 15 (6 teams). The 14-week schedule is an 11-week round robin plus weeks 1–3 repeated, so **remaining strength of schedule is exactly 0.0 for everyone after week 3** (the chart shows one panel and says so in its subtitle); from week 4 the second panel appears.
 - **Completed-week rule:** the smaller of league `last_scored_leg` and `/state/nfl` week − 1. Week 4 becomes available after Monday night's game is scored (likely Tuesday Oct 6).
+- **Playoff format and tiebreaker** (verified 2026-10-05 against the 2025 bracket and Sleeper's provisional 2026 bracket): 6 teams, seeds 1 and 2 on a bye, one week per round (weeks 15–17), fixed bracket with no reseeding (1 v 4/5 winner, 2 v 3/6 winner); seeded by overall wins (head-to-head plus median), then points for. Sleeper publishes a provisional `winners_bracket` from the current standings during the regular season. Details in METRICS_SPEC.md section 8.
 - **Previous season** league ID `1243747994637963265` (Phase 5): same settings (12 teams, 6-team playoffs from week 15, median game on, but 9 starting slots, not 10). Its finished playoffs are the evidence behind risk 4.
 
 ## 6. Decisions log
@@ -197,6 +198,8 @@ Dev/
 | 2026-10-03 | Owner's runbook (`docs/RUNBOOK.md`); rollback workflow added and published pages kept 90 days so last week's page can be restored | Owner (request), Claude (rollback design) | RUNBOOK.md, rollback.yml, weekly.yml |
 | 2026-10-03 | Phase 4 closed; Phase 5 plan written with the extras ordered by value and effort (section 9), order awaiting the owner's confirmation; CLAUDE.md rules 11–13 added (publish only through the workflows, keep the runbook true, explain a failed run before fixing) | Owner (request), Claude (order, rule wording) | CLAUDE.md, section 9 |
 | 2026-10-03 | Failure email and failed-run summary tested with a throwaway branch (`test-failure-email`, deleted after) whose run failed on purpose; nothing published | Owner (approved), Claude | — |
+| 2026-10-05 | Phase 5 starts with the playoff odds spec (owner asked for the interview); the order of the other extras is still to confirm | Owner | section 9 |
+| 2026-10-05 | Playoff odds definition, every recommended option accepted: normal model on scores relative to the week's league mean; team means shrunk toward the league mean with fixed `shrink_weeks` 6 (2025 calibration 6.5) and posterior uncertainty drawn once per simulated season; one pooled score SD; no recency weighting; median game decided from the same simulated scores; seeding by wins then points for, verified format only (anything else stops the run); a new check that our seeding matches Sleeper's provisional `winners_bracket`; 10,000 simulations; a seed per (season, week); outputs playoff, bye, and title odds and average final record from week 3; "Clinched"/"Out" only when a bound proves it, otherwise "<1%"/">99%" | Owner | METRICS_SPEC.md section 8 |
 
 ## 7. Open questions and assumptions to verify
 
@@ -276,7 +279,7 @@ What each needs:
    - **Automatic posting (later, if wanted):** the owner must first say which app the league uses. Sleeper's API is read-only, so posting needs another channel (a Discord or GroupMe webhook, for example) and a secret stored in GitHub. That makes it rule 7 territory: stop and ask before setting one up.
    - **Copy and size:** the wording needs approval (tone: trash talk only in the awards, UI_GUIDE.md). It's about one session.
 2. **Playoff odds.**
-   - **Spec first:** write the definition into METRICS_SPEC.md with the owner before any code. It has to settle the model for future scores (each team's mean and spread, shrunk early in the season?), the number of simulations, the median game, tie-breakers (Sleeper's: record, then points for?), and a 6-team, top-6 format.
+   - **Spec: done** (owner, 2026-10-05): METRICS_SPEC.md section 8, with the 2025 calibration and backtest behind each choice. Target: live by the Tuesday Oct 27 run (week 7 data; week 6 lands Oct 20). One extra API call (`winners_bracket`) for the seeding check.
    - **Data:** the remaining schedule is already in `schedule`.
    - **Build:** a new table with metric checks (odds between 0 and 1, six playoff spots shared out across the league each week), a section after the ladder (UI_GUIDE.md), and "How this works" copy, which needs approval.
    - **Rules:** use a fixed random seed so reruns give the same numbers (rule 1: every run is a full recompute).

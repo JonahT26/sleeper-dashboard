@@ -85,7 +85,7 @@ Keep this list current as commands are added.
 
 ## Current status
 
-**Phase 4 — Automation: complete (2026-10-03),** including monitoring (run summaries, failure emails tested, the stale-data line), rollback, and the runbook. Phase 5 — Extras is next: the plan, with the extras ordered by value and effort, is in `docs/HANDOFF.md` section 9; ask me which comes first. Update this section at the end of every phase.
+**Phase 4 — Automation: complete (2026-10-03),** including monitoring (run summaries, failure emails tested, the stale-data line), rollback, and the runbook. Phase 5 — Extras is in progress: the playoff odds definition is confirmed (`docs/METRICS_SPEC.md` section 8, 2026-10-05) and is built next; the plan for the other extras is in `docs/HANDOFF.md` section 9. Update this section at the end of every phase.
 
 **Starting a new session? Read `docs/HANDOFF.md` first.** It covers working style, environment quirks, the decisions log, open questions, and the next steps.
 
@@ -139,6 +139,6 @@ Roadmap:
 
 ## Open decisions
 
-- Which Phase 5 extra comes first (`docs/HANDOFF.md` section 9 has a recommended order).
+- The order of the Phase 5 extras after playoff odds (`docs/HANDOFF.md` section 9).
 - Where league members see updates: bookmark only, or also a weekly post to the league chat (Phase 5).
 - What the page shows between next season's rollover and its week 1 (before the 2027 season).
