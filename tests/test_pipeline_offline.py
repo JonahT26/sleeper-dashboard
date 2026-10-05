@@ -198,3 +198,27 @@ def test_unscored_no_game_teams_stop_the_run(run_pipeline, tmp_path):
     with pytest.raises(ValueError, match="Week 8, roster 1: 0 starters"):
         run_pipeline(PlayoffLeague(("no_game_teams_unscored",)))
     assert not (tmp_path / "a" / "processed").exists()
+
+
+# --- season rollover (owner, 2026-10-05: switch config.yaml only after the new season's week 1 is scored) ------
+
+@pytest.mark.parametrize("state", ["next season's preseason", "next season under way"])
+def test_switching_to_a_season_with_no_completed_week_stops_with_a_plain_message(monkeypatch, tmp_path, state):
+    from fake_sleeper import FakeHistory
+
+    old_id, new_id = "1000000000000000000", "2000000000000000000"
+    old = FakeSleeper(last_scored_leg=5, league_id=old_id, season="2026", state=STATES[state])
+    new = FakeSleeper(last_scored_leg=0, league_id=new_id, season="2027", previous_league_id=old_id, state=STATES[state])
+    monkeypatch.setattr(api, "get", FakeHistory(new, old).get)
+    monkeypatch.setattr(api, "PLAYERS_CACHE_PATH", tmp_path / "cache" / "players_nfl.json")
+    for module in (extract, transform):
+        monkeypatch.setattr(module, "RAW_DIR", tmp_path / "raw")
+    monkeypatch.setattr(transform, "PROCESSED_DIR", tmp_path / "processed")
+    monkeypatch.setattr(pipeline, "RUN_RECORD_PATH", tmp_path / "cache" / "pipeline_run.json")
+    config = Config(league_id=new_id, season=2027, season_start_dates={2026: START_DATE, 2027: "2027-09-08"},
+                    metrics=load_config().metrics, history_from=2026)
+    monkeypatch.setattr(pipeline, "load_config", lambda: config)
+    with pytest.raises(extract.ExtractError, match=r"Season 2027 has no completed week yet.*Keep the previous season "
+                                                    r"\(season: 2026 and its league_id\)"):
+        pipeline.run()
+    assert not (tmp_path / "processed").exists()  # nothing saved, so nothing published
