@@ -1,6 +1,6 @@
 # Session handoff
 
-Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 at the close of Phase 4 (automation) and its follow-ups (playoff weeks, workflow review, monitoring, rollback, the owner's runbook). A new Claude session should read this file first, then `CLAUDE.md`, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`, before doing anything. Those docs are the source of truth for design, data, metrics, and the page; this file covers everything else: how the owner works, environment quirks, decisions and their reasons, open questions, risks, running the weekly job, and what's next.
+Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 at the close of Phase 4 (automation); **rewritten 2026-10-05 at the end of the first Phase 5 session** (playoff odds, past seasons, History, all on unmerged branches; see section 1). **This file is most current on the `past-seasons` branch**: `main`'s copy is from before Phase 5 work began, so read this one (`git show origin/past-seasons:docs/HANDOFF.md`) before switching branches. A new Claude session should read this file first, then `CLAUDE.md`, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`, before doing anything. Those docs are the source of truth for design, data, metrics, and the page; this file covers everything else: how the owner works, environment quirks, decisions and their reasons, open questions, risks, running the weekly job, and what's next.
 
 ## 1. Where things stand
 
@@ -11,24 +11,28 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 a
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
 | 4 · Automation (weekly GitHub Action, GitHub Pages, monitoring, rollback, runbook) | **Complete** (2026-10-03) |
-| 5 · Extras | **In progress** (2026-10-05): playoff odds built on the `playoff-odds` branch (metric, checks, calibration notebook, page section) and approved; merge after the Tue Oct 6 run is checked. Past seasons (2020–2025) and the History section built on `past-seasons`, stacked on it; History wording awaiting approval. Order of the other extras not confirmed (section 9) |
+| 5 · Extras | **In progress** (2026-10-05): playoff odds and past seasons + History built on two stacked branches, **not merged**; playoff bracket view next; week 15 checks scheduled for Dec 22 (section 9) |
 
-As of 2026-10-03, end of session (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
+As of **Monday 2026-10-05, end of session** (NFL week 4's Monday game is tonight, so weeks 1–3 are the completed weeks):
 
-- **Live:** https://jonaht26.github.io/sleeper-dashboard/, published by `.github/workflows/weekly.yml` every Tuesday and Thursday at 12:17 PM Eastern (section 7a). Every manual run on 2026-10-03 succeeded except one that failed on purpose. The owner checked the live page in every format and approved it, and reconfirmed the schedule and the commit-back. **No scheduled run has happened yet: the first is Tuesday Oct 6**, which should bring week 4, then Thursday Oct 8 (section 7).
-- **Monitoring and recovery** (2026-10-03, owner-approved):
-  - **Run summary:** each run's GitHub page opens with one: latest week, checks passed, tables written, commit, step results, and either the published URL or where the run failed.
-  - **Failure emails:** reach the owner; tested with a run that failed on purpose.
-  - **"Updated" stays visible:** it sits in a bar pinned to the top of the page.
-  - **Stale-data line:** after 8 days without an update it reads "The latest rankings are from week N. Next update due Tue Oct 6, 12:17 PM ET."; once Sleeper marks the season complete it reads "Final rankings for the 2026 season." instead.
-  - **Rollback:** `rollback.yml` republishes any page from the last 90 days.
-  - **Runbook:** `docs/RUNBOOK.md` is the owner's guide for a bad Tuesday.
-- `python -m sleeper_dash.pipeline`: extract → transform → 7 data checks → optimal lineups and metrics → 7 metric checks → save 11 tables → re-check the saved CSVs. 14 of 14 checks, 23 API calls, ~7 seconds. The summary now says whether the latest week moved and which tables changed ("no new completed week since the last run", "unchanged (every file identical)").
-- `python -m sleeper_dash.dashboard`: builds `site/index.html` (masthead with week selector, status bar, ladder, awards, five charts, "How this works"). 28 KB compressed for weeks 1–3.
-- Unattended-job risks fixed: the season start date no longer depends on Sleeper's current season (risk 1); every dependency and Python 3.14.7 pinned, and tested against what's installed (risk 2); the page tests run again on each run's fresh tables (risk 5); extract's folder swap retries when Windows briefly refuses it (risk 5a); playoff-week behaviour checked on this league's real 2025 playoffs and settled with the owner (risk 4).
-- **Playoff weeks:** the real pipeline passed 14 of 14 checks on all 17 weeks of the 2025 season. In playoff weeks the standings checks accept either counting standard (one must fit every team); teams missing from the matchups or without a lineup stop the run; consolation games count for awards (owner decisions, section 6).
-- **433 tests pass**, locally and in GitHub Actions. Git clean and in sync with `origin/main`.
+**What's live (`main`) hasn't changed since 2026-10-03.** https://jonaht26.github.io/sleeper-dashboard/ shows weeks 1–3: ladder, awards, five charts, "How this works". **No scheduled run has happened yet: the first is Tuesday Oct 6, 12:17 PM ET** (should bring week 4), then Thursday Oct 8 (section 7). The only Phase 5 commit on `main` is the playoff odds spec (`90c3190`, docs only).
 
+**Three branches** (all pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
+
+| Branch | Head | Adds | Tests | State |
+|---|---|---|---|---|
+| `main` | `90c3190` | Phase 4 + the playoff odds spec | 433 | Live; the workflow's bot commits refreshed tables here |
+| `playoff-odds` | `e600246` | Playoff odds (metric, `playoff_odds` and `winners_bracket` tables, 2 checks → 16), calibration notebook 04, the Playoff odds section after the ladder, "How this works" paragraph | 467 | **Owner-approved, wording included.** Merge after the Tue Oct 6 run is checked |
+| `past-seasons` | `145f01a` | Stacked on `playoff-odds`: seasons 2020–2025 in the pipeline, `managers` table (17 checks), three owner rules from past data, the History section | 489 | Built and checked; **History wording awaiting the owner's approval**. The local checkout is on this branch |
+
+**Owner input still pending:**
+- **History wording** (UI_GUIDE.md "History"): subtitle, headings, column headers, luck and high-score lines, as reported 2026-10-05. Also flagged: the season count sits under each manager's name instead of in its own column, so the table fits 360px (a separate column overflowed 20px at 390px). Approve, or keep the column and let the table scroll sideways on phones.
+- **Order of the remaining extras** (section 9).
+- **League-chat post:** the owner started a request for an automatic weekly post (webhook as a GitHub secret, dry-run mode, never posting a week twice, a CLAUDE.md rule 7 exception) and then said to **ignore it** in the same message. Nothing was built or asked. Don't act on it unless the owner raises it again.
+
+**Scheduled:** a one-time Claude desktop session, `sleeper-week15-playoff-checks`, Tue Dec 22 2026 at 2:00 PM ET (section 7).
+
+**Pipeline on `past-seasons`, through 2026 week 3:** every season 2020–2026 downloaded, built and checked against its own league settings and Sleeper standings: 17 of 17 checks in every season, 262 API calls, ~80 s locally, byte-identical on a second run, every 2026 row identical to the single-season tables. Raw data for 2020–2026 is in `data/raw/` locally (gitignored).
 ## 2. Working with the owner
 
 `CLAUDE.md` "About the owner" applies. Patterns that matter just as much:
@@ -48,6 +52,10 @@ As of 2026-10-03, end of session (NFL week 4 in progress, so weeks 1–3 are the
 - **Options land best with consequences.** For check-behaviour decisions, showing what would be published under each option (a "warn and continue" what-if run) let the owner decide in one reply.
 - **The owner checks the live page themselves** (phone, and browser developer tools for widths and dark mode) and says so; no need to repeat a check they've reported.
 - **Privacy:** the repo is public. Never commit `data/raw/` (managers' personal settings) or `data/cache/`. Never route around a safety block; explain it and let the owner decide.
+- **Work on a branch while a scheduled run is pending or page wording awaits approval** (2026-10-05). Whatever is on `main` publishes at the next run (rule 11). Push the branch (standing approval covers pushing), merge only when the owner has approved the wording and the latest run has been checked. Stacking a second branch on the first worked; merge them in order.
+- **A failed check in new data is a decision, not a fix** (2026-10-05, past seasons). Stop before saving, run the remaining steps in a scratch script (nothing saved) so every failure surfaces at once, find each cause with data, then present options with a recommendation. The owner chose in one reply ("1a 2 agree 3 agree").
+- **The owner sometimes approves a whole option list with "all of your recommended options are great"** or "1 agree 2 agree …". Record each answer in section 6 in the same commit as the change.
+- **Time-sensitive asks that can't run yet** (e.g. "run this during week 15"): say why, separate what's already done from what's open, recommend what can be built now, and offer a scheduled session (`anthropic-skills:schedule` → `create_scheduled_task` with `fireAt`) that works on a branch and reports without merging.
 
 ## 3. Environment and gotchas
 
@@ -63,7 +71,9 @@ As of 2026-10-03, end of session (NFL week 4 in progress, so weeks 1–3 are the
 | Harmless noise | "LF will be replaced by CRLF" git warnings; exit code −1 when output is piped to `Select-Object -First N`; **exit code 255 after `git push -q`** (git writes progress to stderr): check `git status -sb` shows no "ahead" instead |
 | Commit messages | In PowerShell use `git commit -m @'` … `'@` (closing `'@` at column 0). `git commit -F -` followed by a here-string does **not** work: git treats the text as a file path and commits nothing |
 | `gh --jq` in PowerShell | Filters with string concatenation (`.a + "  " + .b`) get split into extra arguments; use object filters like `'{conclusion, jobs: [.jobs[] | {name, conclusion}]}'` |
-| Scratch experiments | Write throwaway scripts to the session scratchpad with the Write tool (inline `python -c` and `printf` quoting kept breaking). The scratchpad is per session, so nothing there survives (e.g. this session's copy of the 2025 raw data). `pip install .` (not `-e`) leaves a `build/` folder in the project: delete it |
+| Bare `python` | **Hangs** in Bash on this machine (it reaches the Windows Store stub and waits; a backgrounded command had to be stopped, 2026-10-05). Always call `.venv/Scripts/python.exe` |
+| Notebooks | Committed **without outputs**. To check one runs: `.venv/Scripts/jupyter nbconvert --to notebook --execute notebooks/X.ipynb --output-dir <scratchpad>` and read the outputs from the copy |
+| Scratch experiments | Write throwaway scripts to the session scratchpad with the Write tool (inline `python -c` and `printf` quoting kept breaking; heredocs broke again on apostrophes and `\n` in 2026-10-05). The scratchpad is per session, so nothing there survives (e.g. this session's copy of the 2025 raw data). `pip install .` (not `-e`) leaves a `build/` folder in the project: delete it |
 | Excel | Opening CSVs directly corrupts 18-digit IDs. CSVs are `utf-8-sig` |
 | Sleeper politeness | Tests block the network. `api.get` paces calls ≥0.25 s apart; `/players/nfl` cached for 24 h |
 | Plotly version | Python `plotly` 7.1.0 pairs with plotly.js **4.1.1**, loaded from `cdn.plot.ly` (basic bundle). `theme.PLOTLY_JS_VERSION` must match `plotly.offline.get_plotlyjs_version()` (a test checks). `charts.js` uses Plotly internals (`_fullLayout`, axis `_offset`, `l2p`) for label placement; re-check it after any Plotly upgrade |
@@ -78,13 +88,15 @@ As of 2026-10-03, end of session (NFL week 4 in progress, so weeks 1–3 are the
 - Verify layout with JavaScript measurements rather than screenshots: `scrollWidth` vs the viewport, row heights, Plotly's `_fullLayout` plot sizes, label bounding boxes for overlaps, characters per line. A measuring script saved in the page's `localStorage` survives reloads.
 - The ladder's grow-in animation runs very slowly in the pane. For screenshots only, inject `*{transition:none!important}` and remove the `preload` class.
 - Use `form_input` on the week selector (combobox "Week N") to switch weeks like a user would.
+- **After `resize_window`, reload before measuring**: Plotly charts keep their old width until they redraw, which once looked like a sideways scroll at 1024px. `screenshot` sometimes times out when the app window is hidden; retry, or measure with JavaScript.
 
 ## 4. Repository map
 
 ```
 Dev/
 ├── CLAUDE.md                     rules, commands, current status, decisions, open decisions
-├── config.yaml                   league_id (quoted), season, season_start_dates, every metric weight and threshold
+├── config.yaml                   league_id (quoted), season, history_from (2020), season_start_dates (one per season),
+│                                 sleeper_points_gaps (Sleeper's known stale totals), every metric weight and threshold
 ├── pyproject.toml                package + exact dependency versions (dev extra: pytest, jupyterlab)
 ├── requirements-ci.txt           lock file: every package GitHub Actions installs, exact versions
 ├── .python-version               3.14.7, read by the workflow
@@ -99,16 +111,19 @@ Dev/
 │   ├── RUNBOOK.md                the owner's plain-language guide for a failed or doubtful weekly run
 │   └── HANDOFF.md                this file
 ├── src/sleeper_dash/
-│   ├── config.py, api.py, extract.py, transform.py, validate.py (14 checks), lineup.py, metrics/
-│   ├── pipeline.py               full refresh; reports week and table changes; writes data/cache/pipeline_run.json
+│   ├── config.py, api.py, extract.py, transform.py, validate.py, lineup.py, metrics/ (playoff_odds.py on the branches)
+│   ├── seasons.py                (past-seasons) split by season, stack, managers by owner ID, known Sleeper gaps
+│   ├── pipeline.py               full refresh of every season; reports week and table changes; writes data/cache/pipeline_run.json
 │   └── dashboard/
 │       ├── build.py              tables → view (every number formatted once) → HTML; `python -m sleeper_dash.dashboard`
 │       ├── theme.py              the one shared Plotly theme; colours as CSS tokens ("@pylon"); CDN URL
 │       ├── charts.py             five chart sections as Plotly figure dicts (pure functions)
 │       ├── explainer.py          "How this works" copy, numbers from config.yaml (owner-approved)
+│       ├── history.py            (past-seasons) the History section: champions, all-time records, luck, high score
 │       └── templates/            index.html.j2, styles.css, page.js (week selector), charts.js (drawing,
 │                                 highlight, label placement, phone labels); CSS and JS are inlined into the page
-├── tests/                        433 tests, one file per module, plus test_page (every number on the page equals
+├── notebooks/                    01 data check, 02 power-score sensitivity, 04 playoff odds calibration (branches); no outputs
+├── tests/                        433 tests on main (467 playoff-odds, 489 past-seasons), one file per module, plus test_page (every number on the page equals
 │                                 the CSVs), test_quality_floor, test_dependencies (pins = installed), and
 │                                 test_pipeline_offline (the real pipeline against fake_sleeper.py); conftest
 │                                 blocks the network. Tests read only committed files, so they run in Actions
@@ -134,7 +149,7 @@ Dev/
 - **Calendar:** playoffs from week 15 (6 teams). The 14-week schedule is an 11-week round robin plus weeks 1–3 repeated, so **remaining strength of schedule is exactly 0.0 for everyone after week 3** (the chart shows one panel and says so in its subtitle); from week 4 the second panel appears.
 - **Completed-week rule:** the smaller of league `last_scored_leg` and `/state/nfl` week − 1. Week 4 becomes available after Monday night's game is scored (likely Tuesday Oct 6).
 - **Playoff format and tiebreaker** (verified 2026-10-05 against the 2025 bracket and Sleeper's provisional 2026 bracket): 6 teams, seeds 1 and 2 on a bye, one week per round (weeks 15–17), fixed bracket with no reseeding (1 v 4/5 winner, 2 v 3/6 winner); seeded by overall wins (head-to-head plus median), then points for. Sleeper publishes a provisional `winners_bracket` from the current standings during the regular season. Details in METRICS_SPEC.md section 8.
-- **Previous season** league ID `1243747994637963265` (Phase 5): same settings (12 teams, 6-team playoffs from week 15, median game on, but 9 starting slots, not 10). Its finished playoffs are the evidence behind risk 4.
+- **Past seasons** (checked 2026-10-05; `previous_league_id` chain): 2025 `1243747994637963265`, 2024 `1111660327269216256`, 2023 `917304836490715136`, 2022 `858463130051809280`, 2021 `650074750328090624`, 2020 `603428374169325568` (the chain ends there). All 12 teams, median game, the same 6-team bracket. 2020: 13-week regular season (playoffs from week 14) and a wrong `start_week` of 4; 2020–2021 had 10 starting slots, 2022–2025 9. Champions: 2020 Coryv9, 2021 jryan7, 2022 jsmetz97, 2023 nicholascole121, 2024 jryan7, 2025 jryan7. 14 managers over the seven seasons; 10 played all of them.
 
 ## 6. Decisions log
 
@@ -225,12 +240,12 @@ Dev/
 
 **Week 15 (first playoff week, mid-December):** the three playoff assumptions held for this league's 2025 season (risk 4), and the pipeline passes on 2025's real playoff weeks. Still confirm the first 2026 playoff run succeeded. **Scheduled:** a one-time session on Tue Dec 22, 2:00 PM ET (`sleeper-week15-playoff-checks` in the Claude desktop app's Scheduled list; it runs when the app is open, or on its next launch) verifies the assumptions on week 15 (no playoff median; roster standings regular season only; byes unpaired, consolation games paired, every team listed with a lineup) and, if they hold, restores the strict regular-season-only standings checks (owner, 2026-10-05) on the branch `playoff-week15-checks`, reporting without merging. Consolation-bracket and placement games are paired like real games, so matchup awards (Heartbreaker, Robbery, Blowout, Nail-biter) in playoff weeks can go to them: kept by the owner (2026-10-03, METRICS_SPEC.md section 7).
 
-**Known gaps:** Sleeper's `ppts` sits 0.02–4.00 points below our optimal lineups for 7 teams (soft check only); on the 2025 season the gap reached 8.5–15.3 points for 6 teams, probably because player positions are today's (risk 10), which matters for past seasons (Phase 5); FAAB and picks traded inside trades aren't in `transactions`; player positions describe today, not past weeks; `winners_bracket` not pulled (Phase 5). A season with no completed week yet (next season's preseason, after `config.yaml` moves to 2027) stops the pipeline with a misleading "matchups is missing. Run `python -m sleeper_dash.extract` first" message (checked with the fake league): decide the season-rollover behaviour before then (section 7a).
+**Known gaps:** Sleeper's `ppts` sits 0.02–4.00 points below our optimal lineups for 7 teams (soft check only); on the 2025 season the gap reached 8.5–15.3 points for 6 teams, probably because player positions are today's (risk 10), which matters for past seasons (Phase 5); FAAB and picks traded inside trades aren't in `transactions`; player positions describe today, not past weeks (partly mitigated, risk 10); `winners_bracket` is pulled on the branches. A season with no completed week yet (next season's preseason, after `config.yaml` moves to 2027) stops the pipeline with a misleading "matchups is missing. Run `python -m sleeper_dash.extract` first" message (checked with the fake league): decide the season-rollover behaviour before then (section 7a).
 
 **Stale-data line after the season: decided and built (owner, 2026-10-03).** Once Sleeper marks the league `status: complete` (it did for 2025), the run record's `league.season_complete` is true and the stale-data line reads "Final rankings for the 2026 season." with no "next update". Verify after week 17: the first run after Sleeper flips the status records `"season_complete": true` (the page shows the line only once the data is 8 days old, as in season). Not yet seen on a live season end: Sleeper's timing for setting `complete` is unknown, but runs continue Tue/Thu for ~60 days, so it's picked up long before the page goes stale.
 
 **Open product questions:**
-- Which Phase 5 extra comes first (section 9 recommends an order; the owner hasn't confirmed it).
+- The order of the remaining Phase 5 extras (section 9).
 - Where league members see updates: bookmark only, or also a weekly league-chat post (Phase 5 item 1). The owner is posting an introduction to the league by hand (2026-10-03).
 - Boom/bust weeks are explained in "How this works" but not displayed yet (owner wants them kept for a future display).
 
@@ -253,7 +268,7 @@ Dev/
 
 Ordered by impact on the unattended weekly job.
 
-1. **Off-season breakage: fixed 2026-10-03.** Season start dates live in `config.yaml` `season_start_dates`, one per season, and never come from `/state/nfl`, which is only a cross-check while it describes the league's season and gives a date. Proven offline (`test_pipeline_offline`: Sleeper in 2026, the off-season, 2027's preseason, 2027 under way, no date) and on the real league (four `/state/nfl` variants, 14 of 14 checks, all 11 tables identical to the committed CSVs). Phase 5 needs a line for each past season; `/state/nfl` can't supply them, and Sleeper's 2026 date (2026-09-09) falls on a Wednesday, so confirm what Sleeper's date marks before filling in 2025.
+1. **Off-season breakage: fixed 2026-10-03.** Season start dates live in `config.yaml` `season_start_dates`, one per season, and never come from `/state/nfl`, which is only a cross-check while it describes the league's season and gives a date. Proven offline (`test_pipeline_offline`: Sleeper in 2026, the off-season, 2027's preseason, 2027 under way, no date) and on the real league (four `/state/nfl` variants, 14 of 14 checks, all 11 tables identical to the committed CSVs). Past seasons have their own lines (on `past-seasons`): the Wednesday before the NFL's opening game, Sleeper's 2026 rule (owner, 2026-10-05).
 2. **Unpinned dependencies: fixed 2026-10-03.** Exact versions in `pyproject.toml`; `requirements-ci.txt` (the lock file) pins all 23 packages Actions installs; `.python-version` pins Python 3.14.7, which the workflow reads (GitHub already offers 3.14.8). `test_dependencies` fails, locally or in Actions, if the installed packages or Python differ from the pins or the lock misses a package. A fresh environment from the lock produced all 11 tables and the page byte-identical. Update steps in `docs/CODEBASE.md` "Dependencies".
 3. **GitHub switches off scheduled workflows after 60 days with no repository activity.** In season the bot's weekly commits keep it on. After the season the tables stop changing, so it will switch off (expected, harmless); re-enable it before next season (section 7a).
 4. **Playoff weeks: checked on real data and decided, 2026-10-03.** This league's finished 2025 season (same settings: 12 teams, 6-team playoffs from week 15, median game) shows Sleeper's roster wins, losses, points for and against count the **regular season only** (12 of 12 teams; so no median game counts in the playoffs either); **every team is listed every playoff week** with a full lineup and points; byes have no `matchup_id`; consolation games **are** paired. The real pipeline on all 17 weeks of 2025 passed 14 of 14 checks and built the page. `test_pipeline_offline` runs an 8-team fake league through two playoff weeks in each plausible Sleeper behaviour: as in 2025 and with no consolation games, everything passes and publishes; if Sleeper's standings counted playoff games or points, "Records match Sleeper" or "Points for/against match Sleeper" stops the run; teams left out of the matchups stop it at "Every week has one row per team"; teams with an empty lineup stop it in transform. **Owner decision 2026-10-03:** the standings checks accept either counting standard in playoff weeks (regular season only, or also playoff games, a playoff median, or playoff points), as long as one standard fits every team, and name the one that matched; teams missing from the matchups or without a lineup still stop the run. Standings that count the playoffs now pass with tables byte-identical to the 2025-style case, and standings that fit no single standard still stop the run (`test_pipeline_offline`).
@@ -264,7 +279,6 @@ Ordered by impact on the unattended weekly job.
 8. **The page depends on two CDNs** (Google Fonts, cdn.plot.ly). If Plotly fails to load, each chart shows its one-sentence text summary instead. Loading fonts from Google also tells Google each visitor's IP address; self-hosting the fonts would remove both.
 9. **Newer CSS** (container queries, `::details-content`, `interpolate-size`): older browsers fall back to the three-line ladder on desktop and an instant (unanimated) breakdown. Nothing breaks.
 10. **Player positions are today's**, so a mid-season position change alters past optimal lineups. Partly mitigated (owner, 2026-10-05): a player may also fill the single-position slot he actually started in that week, which fixed the one past team-week where the best lineup came out below the real one (2021 week 8). Sleeper's `ppts` still sits 5+ points below our optimal lineups for 4–7 teams in 2020, 2023, 2024 and 2025 (soft check; reported for the current season only).
-18. **Past seasons add surface to the weekly job** (2026-10-05): about 240 more Sleeper calls and a minute more per run, and a failed check in any past season stops the whole run (the detail names the season; the live page stays as it was). If Sleeper edits an old season again, the known-gaps list or a check may need updating.
 11. **Posted numbers can change** after stat corrections (deliberate full recompute; explained in "How this works").
 12. **Near-ties at the top** of the power rankings (#1 and #2 both show 57.8 through week 3).
 13. **Who receives scheduled-run failure emails.** GitHub sends them to whoever created the schedule or last changed it, or last re-enabled the workflow. The workflow's commits are authored as `jonahtersol@gmail.com`, which GitHub doesn't link to any account (`author.login` is null), so it's unconfirmed that GitHub recorded JonahT26. Mitigations: the owner adds and verifies that address on the account (Settings → Emails); the stale-data line on the page catches a silent failure after 8 days. Verify on Tuesday Oct 6 (section 7).
@@ -272,65 +286,44 @@ Ordered by impact on the unattended weekly job.
 15. **Rollback reaches back 90 days only,** and only to pages published from 2026-10-03 12:19 PM ET (run `37136344876`) onward; earlier pages expired after a day.
 16. **The stale-data line needs JavaScript and trusts the visitor's clock.** Without JavaScript it never shows, though the "Updated" time always does. A wrong device clock shows it too early or too late.
 17. **When Sleeper sets `status: complete`** after the final week is unknown. The "Final rankings" wording depends on it (section 7).
+18. **Past seasons add surface to the weekly job** (2026-10-05): about 240 more Sleeper calls and a minute more per run, and a failed check in any past season stops the whole run (the detail names the season; the live page stays as it was). If Sleeper edits an old season again, the known-gaps list or a check may need updating.
+19. **Merging the branches will conflict on `data/processed/*.csv`** once the bot has committed week 4 to `main`. Expected and harmless: resolve by taking either side, then run the pipeline (it rewrites every table from Sleeper) and commit its output (section 9, "Merging").
 
 ## 9. Next: Phase 5 (extras)
 
-Planned 2026-10-03 at the close of Phase 4; **not started**. The order below ranks each extra by its value to the league against its effort, with timing as the tie-breaker. First ask the owner to confirm or reorder it (one numbered question, recommending this order). Then plan the chosen extra on its own, in small steps, with the owner. Anything managers will read goes to the owner as a draft first.
+**Done in the 2026-10-05 session** (owner's order: playoff odds spec, then build; then past seasons and History; the chat post and boom/bust display were not taken up):
 
-| # | Extra | Value | Effort | Timing | Why here |
-|---|---|---|---|---|---|
-| 1 | **Weekly league-chat post** (a ready-to-paste message each run) | High: most managers only see what lands in the chat | Low as a draft the owner pastes; medium to high if posted automatically | Every week, from now | The cheapest way to get the dashboard read. Start with the draft |
-| 2 | **Playoff odds** | Highest: the question every manager asks from mid-season | High: a spec with the owner, a simulation, checks, a new section | Most useful from about week 7 (Oct 20) to week 14; no use after week 14 | Time-limited, so start right after 1 |
-| 3 | **Boom/bust weeks on the page** | Low to medium | Low: already computed (`is_boom`, `is_bust`, `boom_weeks`, `bust_weeks`) and explained in "How this works" | Any time | A quick win the owner asked to keep for later |
-| 4 | **Past seasons** | Medium: history and bragging rights | High: per-season data, a season selector, playoff results, page weight | Off-season | Nothing about it is time-sensitive |
-| 5 | **Season rollover** | Required | Medium | Before the 2027 preseason (about August 2027) | Must happen; off-season work |
+| Extra | State | Where |
+|---|---|---|
+| Playoff odds (METRICS_SPEC.md section 8) | Built, approved, unmerged | `playoff-odds` |
+| Calibration on 2025 (notebook 04) | Done: playoff Brier 0.134 (vs 0.250 everyone-50%, 0.222 top-6-now); bye odds no better than flat 2/12; more shrinkage scored better in-sample (k 20: 0.128). Revisit `shrink_weeks` after 2026's week 14 | `playoff-odds` |
+| Past seasons 2020–2025 | Built and checked (17 of 17 in every season) | `past-seasons` |
+| History section | Built; wording awaiting approval | `past-seasons` |
 
-What each needs:
+**Merging** (in this order; never merge with an unchecked run or unapproved wording):
+1. After the Tue Oct 6 run succeeds (and its actor is checked, section 7): `git switch main`, `git pull`, `git merge playoff-odds`. The bot's week 4 commit will conflict on `data/processed/*.csv`: take either side (`git checkout --theirs data/processed/`), run `.venv\Scripts\python.exe -m sleeper_dash.pipeline` (16 of 16 checks; week 4 odds appear), run all tests (467), commit, push. Check the page at 360, 390, 1024 and 1280px, light and dark. The Thursday Oct 8 run publishes it (or run Weekly refresh by hand).
+2. When the owner approves the History wording: `git merge past-seasons` into `main` the same way (conflicts again only in tables; pipeline 17 of 17 in every season; 489 tests). The first GitHub run afterwards takes about 4 minutes (RUNBOOK.md says so); watch it once with `gh run watch`.
+3. Update this file, `CLAUDE.md` "Current status", and the memory note after each merge.
 
-1. **Weekly league-chat post.**
-   - **The draft version:** each run's summary on GitHub gains a short, copy-ready message: who's #1 and who moved most, the week's awards, and the link. The owner pastes it into the chat, and only Python formats it.
-   - **Automatic posting (later, if wanted):** the owner must first say which app the league uses. Sleeper's API is read-only, so posting needs another channel (a Discord or GroupMe webhook, for example) and a secret stored in GitHub. That makes it rule 7 territory: stop and ask before setting one up.
-   - **Copy and size:** the wording needs approval (tone: trash talk only in the awards, UI_GUIDE.md). It's about one session.
-2. **Playoff odds.**
-   - **Spec: done** (owner, 2026-10-05): METRICS_SPEC.md section 8, with the 2025 calibration and backtest behind each choice. Target: live by the Tuesday Oct 27 run (week 7 data; week 6 lands Oct 20). One extra API call (`winners_bracket`) for the seeding check.
-   - **Built: done** (2026-10-05) on the `playoff-odds` branch: `metrics/playoff_odds.py`, `playoff_odds` and `winners_bracket` tables, two checks (16 in all), `notebooks/04_playoff_odds_calibration.ipynb`, the page section after the ladder, and a "How this works" paragraph. 467 tests. Real league through week 3: 16 of 16 checks; Sleeper's provisional bracket agrees with our seeding.
-   - **Before merging:** (1) done: the owner approved the section's wording and the "How this works" paragraph as drafted, 2026-10-05; (2) the Tuesday Oct 6 run is checked on `main`; (3) merge, `git pull`, run the pipeline (week 4 odds), and check the page at 360, 390, 1024 and 1280px.
-   - **Calibration finding for the owner** (2025, notebook 04): playoff Brier 0.134 vs 0.250 (everyone 50%) and 0.222 ("top 6 right now"), both gaps holding when teams are resampled; bye odds no better than a flat 2/12 (0.142 vs 0.139); more shrinkage scored better in-sample (k = 20: 0.128 vs 0.134 at k = 6), the opposite direction from the score-level calibration (k = 6.5). One season, 12 outcomes: worth a decision on `shrink_weeks` after 2026's week 14, not now.
-   - **Data:** the remaining schedule is already in `schedule`.
-   - **Build:** a new table with metric checks (odds between 0 and 1, six playoff spots shared out across the league each week), a section after the ladder (UI_GUIDE.md), and "How this works" copy, which needs approval.
-   - **Rules:** use a fixed random seed so reruns give the same numbers (rule 1: every run is a full recompute).
-3. **Boom/bust display.**
-   - **Design:** choose a form with the owner, such as a count beside each team or a small table. The data and its explanation already exist.
-   - **Rules to follow:** UI_GUIDE.md's hidden-section rule (weeks with no data show nothing), and a `test_page` check that the numbers equal `metrics_season`.
-4. **Past seasons.**
-   - **Data: done** (2026-10-05, branch `past-seasons`, stacked on `playoff-odds`): every season 2020–2025 rebuilt on each run with the 2026 code, all 17 checks passing in every season; `managers` table. The History section is built (design approved; wording awaiting approval).
-   - **Data:** the previous league is `1243747994637963265` (reached through `previous_league_id`).
-   - **Already proven:** on 2026-10-03 the real pipeline and page build ran on all 17 weeks of 2025 in a scratch folder (14 of 14 checks; page 1.3 MB raw). It worked by pointing the module paths at a temporary folder and passing a `Config` for 2025, the same pattern as the `run_pipeline` fixture in `tests/test_pipeline_offline.py`.
-   - **Still needed:**
-     - a `season_start_dates` line for each season (risk 1);
-     - extract and the pipeline run per season (`data/raw/{season}/` already separates them);
-     - a season selector on the page;
-     - `winners_bracket` for playoff results;
-     - keeping the page under 1 MB compressed;
-     - a caveat for today's player positions (risk 10).
-5. **Season rollover.**
-   - **Decisions:** what the page shows between rollover and week 1 (today the build stops: section 7), and whether 2026 stays viewable (ties to 4).
-   - **Steps:** then the checklist in section 7a.
+**Next to build: the playoff bracket view** (owner, 2026-10-05: build now, after the playoff odds merge). A section shown only in playoff weeks, from the `winners_bracket` table (seeds, byes, results as they come in), mobile first per UI_GUIDE.md; tested offline on the real 2025 bracket (in `data/processed/` once `past-seasons` is merged; seasons 2020–2025 give six finished brackets) and the fake 8-team `PlayoffLeague`. Wording to the owner as a draft. Must be on `main` before the Tue Dec 22 run; aim for early December. Start a new branch from `main` after the merges (or from `past-seasons` if History is still pending, and say so).
 
-**Playoff bracket view** (owner, 2026-10-05: build now, after the playoff odds merge): a section shown only in playoff weeks, drawn from the `winners_bracket` table (seeds, byes, results as they come in), designed mobile first per UI_GUIDE.md and tested on the real 2025 bracket (`notebooks/04` downloads it into `data/raw/2025/`) and the fake 8-team `PlayoffLeague`. Wording to the owner as a draft. Must be on `main` before the Tue Dec 22 run; aim for early December so one live run uses the code first (no bracket shows until week 15, so a run can't exercise it; test it offline instead).
+**Remaining extras** (ask the owner to order them; recommendations in brackets):
+- **Weekly league-chat post** (high value; see the note in section 1 before raising it).
+- **Boom/bust display** (low effort; data and copy already exist).
+- **Season rollover** (required before the 2027 preseason, about August 2027): what the page shows between rollover and week 1 (the build stops on a season with no completed week, section 7), then the checklist in section 7a. With past seasons in the pipeline, 2026 simply becomes a past season: move `season` and `league_id` to 2027 and add its start date; `history_from` stays.
+- Smaller, any time: self-host the fonts (risk 8); the "Final rankings" line immediately after the season instead of after 8 days (one line; owner chose 8 days).
 
-Smaller items, any time: self-host the fonts (risk 8: removes a CDN and Google seeing visitors' IP addresses). If the owner wants the "Final rankings" line to show as soon as the season ends rather than after 8 days, that's a one-line change; for now the owner chose after 8 days.
-
+**December, already scheduled:** Tue Dec 22 2:00 PM ET, `sleeper-week15-playoff-checks` (section 7): verifies the playoff assumptions on week 15, restores the strict standings checks if they hold, and reports on branch `playoff-week15-checks` without merging. It expects the bracket view to be on `main` by then and reports if it isn't.
 ## 10. Commit history
 
-Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 runs from `487e76c` (season-to-date lineup efficiency) to `8966259 Phase 3: dashboard`; Phase 4 runs from `8dee0e8` (season start date in config) to `df8f4cf Phase 4: automation`; follow-ups `e8a3260` (playoff tests against 2025 behaviour), `86c1486` (either standings standard in playoff weeks), `38e081c` (workflow reconfirmed), `5cc0180` (handoff), `cbd13c7` (run summary), `6a70578` (status bar and stale-data line), `e7534e2` ("Final rankings"), `817c342` (rollback and 90-day retention), `8c9be5e` (runbook), and a second commit named "Phase 4: automation" that closes the phase (docs). From Phase 4 on, `github-actions[bot]` commits refreshed tables ("Weekly refresh: tables through week N"). Use `git log --oneline` for the full list.
+Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 runs from `487e76c` (season-to-date lineup efficiency) to `8966259 Phase 3: dashboard`; Phase 4 runs from `8dee0e8` (season start date in config) to `df8f4cf Phase 4: automation`; follow-ups `e8a3260` (playoff tests against 2025 behaviour), `86c1486` (either standings standard in playoff weeks), `38e081c` (workflow reconfirmed), `5cc0180` (handoff), `cbd13c7` (run summary), `6a70578` (status bar and stale-data line), `e7534e2` ("Final rankings"), `817c342` (rollback and 90-day retention), `8c9be5e` (runbook), and a second commit named "Phase 4: automation" that closes the phase (docs). From Phase 4 on, `github-actions[bot]` commits refreshed tables ("Weekly refresh: tables through week N"). Phase 5 so far: `90c3190` (playoff odds spec, on `main`); on `playoff-odds`: `15727ea` (playoff odds and winners bracket), `cccbb28` (calibration notebook), `9c3a8de` (page section), `bc995c6` (wording approved), `e600246` (December plan); on `past-seasons`: `8f51743` (seasons 2020–2025), `145f01a` (History section), plus this handoff. Use `git log --oneline` for the full list.
 
 ## 11. First steps for the new session
 
-1. `git pull` (the bot commits to `main`).
-2. Read `CLAUDE.md`, this file, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`. Skim `docs/RUNBOOK.md`: it's what the owner follows, so match its wording when talking about runs.
-3. Confirm the environment: `.venv\Scripts\python.exe -m pytest -q` (expect **433 passed** on `main`, **467** on `playoff-odds`; a `test_dependencies` failure means the local environment drifted from the pins, see `docs/CODEBASE.md` "Dependencies") and `git status` (clean, in sync).
-4. Check the weekly job: `gh run list --workflow weekly.yml --limit 5`. Any failure comes first (section 7a, CLAUDE.md rule 13). The first scheduled runs are Tue Oct 6 (should commit "Weekly refresh: tables through week 4") and Thu Oct 8 (should report no new week); if a session starts before then, there's nothing scheduled to check yet. After the first scheduled run, check its actor (section 7, risk 13).
-5. If week 4 or later has arrived, check the live page at 360, 390, 1024 and 1280px in light and dark (section 3), paying attention to the section 7 items.
-6. **Playoff odds merge** (section 9, item 2): once the Tue Oct 6 run has succeeded and its actor is checked, merge `playoff-odds` into `main`, push, run the pipeline locally (week 4 odds; 16 of 16 checks), run all tests, and check the page at 360, 390, 1024 and 1280px. The next scheduled run (Thu Oct 8) then publishes it, or run Weekly refresh by hand.
-7. Then section 9: ask the owner to confirm the order of the remaining Phase 5 extras, and plan only the next one.
+1. **Before switching branches, read this file from `past-seasons`** (the local checkout is there): `git fetch`, then `git show origin/past-seasons:docs/HANDOFF.md` if you're elsewhere. `main`'s copy predates Phase 5.
+2. Read `CLAUDE.md`, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md` and `docs/UI_GUIDE.md` from the same branch. Skim `docs/RUNBOOK.md`: it's what the owner follows, so match its wording when talking about runs.
+3. Check the weekly job: `gh run list --workflow weekly.yml --limit 5`. Any failure comes first (section 7a, CLAUDE.md rule 13). **Tue Oct 6** should commit "Weekly refresh: tables through week 4"; check its actor is JonahT26 (`gh api repos/JonahT26/sleeper-dashboard/actions/runs/<id> --jq .actor.login`, risk 13). **Thu Oct 8** should report no new week.
+4. Confirm the environment on each branch you touch: `.venv\Scripts\python.exe -m pytest -q` (**433** on `main`, **467** on `playoff-odds`, **489** on `past-seasons`; a `test_dependencies` failure means the environment drifted from the pins) and `git status` (clean, in sync).
+5. If the Tue Oct 6 run passed: merge `playoff-odds` (section 9, "Merging", step 1) and check the page.
+6. Ask the owner about the History wording (section 1); on approval, merge `past-seasons` (step 2).
+7. Then build the playoff bracket view (section 9), and ask the owner to order the remaining extras.
