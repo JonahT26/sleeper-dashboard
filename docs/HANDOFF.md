@@ -30,7 +30,7 @@ As of **Monday 2026-10-05, end of session** (NFL week 4's Monday game is tonight
 | `chat-post` | see `git log` | Stacked on `boom-bust`: the weekly GroupMe post (`chat.py`, a `post` job in `weekly.yml`, `config.yaml` `chat`, `data/chat_posts.csv`), CLAUDE.md rule 7's one approved secret, RUNBOOK.md section 7 | 552 | Built in dry-run mode; **message wording and award choice approved** (2026-10-05); merge after `boom-bust`; turn on once the owner has added the secret. The local checkout is on this branch |
 
 **Owner input still pending:**
-- **League-chat post** (built 2026-10-05 on `chat-post`; GroupMe bot; message and award choice approved): the owner creates the bot and adds `GROUPME_BOT_ID` as a GitHub Actions secret (RUNBOOK.md section 7). Merge `chat-post` last, still in dry-run; when the owner says the secret is added, set `chat.mode` to "on" in a commit.
+- **League-chat post** (built 2026-10-05 on `chat-post`; GroupMe bot; message and award choice approved): the owner added `GROUPME_BOT_ID` as a GitHub Actions secret on 2026-10-05 at 18:14 UTC (`gh secret list` shows its name and date only). A first bot ID was pasted into the Claude chat by mistake; Claude didn't use or store it and advised deleting that bot and creating a new one before adding the secret. Merge `chat-post` last, still in dry-run; check one live run's dry-run message, then set `chat.mode` to "on" in a commit.
 
 **Scheduled:** one-time Claude desktop sessions: `sleeper-week15-playoff-checks`, Tue Dec 22 2026 at 2:00 PM ET (section 7), and `sleeper-season-2027-rollover`, Tue Sep 14 2027 at 2:00 PM ET (section 7a). Both work on a branch and report without merging; they run when the app is open, or on its next launch.
 
