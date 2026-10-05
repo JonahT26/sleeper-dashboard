@@ -481,19 +481,31 @@ def save_tables(tables, processed_dir=None):
 
 
 def main():
-    config = load_config()
-    tables, league, rosters, start_date = build_tables(config.season, config.season_start_date)
+    from sleeper_dash.seasons import build_managers, stack, with_known_gaps
+    from sleeper_dash.validate import check_managers, validate_seasons
 
-    # Check before saving, so tables that fail never overwrite the last good ones.
+    config = load_config()
+    by_season, start_dates = {}, {}
+    for season in config.seasons:
+        season_tables, league, rosters, start_dates[season] = build_tables(season, config.start_date(season))
+        by_season[season] = (season_tables, league, with_known_gaps(rosters, config.sleeper_points_gaps.get(season, [])))
+    teams = pd.concat([t["teams"] for t, _, _ in by_season.values()], ignore_index=True)
+    managers = build_managers(teams)
+
+    # Check every season before saving, so tables that fail never overwrite the last good ones.
     try:
-        results = validate(tables, league, rosters)
+        results = validate_seasons(by_season, extra=[check_managers(managers, teams)])
     except ValidationError as error:
         raise SystemExit(str(error))
     print(format_results(results))
     print()
 
-    for name, path in save_tables(tables).items():
-        print(f"Saved {len(tables[name])} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
+    stacked = {**stack({season: t for season, (t, _, _) in by_season.items()}), "managers": managers}
+    for name, path in save_tables(stacked).items():
+        print(f"Saved {len(stacked[name])} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
+
+    tables, league, rosters = by_season[config.season]  # the reports below describe the current season
+    start_date = start_dates[config.season]
 
     teams, team_weeks = tables["teams"], tables["team_weeks"]
     player_weeks, transactions = tables["player_weeks"], tables["transactions"]

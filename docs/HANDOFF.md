@@ -11,7 +11,7 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 a
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
 | 4 · Automation (weekly GitHub Action, GitHub Pages, monitoring, rollback, runbook) | **Complete** (2026-10-03) |
-| 5 · Extras | **In progress** (2026-10-05): playoff odds built on the `playoff-odds` branch (metric, checks, calibration notebook, page section) and approved; merge after the Tue Oct 6 run is checked. Order of the other extras not confirmed (section 9) |
+| 5 · Extras | **In progress** (2026-10-05): playoff odds built on the `playoff-odds` branch (metric, checks, calibration notebook, page section) and approved; merge after the Tue Oct 6 run is checked. Past seasons (2020–2025) built on `past-seasons`, stacked on it; History section proposed, awaiting approval. Order of the other extras not confirmed (section 9) |
 
 As of 2026-10-03, end of session (NFL week 4 in progress, so weeks 1–3 are the completed weeks):
 
@@ -202,6 +202,10 @@ Dev/
 | 2026-10-05 | Playoff odds built on a branch (`playoff-odds`), not `main`: the first scheduled run (Tue Oct 6) should be checked on unchanged code, and the page wording needs the owner's approval before the next run publishes it | Claude (rule 11; owner to confirm the merge) | section 9 |
 | 2026-10-05 | Per-seed probabilities added to playoff odds (`p_seed_1` … `p_seed_6`) and shown in a folded "Chance of each seed" table | Owner (request), Claude (display) | METRICS_SPEC.md section 8, UI_GUIDE.md |
 | 2026-10-05 | A tie on wins and points for at the end of the regular season stops the run only when it affects seeding (inside or straddling the top 6); "Seeding matches Sleeper's bracket" is a stopping check like the other Sleeper reconciliations, and passes with "nothing to compare" when Sleeper has no filled-in bracket | Claude's reading, flagged to the owner | METRICS_SPEC.md section 8 |
+| 2026-10-05 | Past seasons: every season Sleeper has (2020–2025, `history_from: 2020`), re-downloaded every run (rule 1); start dates the Wednesday before kickoff; past usernames, team names and owner IDs committed publicly like 2026's; managers matched by owner ID | Owner (1–4 agree) | config.yaml, CODEBASE.md |
+| 2026-10-05 | Sleeper's stale season totals in 2020, 2021 and 2023 (13 teams, one game each) listed in `config.yaml` `sleeper_points_gaps`; the points check allows exactly these (option 1a over warning-only or dropping those seasons) | Owner | config.yaml, CODEBASE.md "Known quirks" |
+| 2026-10-05 | A player may fill the single-position slot he actually started in that week, as well as his positions today (changes one past team-week, 2021 week 8, and nothing in 2026) | Owner | METRICS_SPEC.md section 3 |
+| 2026-10-05 | The regular season is week 1 to the week before the playoffs in every check; Sleeper's `start_week` (4 in 2020, wrongly) is ignored | Owner | validate.py |
 | 2026-10-05 | Playoff bracket view: build it now (after the playoff odds merge), tested on the real 2025 bracket and the fake league, so it can show from the Dec 22 run; it appears only in playoff weeks | Owner (option 1) | section 9 |
 | 2026-10-05 | Restore the strict playoff-week standings checks (regular season only), reversing the 2026-10-03 "either standard" rule, but only once 2026's week 15 data confirms Sleeper counts the regular season only, as in 2025 | Owner (agreed with Claude's recommendation) | section 7, risk 4 |
 | 2026-10-05 | A one-time scheduled session, Tue Dec 22 2026 at 2:00 PM ET (`sleeper-week15-playoff-checks`, Claude desktop app, Scheduled): checks today's run, verifies the three playoff assumptions on week 15, tightens the checks if they hold, builds the page, and reports on a branch (`playoff-week15-checks`) without merging or publishing | Owner (request), Claude (task) | section 7 |
@@ -258,7 +262,8 @@ Ordered by impact on the unattended weekly job.
 7. **Label placement is a heuristic** (`charts.js`): crowded luck charts could still overlap in some weeks. Check new weeks at 390px.
 8. **The page depends on two CDNs** (Google Fonts, cdn.plot.ly). If Plotly fails to load, each chart shows its one-sentence text summary instead. Loading fonts from Google also tells Google each visitor's IP address; self-hosting the fonts would remove both.
 9. **Newer CSS** (container queries, `::details-content`, `interpolate-size`): older browsers fall back to the three-line ladder on desktop and an instant (unanimated) breakdown. Nothing breaks.
-10. **Player positions are today's**, so a mid-season position change alters past optimal lineups.
+10. **Player positions are today's**, so a mid-season position change alters past optimal lineups. Partly mitigated (owner, 2026-10-05): a player may also fill the single-position slot he actually started in that week, which fixed the one past team-week where the best lineup came out below the real one (2021 week 8). Sleeper's `ppts` still sits 5+ points below our optimal lineups for 4–7 teams in 2020, 2023, 2024 and 2025 (soft check; reported for the current season only).
+18. **Past seasons add surface to the weekly job** (2026-10-05): about 240 more Sleeper calls and a minute more per run, and a failed check in any past season stops the whole run (the detail names the season; the live page stays as it was). If Sleeper edits an old season again, the known-gaps list or a check may need updating.
 11. **Posted numbers can change** after stat corrections (deliberate full recompute; explained in "How this works").
 12. **Near-ties at the top** of the power rankings (#1 and #2 both show 57.8 through week 3).
 13. **Who receives scheduled-run failure emails.** GitHub sends them to whoever created the schedule or last changed it, or last re-enabled the workflow. The workflow's commits are authored as `jonahtersol@gmail.com`, which GitHub doesn't link to any account (`author.login` is null), so it's unconfirmed that GitHub recorded JonahT26. Mitigations: the owner adds and verifies that address on the account (Settings → Emails); the stale-data line on the page catches a silent failure after 8 days. Verify on Tuesday Oct 6 (section 7).
@@ -297,6 +302,7 @@ What each needs:
    - **Design:** choose a form with the owner, such as a count beside each team or a small table. The data and its explanation already exist.
    - **Rules to follow:** UI_GUIDE.md's hidden-section rule (weeks with no data show nothing), and a `test_page` check that the numbers equal `metrics_season`.
 4. **Past seasons.**
+   - **Data: done** (2026-10-05, branch `past-seasons`, stacked on `playoff-odds`): every season 2020–2025 rebuilt on each run with the 2026 code, all 17 checks passing in every season; `managers` table. The History section is proposed to the owner and not built yet.
    - **Data:** the previous league is `1243747994637963265` (reached through `previous_league_id`).
    - **Already proven:** on 2026-10-03 the real pipeline and page build ran on all 17 weeks of 2025 in a scratch folder (14 of 14 checks; page 1.3 MB raw). It worked by pointing the module paths at a temporary folder and passing a `Config` for 2025, the same pattern as the `run_pipeline` fixture in `tests/test_pipeline_offline.py`.
    - **Still needed:**

@@ -183,7 +183,18 @@ def built(tables, params):
 
 
 def this_season():
-    return load_tables(PROCESSED_DIR, names=build.TABLES), load_config().metrics
+    """The saved tables hold every season (Phase 5); the page shows the configured one, so the expectations do too."""
+    config = load_config()
+    tables = load_tables(PROCESSED_DIR, names=build.TABLES)
+    return {n: t[t["season"] == config.season].reset_index(drop=True) for n, t in tables.items()}, config.metrics
+
+
+def test_the_page_shows_only_the_current_season_from_the_stacked_tables():
+    config = load_config()
+    stacked = load_tables(PROCESSED_DIR, names=build.TABLES)
+    assert stacked["team_weeks"]["season"].nunique() == len(config.seasons)  # every season is saved
+    current, params = this_season()
+    assert built(stacked, params).html == built(current, params).html
 
 
 @pytest.fixture(scope="module", params=["this season", "synthetic 17 weeks"])

@@ -2,15 +2,18 @@
 
 Run with:  python -m sleeper_dash.pipeline
 
-Every run re-downloads the whole season and rebuilds every table, so Sleeper stat
-corrections flow through. Steps, in order:
+Every run re-downloads every configured season (config.yaml season, and past seasons back to
+history_from) and rebuilds every table, so Sleeper stat corrections flow through. Steps, in order:
 
-1. extract       raw Sleeper JSON into data/raw/{season}/
-2. transform     tidy tables (teams, team_weeks, player_weeks, transactions, schedule)
-3. data checks   reconciliation with Sleeper and integrity; any failure stops the run
-4. metrics       optimal lineups, then every metric table (docs/METRICS_SPEC.md)
-5. metric checks the spec's invariants (luck sums to 0, power mean 50, ...); any failure stops the run
-6. save          every table to data/processed/, then re-read and re-check all of them
+1. extract       raw Sleeper JSON into data/raw/{season}/, one folder per season
+2. transform     tidy tables per season (teams, team_weeks, player_weeks, transactions, schedule,
+                 winners_bracket), plus managers matched across seasons by owner ID
+3. data checks   reconciliation with Sleeper and integrity, for every season against its own league
+                 and standings; any failure stops the run
+4. metrics       optimal lineups, then every metric table (docs/METRICS_SPEC.md), per season
+5. metric checks the spec's invariants (luck sums to 0, power mean 50, ...), per season; any failure stops the run
+6. save          every table, seasons stacked by their season column, to data/processed/, then re-read
+                 and re-check all of them
 
 Nothing is saved unless steps 3 and 5 pass, so a failed run leaves the last good tables
 in data/processed/. Exits with code 1 on any failure.
@@ -38,7 +41,7 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-from sleeper_dash import extract, lineup, metrics, transform, validate
+from sleeper_dash import extract, lineup, metrics, seasons, transform, validate
 from sleeper_dash.api import SleeperAPIError
 from sleeper_dash.config import PROJECT_ROOT, load_config
 
@@ -56,12 +59,13 @@ def league_facts(league):
             "playoff_teams": settings.get("playoff_teams")}  # quoted by the playoff odds section and its copy
 
 
-def write_run_record(league, season, weeks, path=None):
+def write_run_record(league, season, weeks, path=None, all_seasons=None):
     """Record a successful run for the dashboard. Kept out of data/processed/ so the tables stay byte-identical across runs."""
     path = path or RUN_RECORD_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
     record = {"finished_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-              "league_name": league.get("name"), "season": season, "weeks": weeks, "league": league_facts(league)}
+              "league_name": league.get("name"), "season": season, "weeks": weeks, "league": league_facts(league),
+              "seasons": all_seasons or [season]}
     path.write_text(json.dumps(record, indent=2), encoding="utf-8")
     return record
 
@@ -91,26 +95,44 @@ def run():
 
     extracted = extract.extract(config)
 
-    tables, league, rosters, _ = transform.build_tables(config.season, config.season_start_date)
-    data_results = validate.validate(tables, league, rosters, validate.run_data_checks, "Data checks")
+    # Each season is built and checked against its own league settings and Sleeper standings.
+    by_season = {}
+    for season in config.seasons:
+        tables, league, rosters, _ = transform.build_tables(season, config.start_date(season))
+        by_season[season] = (tables, league, seasons.with_known_gaps(rosters, config.sleeper_points_gaps.get(season, [])))
+    teams = pd.concat([t["teams"] for t, _, _ in by_season.values()], ignore_index=True)
+    managers = seasons.build_managers(teams)
+    data_results = validate.validate_seasons(by_season, validate.run_data_checks, "Data checks",
+                                             extra=[validate.check_managers(managers, teams)])
 
-    tables.update(lineup.build_lineup_tables(tables, league, transform.read_players()))
-    tables.update(metrics.build_metric_tables(tables, config.metrics, league))
-    metric_results = validate.validate(tables, league, rosters, validate.run_metric_checks, "Metric checks")
+    players = transform.read_players()
+    for tables, league, _ in by_season.values():
+        tables.update(lineup.build_lineup_tables(tables, league, players))
+        tables.update(metrics.build_metric_tables(tables, config.metrics, league))
+    metric_results = validate.validate_seasons(by_season, validate.run_metric_checks, "Metric checks")
 
+    tables = seasons.stack({season: t for season, (t, _, _) in by_season.items()})
+    tables["managers"] = managers
     before, previous_week = saved_snapshot(config.season, tables)
     transform.save_tables(tables)
     after, _ = saved_snapshot(config.season, tables)
     saved = validate.load_tables()
-    saved_results = validate.validate(saved, league, rosters, stage="Saved-file checks")  # the CSVs themselves pass
+    saved_by_season = {season: (seasons.season_slice(saved, season), league, rosters)
+                       for season, (_, league, rosters) in by_season.items()}
+    saved_results = validate.validate_seasons(saved_by_season, stage="Saved-file checks",  # the CSVs themselves pass
+                                              extra=[validate.check_managers(saved["managers"], saved["teams"])])
 
-    weeks = sorted(int(w) for w in saved["team_weeks"]["week"].unique())
-    write_run_record(league, config.season, weeks)
+    _, league, rosters = by_season[config.season]
+    current = seasons.season_slice(saved, config.season)
+    weeks = sorted(int(w) for w in current["team_weeks"]["week"].unique())
+    write_run_record(league, config.season, weeks, all_seasons=config.seasons)
+    # Soft check on the current season only: past seasons' gaps are known and come from today's player positions (risk 10).
     sleeper_check = lineup.compare_to_sleeper_max(
-        saved["lineups_optimal"], saved["team_weeks"], rosters, config.metrics["efficiency"]["ppts_warn_gap"]
+        current["lineups_optimal"], current["team_weeks"], rosters, config.metrics["efficiency"]["ppts_warn_gap"]
     )
     return {
         "season": config.season,
+        "seasons": config.seasons,
         "weeks": weeks,
         "previous_week": previous_week,  # latest week in data/processed/ before this run; None if none for this season
         "changed_tables": None if not before else [name for name in tables if before.get(name) != after.get(name)],
@@ -144,6 +166,10 @@ def _table_change(changed, total):
     return f"{len(changed)} of {total} changed: {', '.join(changed)}"
 
 
+def _season_span(all_seasons):
+    return str(all_seasons[0]) if len(all_seasons) == 1 else f"{all_seasons[0]}–{all_seasons[-1]} ({len(all_seasons)} seasons)"
+
+
 def _check_lines(checks):
     width = max(len(name) for name, _, _ in checks)
     return [f"    {'PASS' if passed else 'FAIL'}  {name:<{width}}  {detail}" for name, passed, detail in checks]
@@ -169,6 +195,7 @@ def summary_markdown(summary):
         "| | |",
         "|---|---|",
         f"| Latest completed week | {_week_change(weeks[-1] if weeks else None, summary['previous_week'])} |",
+        f"| Seasons | {_season_span(summary.get('seasons', [summary['season']]))} |",
         *(f"| {label} | {sum(ok for _, ok, _ in checks)} of {len(checks)} passed |" for label, checks in groups),
         f"| Saved files re-checked | {passed} of {total} checks passed |",
         f"| Tables written | {len(rows)}; vs the last run: {_table_change(changed, len(rows))} |",
@@ -213,6 +240,7 @@ def main():
     weeks = summary["weeks"]
     week_text = f"{weeks[0]}–{weeks[-1]}" if weeks else "none completed yet"
     print(f"Pipeline complete: season {summary['season']}, weeks {week_text}")
+    print(f"  Seasons:    {_season_span(summary.get('seasons', [summary['season']]))}")
     print(f"  Latest completed week:  {_week_change(weeks[-1] if weeks else None, summary['previous_week'])}")
     print(f"  Tables vs the last run: {_table_change(summary['changed_tables'], len(summary['rows']))}")
     print(f"  API calls:  {summary['api_calls']}")

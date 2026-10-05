@@ -19,6 +19,13 @@ class Config:
     season_start_dates: dict
     metrics: dict = field(default_factory=dict)  # metric parameters; defined in docs/METRICS_SPEC.md
     dashboard: dict = field(default_factory=dict)  # page settings, e.g. stale_after_days (docs/UI_GUIDE.md)
+    # First season to include. Earlier seasons are reached through each league's previous_league_id;
+    # None means the configured season only.
+    history_from: int | None = None
+    # {season: [{roster_id, points_for, points_against}]}: known gaps between the sum of Sleeper's weekly
+    # scores and its stored season totals (weekly sum minus stored), from stat corrections Sleeper never
+    # carried into the totals. The points check allows exactly these and nothing else.
+    sleeper_points_gaps: dict = field(default_factory=dict)
 
     def start_date(self, season):
         """The season's start date, 'YYYY-MM-DD'. Raises ValueError if config.yaml doesn't have it."""
@@ -33,6 +40,11 @@ class Config:
     def season_start_date(self):
         """This season's start date."""
         return self.start_date(self.season)
+
+    @property
+    def seasons(self):
+        """Every season the pipeline builds, oldest first: history_from up to the configured season."""
+        return list(range(self.history_from or self.season, self.season + 1))
 
 
 def load_config(path: Path = CONFIG_PATH) -> Config:
@@ -71,8 +83,38 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
     if not isinstance(stale, (int, float)) or isinstance(stale, bool) or stale <= 0:
         raise ValueError(f"dashboard.stale_after_days in {path} must be a number of days above 0, e.g. stale_after_days: 8")
 
+    history_from = raw.get("history_from")
+    if history_from is not None:
+        if not _is_whole_number(history_from) or history_from > season:
+            raise ValueError(f"history_from in {path} must be a season year no later than season ({season}), e.g. history_from: 2020")
+        missing = [s for s in range(history_from, season) if s not in start_dates]
+        if missing:
+            raise ValueError(f"season_start_dates in {path} has no date for season(s) {missing}, which history_from "
+                             f"{history_from} includes. Add one line per season.")
+
     return Config(league_id=league_id, season=season, season_start_dates=start_dates, metrics=metrics,
-                  dashboard={**dashboard, "stale_after_days": stale})
+                  dashboard={**dashboard, "stale_after_days": stale}, history_from=history_from,
+                  sleeper_points_gaps=_points_gaps(raw.get("sleeper_points_gaps") or {}, path))
+
+
+def _points_gaps(value, path):
+    """{season: [{"roster_id": int, "points_for": float, "points_against": float}]}, missing amounts as 0."""
+    example = "sleeper_points_gaps:\n  2023:\n    - {roster_id: 5, points_for: 1.00}"
+    if not isinstance(value, dict):
+        raise ValueError(f"sleeper_points_gaps in {path} must list gaps by season, e.g.\n{example}")
+    gaps = {}
+    for season, entries in value.items():
+        if not _is_whole_number(season) or not isinstance(entries, list):
+            raise ValueError(f"sleeper_points_gaps in {path}: {season!r} must be a season year with a list of gaps, e.g.\n{example}")
+        gaps[season] = []
+        for entry in entries:
+            extra = set(entry) - {"roster_id", "points_for", "points_against"} if isinstance(entry, dict) else {"?"}
+            if extra or not _is_whole_number(entry.get("roster_id")):
+                raise ValueError(f"sleeper_points_gaps in {path}, season {season}: each gap needs roster_id and "
+                                 f"points_for and/or points_against, e.g.\n{example}")
+            gaps[season].append({"roster_id": entry["roster_id"], "points_for": float(entry.get("points_for", 0)),
+                                 "points_against": float(entry.get("points_against", 0))})
+    return gaps
 
 
 def _is_whole_number(value):

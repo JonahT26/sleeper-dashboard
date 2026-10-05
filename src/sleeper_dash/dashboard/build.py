@@ -175,7 +175,10 @@ def build_view(tables, run, params, fresh=None):
     tables: teams, team_weeks, power_rankings, metrics_season, lineups_optimal, awards. run: the pipeline's run record.
     params: config.yaml metrics (power weights and windows for the ladder; every weight and threshold for "How this works").
     fresh: freshness() for the stale-data line; build_site always passes it. Without it the page has no stale-data line.
+    The saved tables hold every season (Phase 5); the page shows the run's season only.
     """
+    tables = {name: table[table["season"] == run["season"]].reset_index(drop=True) if "season" in table.columns else table
+              for name, table in tables.items()}
     teams = tables["teams"].set_index("roster_id")
     power, season, awards = tables["power_rankings"], tables["metrics_season"], tables["awards"]
     lineups, team_weeks = tables["lineups_optimal"], tables["team_weeks"]

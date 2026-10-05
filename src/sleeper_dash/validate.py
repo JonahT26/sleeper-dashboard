@@ -27,10 +27,12 @@ KEYS = {
     "power_rankings": ["season", "week", "roster_id"],
     "awards": ["season", "week", "award", "roster_id"],
     "playoff_odds": ["season", "week", "roster_id"],
+    "managers": ["owner_id"],
 }
 LUCK_TOLERANCE = 1e-6  # wins
 BASE_TABLES = ["teams", "team_weeks", "player_weeks", "transactions", "schedule", "winners_bracket"]  # built by transform
-METRIC_TABLES = [name for name in KEYS if name not in BASE_TABLES]                  # built by lineup and metrics
+HISTORY_TABLES = ["managers"]                                                      # across seasons (seasons.py)
+METRIC_TABLES = [name for name in KEYS if name not in BASE_TABLES + HISTORY_TABLES]  # built by lineup and metrics
 
 
 @dataclass
@@ -55,7 +57,7 @@ def check_team_rows_per_week(team_weeks, league):
     if counts.empty:
         return CheckResult("Every week has one row per team", True, "no completed weeks yet")
     problems = [f"week {w}: {n} rows, expected {expected}" for w, n in counts.items() if n != expected]
-    start = league["settings"].get("start_week", 1)
+    start = 1  # not Sleeper's start_week, which is wrong for 2020 (see _regular_weeks)
     missing = sorted(set(range(start, counts.index.max() + 1)) - set(counts.index))
     if missing:
         problems.append(f"weeks missing entirely: {missing}")
@@ -188,9 +190,12 @@ def check_points_for_against(team_weeks, rosters):
     """Points for and against match Sleeper's fpts and fpts_against (within TOLERANCE).
 
     Regular season only, as Sleeper counts it; in playoff weeks a standard that also counts playoff
-    points is accepted too, as long as one standard fits every team.
+    points is accepted too, as long as one standard fits every team. Sleeper's totals arrive with any known
+    gaps from config.yaml sleeper_points_gaps already added back (seasons.with_known_gaps); the detail says how many.
     """
     sleeper = {rid: (s["PF"], s["PA"]) for rid, s in _sleeper_totals(rosters).items()}
+    known = sum(bool(r["settings"].get("known_points_gap")) for r in rosters)
+    allowed = f"; {known} team(s) with a known Sleeper gap from config.yaml" if known else ""
     standards = _points_standards(team_weeks)
     close = lambda ours, theirs: abs(ours[0] - theirs[0]) <= TOLERANCE and abs(ours[1] - theirs[1]) <= TOLERANCE
     standard = _matching_standard(standards, sleeper, close)
@@ -205,13 +210,16 @@ def check_points_for_against(team_weeks, rosters):
                 problems.append(f"roster {roster_id}: points against {pa:.2f} vs Sleeper {spa:.2f}")
         if len(standards) > 1:
             problems.append(f"no counting standard fits every team (tried: {', '.join(standards)})")
+    if problems and known:
+        problems.append(f"after adding back {known} team(s)' known gaps from config.yaml sleeper_points_gaps")
     return _result("Points for/against match Sleeper", problems,
-                   f"{len(rosters)} teams within {TOLERANCE}; {standard or REGULAR_SEASON}")
+                   f"{len(rosters)} teams within {TOLERANCE}; {standard or REGULAR_SEASON}{allowed}")
 
 
 def _regular_weeks(league):
-    settings = league["settings"]
-    return list(range(settings.get("start_week", 1), settings["playoff_week_start"]))
+    """Week 1 to the week before the playoffs. Sleeper's start_week setting is ignored: in 2020 it says 4,
+    yet weeks 1-3 were played and count in Sleeper's own standings (owner, 2026-10-05)."""
+    return list(range(1, league["settings"]["playoff_week_start"]))
 
 
 def check_schedule(schedule, team_weeks, league):
@@ -577,6 +585,37 @@ def check_playoff_odds(odds, team_weeks, league):
                                    "every seed once; Clinched and Out consistent")
 
 
+def check_managers(managers, teams):
+    """Managers are matched across seasons by Sleeper owner ID (seasons.build_managers).
+
+    Every team in every season has an owner listed in managers, no owner has two teams in one season,
+    and each manager's seasons, first and last season, and name (from their latest season) agree with teams.
+    """
+    from sleeper_dash.seasons import build_managers
+
+    problems = []
+    if teams["owner_id"].isna().any():
+        rows = teams[teams["owner_id"].isna()]
+        problems += [f"{r.season} roster {r.roster_id}: no owner" for r in rows.itertuples()]
+    doubled = teams.dropna(subset=["owner_id"]).groupby(["season", "owner_id"]).size()
+    problems += [f"{season}: owner {owner} has {n} teams" for (season, owner), n in doubled[doubled > 1].items()]
+    if managers["owner_id"].duplicated().any():
+        problems.append("an owner appears twice in managers")
+    expected = build_managers(teams).set_index("owner_id")
+    actual = managers.astype({"owner_id": str}).set_index("owner_id")
+    missing, extra = sorted(set(expected.index) - set(actual.index)), sorted(set(actual.index) - set(expected.index))
+    problems += [f"owner {o} owns a team but isn't in managers" for o in missing]
+    problems += [f"owner {o} is in managers but owns no team" for o in extra]
+    both = expected.index.intersection(actual.index)
+    for column in ["display_name", "first_season", "last_season", "seasons"]:
+        wrong = [o for o in both if expected.at[o, column] != actual.at[o, column]]
+        problems += [f"owner {o}: {column} is {actual.at[o, column]}, expected {expected.at[o, column]}" for o in wrong]
+    seasons = teams["season"].nunique()
+    every = int((actual["seasons"] == seasons).sum()) if len(actual) else 0
+    return _result("Managers match across seasons by owner ID", problems,
+                   f"{len(actual)} managers over {seasons} season(s); {every} played every season")
+
+
 def check_unique_keys(tables, label=None):
     """No table has two rows with the same key."""
     problems = []
@@ -634,6 +673,42 @@ def run_checks(tables, league, rosters):
     return run_data_checks(tables, league, rosters) + run_metric_checks(tables, league, rosters)
 
 
+def combine_season_results(per_season):
+    """One result per check from {season: [results]}: passed only if it passed in every season.
+
+    A failure names each season it failed in; a pass shows the latest season's detail and how many
+    earlier seasons also passed. With one season the results are unchanged.
+    """
+    if len(per_season) == 1:
+        return next(iter(per_season.values()))
+    latest = max(per_season)
+    combined = []
+    for result in per_season[latest]:
+        rows = {season: r for season, results in per_season.items() for r in results if r.name == result.name}
+        failed = {season: r for season, r in rows.items() if not r.passed}
+        if failed:
+            detail = "; ".join(f"{season}: {r.detail}" for season, r in sorted(failed.items(), reverse=True))
+        else:
+            earlier = len(rows) - 1
+            detail = f"{latest}: {result.detail}" + (f"; passed in {earlier} earlier season(s) too" if earlier else "")
+        combined.append(CheckResult(result.name, not failed, detail))
+    return combined
+
+
+def validate_seasons(by_season, checks=None, stage="Validation", extra=()):
+    """validate() for several seasons: by_season = {season: (tables, league, rosters)}, each season checked
+    against its own league settings and Sleeper standings. `extra` adds results already worked out across
+    seasons (e.g. check_managers). Raises ValidationError listing every failure; returns the results."""
+    per_season = {season: (checks or run_checks)(tables, league, rosters) for season, (tables, league, rosters) in by_season.items()}
+    results = combine_season_results(per_season) + list(extra)
+    failed = [r for r in results if not r.passed]
+    if failed:
+        raise ValidationError(
+            f"{stage}: {len(failed)} check(s) failed; nothing was saved or published.\n\n" + format_results(results)
+        )
+    return results
+
+
 def format_results(results):
     width = max(len(r.name) for r in results)
     lines = [f"{'Check':<{width}}  Result  Detail"]
@@ -670,11 +745,15 @@ def load_tables(processed_dir=None, names=None):
 
 def main():
     from sleeper_dash.config import load_config
-    from sleeper_dash.transform import read_raw
+    from sleeper_dash.seasons import league_files, season_slice
 
-    season = load_config().season
-    tables, league, rosters = load_tables(), read_raw(season, "league.json"), read_raw(season, "rosters.json")
-    data, metric = run_data_checks(tables, league, rosters), run_metric_checks(tables, league, rosters)
+    tables = load_tables()
+    files = league_files(sorted(int(s) for s in tables["teams"]["season"].unique()), load_config().sleeper_points_gaps)
+    by_season = {season: (season_slice(tables, season), *files[season]) for season in files}
+    data = combine_season_results({s: run_data_checks(*v) for s, v in by_season.items()})
+    data.append(check_managers(tables["managers"], tables["teams"]))
+    metric = combine_season_results({s: run_metric_checks(*v) for s, v in by_season.items()})
+    print(f"Seasons: {', '.join(str(s) for s in files)}\n")
     print("DATA CHECKS\n" + format_results(data) + "\n\nMETRIC CHECKS\n" + format_results(metric))
     results = data + metric
     failed = sum(not r.passed for r in results)

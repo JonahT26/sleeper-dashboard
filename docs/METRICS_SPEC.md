@@ -160,7 +160,7 @@ Solved exactly as an assignment problem (slots × players).
 | REC_FLEX | WR, TE |
 | SUPER_FLEX | QB, RB, WR, TE |
 
-This league uses QB, RB, WR, FLEX, REC_FLEX, SUPER_FLEX, K, and DEF. TE and WRRB_FLEX are Sleeper slots it doesn't use; they are listed so a settings change wouldn't stop the run. A player's positions are his `fantasy_positions` in the players cache (his primary `position` if that list is empty), and he may fill a slot if any of them is eligible. The slot list is read from league settings each run. The eligibility table is Sleeper's rule, not a tunable parameter, so it is fixed in this spec. A slot name not in this table stops the run.
+This league uses QB, RB, WR, FLEX, REC_FLEX, SUPER_FLEX, K, and DEF. TE and WRRB_FLEX are Sleeper slots it doesn't use; they are listed so a settings change wouldn't stop the run. A player's positions are his `fantasy_positions` in the players cache (his primary `position` if that list is empty), plus, for that week only, the position of the single-position slot (QB, RB, WR, TE, K, DEF) he actually started in: Sleeper only allows a start his position permitted at the time, so it proves he had that position then (owner, 2026-10-05, after past seasons showed a 2021 WR whom Sleeper lists as RB today). He may fill a slot if any of these is eligible. The slot list is read from league settings each run. The eligibility table is Sleeper's rule, not a tunable parameter, so it is fixed in this spec. A slot name not in this table stops the run.
 
 **Formula.** For team *i* in week *w*:
 
@@ -197,7 +197,7 @@ The players chosen by the optimal lineup are stored as well (one row per slot pe
 | Optimal points of 0 or less | Efficiency is null (cannot occur in practice; listed so the code never divides by zero) |
 | Equal-scoring alternatives | Optimal points are the same either way. For the stored player list, ties go to the player the manager actually started, so no award blames a manager for a pointless swap |
 | Playoff weeks | **Included: every week, every team** (owner decision, consistent with all-play). Season totals include playoff weeks. The soft check against `ppts` uses regular-season weeks only, because `ppts` is assumed to be regular season only (verify at week 15) |
-| Position eligibility | From the players cache, which describes players **today** (owner accepted). A player whose position changed mid-season is judged on his current position. In weeks 1–3, none of the 230 players used had more than one eligible position |
+| Position eligibility | From the players cache, which describes players **today** (owner accepted), plus the position of a single-position slot the player actually started in that week (owner, 2026-10-05). A player whose position changed is judged on his current position except in weeks he started at his old one. In weeks 1–3, none of the 230 players used had more than one eligible position |
 | Median game | Not relevant |
 | Small early-season samples | No shrinkage. The metric is descriptive |
 
