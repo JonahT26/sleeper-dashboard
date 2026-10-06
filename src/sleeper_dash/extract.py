@@ -165,6 +165,12 @@ def extract(config):
     while True:
         league, summary = extract_season(league_id, season, state)
         calls += summary["calls"]
+        if season == config.season and summary["latest_completed_week"] == 0:
+            # Season rollover too early (owner, 2026-10-05): say so plainly rather than fail later on missing files.
+            raise ExtractError(
+                f"Season {season} has no completed week yet, so there is nothing to rank. Keep the previous season "
+                f"(season: {season - 1} and its league_id) in config.yaml until week 1 of {season} is scored; the "
+                "last published page stays live meanwhile (docs/RUNBOOK.md, section 2).")
         seasons[season] = {**summary, "league_id": league_id}
         if season <= first:
             break

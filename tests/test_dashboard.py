@@ -41,9 +41,12 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining
     teams = pd.DataFrame({"season": 2026, "roster_id": range(1, n + 1), "owner_id": [f"9{i:02d}" for i in range(1, n + 1)],
                           "team_name": team_names or [f"Team {i}" for i in range(1, n + 1)],
                           "display_name": [f"user{i}" for i in range(1, n + 1)]})
-    power, season, awards, team_weeks, lineups = [], [], [], [], []
+    power, season, awards, team_weeks, lineups, weekly = [], [], [], [], [], []
     for week in range(1, weeks + 1):
         for i in range(1, n + 1):
+            # Team 1 booms every even week and team n busts in week 2, matching boom_weeks and bust_weeks below.
+            weekly.append({"season": 2026, "week": week, "roster_id": i, "is_boom": i == 1 and week % 2 == 0,
+                           "is_bust": i == n and week == 2})
             team_weeks.append({"season": 2026, "week": week, "roster_id": i, "is_playoff": week >= 15,
                                "points": 140.0 - 3 * i + (week % 3) * (i % 4)})
             actual = 140.0 - 3 * i
@@ -65,7 +68,8 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining
                            "efficiency": round((140.0 - 3 * i) / (140.0 - 2 * i), 4),
                            # consistency and strength of schedule appear from week 3 (min_weeks); remaining ends after week 14
                            "volatility": 10.0 + i if week >= 3 else None, "floor": 120.0 - i if week >= 3 else None,
-                           "ceiling": 140.0 + i if week >= 3 else None, "sos_played": (i - 6.5) * 2 if week >= 3 else None,
+                           "ceiling": 140.0 + i if week >= 3 else None,
+                           "boom_weeks": week // 2 if i == 1 else 0, "bust_weeks": 1 if i == n and week >= 2 else 0, "sos_played": (i - 6.5) * 2 if week >= 3 else None,
                            "sos_remaining": (0.0 if flat_remaining else 6.5 - i) if 3 <= week < 14 else None,
                            "allplay_wins": (n - i) * week, "allplay_losses": (i - 1) * week, "allplay_ties": 0,
                            "h2h_wins": week if i == 1 else 0, "h2h_losses": 0 if i == 1 else week, "h2h_ties": 0})
@@ -79,7 +83,7 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining
                  "value": 40.0, "caption": "Beat Team 8 by 40.0.", "player_id": None},
             ]
     return {"teams": teams, "team_weeks": pd.DataFrame(team_weeks), "lineups_optimal": pd.DataFrame(lineups),
-            "power_rankings": pd.DataFrame(power), "metrics_season": pd.DataFrame(season),
+            "power_rankings": pd.DataFrame(power), "metrics_team_weeks": pd.DataFrame(weekly), "metrics_season": pd.DataFrame(season),
             "awards": pd.DataFrame(awards, columns=["season", "week", "award", "award_name", "roster_id", "value", "caption", "player_id"]),
             "playoff_odds": make_odds(range(3, min(weeks, 14) + 1), n),
             "managers": seasons.build_managers(teams),

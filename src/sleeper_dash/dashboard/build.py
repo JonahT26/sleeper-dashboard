@@ -26,7 +26,7 @@ from sleeper_dash.dashboard import bracket, charts, explainer, history, moves, t
 
 SITE_DIR = PROJECT_ROOT / "site"
 TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards", "playoff_odds",
-          "managers", "winners_bracket", "start_credits", "pickups", "trades"]
+          "managers", "winners_bracket", "start_credits", "pickups", "trades", "metrics_team_weeks"]
 EASTERN = ZoneInfo("America/New_York")
 # The weekly workflow's schedule is the one source for "next update due" (UI_GUIDE.md "Status bar").
 WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "weekly.yml"
@@ -233,7 +233,11 @@ def build_view(tables, run, params, fresh=None):
         if not so_far.empty:
             sections.append(charts.efficiency_chart(so_far, standings["efficiency"], names, highlight, week))
         scores = team_weeks.loc[team_weeks["week"] <= week, ["roster_id", "week", "points"]]
-        later = [charts.consistency_chart(scores, standings, names, highlight, week),
+        if "metrics_team_weeks" in tables:  # boom and bust weeks, drawn as ▲ and ▼
+            scores = scores.merge(tables["metrics_team_weeks"][["week", "roster_id", "is_boom", "is_bust"]],
+                                  on=["week", "roster_id"], how="left", validate="one_to_one")
+        margins = (params["consistency"]["boom_margin"], params["consistency"]["bust_margin"])
+        later = [charts.consistency_chart(scores, standings, names, highlight, week, margins),
                  charts.schedule_chart(standings, names, highlight, week),
                  charts.rank_history_chart(power.loc[power["week"] <= week, ["week", "roster_id", "rank"]], names, highlight, week)]
         sections += [section for section in later if section]  # a chart without data yet is left out

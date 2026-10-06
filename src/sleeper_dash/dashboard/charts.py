@@ -157,11 +157,14 @@ def efficiency_chart(lineups, efficiency, names, highlight, week):
     }
 
 
-def consistency_chart(scores, standings, names, highlight, week):
+def consistency_chart(scores, standings, names, highlight, week, margins=None):
     """Strip plot of each team's weekly scores, one row per team, steadiest on top (METRICS_SPEC.md section 4).
 
-    scores: team_weeks rows for weeks 1…week (roster_id, week, points). standings: metrics_season rows for this
-    week, indexed by roster_id (volatility, floor, ceiling). Returns None until volatility exists (min_weeks).
+    scores: team_weeks rows for weeks 1…week (roster_id, week, points), with metrics_team_weeks' is_boom and is_bust
+    when available. standings: metrics_season rows for this week, indexed by roster_id (volatility, floor, ceiling,
+    boom_weeks, bust_weeks). margins: (boom_margin, bust_margin) from config. Boom weeks are drawn as ▲ and bust weeks
+    as ▼ (owner, 2026-10-05): the shape carries the meaning, so the highlight colour works as on every chart.
+    Returns None until volatility exists (min_weeks).
     """
     if standings["volatility"].isna().all():
         return None
@@ -177,12 +180,17 @@ def consistency_chart(scores, standings, names, highlight, week):
         annotations += _row_labels(shown[r.roster_id], f"±{r.volatility:.1f}", r.row, r.roster_id)
     points = scores.sort_values(["roster_id", "week"])
     rosters = points["roster_id"].tolist()
+    boom, bust = ([bool(v) for v in points[c].fillna(False)] if c in points else [False] * len(points) for c in ("is_boom", "is_bust"))
+    kind = [", a boom" if b else ", a bust" if s else "" for b, s in zip(boom, bust)]
     median = float(points["points"].median())
     data = [
         {"type": "scatter", "mode": "lines", "x": band_x, "y": band_y, "hoverinfo": "skip", "line": {"color": "@hash", "width": 8}},
         {"type": "scatter", "mode": "markers", "x": points["points"].round(2).tolist(), "y": points["roster_id"].map(row_of).tolist(),
-         "marker": {"size": 8, "opacity": 0.9, "color": [theme.team_colour(r, highlight) for r in rosters], "line": {"width": 1, "color": "@page"}},
-         "customdata": rosters, "hovertext": [f"{shown[r.roster_id]}<br>Week {r.week}: {r.points:.1f}" for r in points.itertuples()],
+         "marker": {"size": [11 if b or s else 8 for b, s in zip(boom, bust)], "opacity": 0.9,
+                    "symbol": ["triangle-up" if b else "triangle-down" if s else "circle" for b, s in zip(boom, bust)],
+                    "color": [theme.team_colour(r, highlight) for r in rosters], "line": {"width": 1, "color": "@page"}},
+         "customdata": rosters, "hovertext": [f"{shown[r.roster_id]}<br>Week {r.week}: {r.points:.1f}{k}"
+                                              for r, k in zip(points.itertuples(), kind)],
          "hovertemplate": "%{hovertext}<extra></extra>", "meta": {"rosters": rosters, "paint": ["marker.color"]}},
     ]
     n = len(order)
@@ -197,15 +205,32 @@ def consistency_chart(scores, standings, names, highlight, week):
         "annotations": annotations, "margin": {"t": 24},
     }
     steady, swingy = order.iloc[0], order.iloc[-1]
+    subtitle = ("Each dot is one week's score; the shaded bar runs from a typical bad week to a typical good week. "
+                "Steadiest teams on top. The ± number is how much a team's score swings against the league each week.")
+    counts = ""
+    if margins:
+        subtitle += (f" ▲ is a boom week, {margins[0]:g} or more points above that week's median; "
+                     f"▼ a bust, {margins[1]:g} or more below.")
+        counts = " " + " ".join(_most(order, column, label, names) for column, label in (("boom_weeks", "booms"), ("bust_weeks", "busts")))
     return {
         "key": "consistency", "id": f"consistency-{week}",
         "title": "Consistency: weekly scores",
-        "subtitle": "Each dot is one week's score; the shaded bar runs from a typical bad week to a typical good week. "
-                    "Steadiest teams on top. The ± number is how much a team's score swings against the league each week.",
+        "subtitle": subtitle,
         "summary": f"Consistency through week {week}. Steadiest: {names[steady.roster_id]} (±{steady.volatility:.1f} points). "
-                   f"Swingiest: {names[swingy.roster_id]} (±{swingy.volatility:.1f}). League median score {median:.1f}.",
+                   f"Swingiest: {names[swingy.roster_id]} (±{swingy.volatility:.1f}). League median score {median:.1f}.{counts}",
         "figure": {"data": data, "layout": layout, "labels": [], "highlight": highlight, "height": {"phone": 30 * n + 90, "desktop": 30 * n + 90}},
     }
+
+
+def _most(order, column, label, names):
+    """'Most booms: Team A (3).', 'Most busts: Team B and Team C (2).', 'Most booms: 7 teams with 1.', or 'No busts yet.'"""
+    top = order[column].max()
+    if not top:
+        return f"No {label} yet."
+    leaders = [names[r] for r in order.loc[order[column] == top, "roster_id"].sort_values()]
+    if len(leaders) > 2:
+        return f"Most {label}: {len(leaders)} teams with {int(top)}."
+    return f"Most {label}: {' and '.join(leaders)} ({int(top)})."
 
 
 def schedule_chart(standings, names, highlight, week):
