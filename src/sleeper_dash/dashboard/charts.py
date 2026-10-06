@@ -234,10 +234,10 @@ def _most(order, column, label, names):
 
 
 def schedule_chart(standings, names, highlight, week):
-    """Strength of schedule, played and remaining, as bars left or right of the league average (METRICS_SPEC.md section 5).
+    """Strength of schedule so far, as bars left or right of the league average (METRICS_SPEC.md section 5).
 
     standings: metrics_season rows for this week, indexed by roster_id. Returns None until SOS exists (min_weeks).
-    The remaining panel is left out once the regular season is over.
+    Only games played are drawn; sos_remaining stays in metrics_season but is left off the page (owner, 2026-10-06).
     """
     if standings["sos_played"].isna().all():
         return None
@@ -245,64 +245,37 @@ def schedule_chart(standings, names, highlight, week):
     order["row"] = _rows(order)
     n, rows, rosters = len(order), order["row"].tolist(), order["roster_id"].tolist()
     shown = _plotly_text(names)
-    remaining = order["sos_remaining"]
-    has_remaining = bool(remaining.notna().any())
-    all_average = has_remaining and bool((remaining.abs() < 0.05).all())
-    two_panels = has_remaining and not all_average  # a panel of zero-length bars says nothing; a note says it better
+    played = order["sos_played"]
 
-    biggest = max(order["sos_played"].abs().max(), remaining.abs().max() if two_panels else 0, 1)
+    biggest = max(played.abs().max(), 1)
     tick = max([t for t in (2, 5, 10, 15, 20, 25, 30, 40, 50) if t <= biggest] or [2])
     reach = biggest * 1.45  # room past the longest bar for its value
     colours = [theme.team_colour(r, highlight) for r in rosters]
-
-    def bars(values, axis_name, label):
-        return {"type": "bar", "orientation": "h", "x": values.round(2).tolist(), "y": rows, "xaxis": axis_name, "yaxis": "y",
-                "marker": {"color": list(colours)}, "width": 0.36, "text": [_signed(v) for v in values], "textposition": "outside",
-                "cliponaxis": False, "textfont": {"size": theme.LABEL_SIZE, "color": "@ink"}, "customdata": rosters,
-                "hovertext": [f"{shown[r]}<br>{label}: {_signed(v)} points a week vs average" for r, v in zip(rosters, values)],
-                "hovertemplate": "%{hovertext}<extra></extra>", "meta": {"rosters": rosters, "paint": ["marker.color"]}}
-
-    def zero_line(axis_name):
-        return {"type": "line", "x0": 0, "x1": 0, "xref": axis_name, "y0": 0, "y1": 1, "yref": "paper", "line": {"color": "@muted", "width": 1}}
-
-    played_domain = [0, 0.47] if two_panels else [0, 1]
-    axis = {"range": [-reach, reach], "tickvals": [-tick, 0, tick], "ticktext": [f"{MINUS}{tick:g}", "0", f"+{tick:g}"],
-            "title": {"text": "Points a week vs average"}}
-    data, shapes = [bars(order["sos_played"], "x", "Played")], [zero_line("x")]
-    layout = {"xaxis": {**axis, "domain": played_domain},
-              "yaxis": {"range": [-0.6, n - 0.2], "dtick": 1, "tick0": 0, "showticklabels": False}, "margin": {"t": 26}}
-    titles = [("Played", sum(played_domain) / 2)]
-    if two_panels:
-        layout["xaxis2"] = theme.merge(theme.axis(gridlines=False), {**axis, "domain": [0.53, 1], "anchor": "y"})
-        titles.append(("Remaining", 0.765))
-        data.append(bars(remaining, "x2", "Remaining"))
-        shapes.append(zero_line("x2"))
-    annotations = [{"text": f"<b>{text}</b>", "x": x, "xref": "paper", "y": 1, "yref": "paper", "yanchor": "bottom", "yshift": 4,
-                    "showarrow": False, "font": {"size": 13, "color": "@ink"}} for text, x in titles]
-    for r in order.itertuples():
-        annotations.append(_team_label(shown[r.roster_id], r.roster_id, x=0, xref="paper", xanchor="left", y=r.row, yanchor="bottom", yshift=6))
-    layout["annotations"], layout["shapes"] = annotations, shapes
+    data = [{"type": "bar", "orientation": "h", "x": played.round(2).tolist(), "y": rows,
+             "marker": {"color": list(colours)}, "width": 0.36, "text": [_signed(v) for v in played], "textposition": "outside",
+             "cliponaxis": False, "textfont": {"size": theme.LABEL_SIZE, "color": "@ink"}, "customdata": rosters,
+             "hovertext": [f"{shown[r]}<br>{_signed(v)} points a week vs average" for r, v in zip(rosters, played)],
+             "hovertemplate": "%{hovertext}<extra></extra>", "meta": {"rosters": rosters, "paint": ["marker.color"]}}]
+    layout = {
+        "xaxis": {"range": [-reach, reach], "tickvals": [-tick, 0, tick], "ticktext": [f"{MINUS}{tick:g}", "0", f"+{tick:g}"],
+                  "title": {"text": "Points a week vs average"}},
+        "yaxis": {"range": [-0.6, n - 0.2], "dtick": 1, "tick0": 0, "showticklabels": False},
+        "shapes": [{"type": "line", "x0": 0, "x1": 0, "y0": 0, "y1": 1, "yref": "paper", "line": {"color": "@muted", "width": 1}}],
+        "annotations": [_team_label(shown[r.roster_id], r.roster_id, x=0, xref="paper", xanchor="left", y=r.row, yanchor="bottom", yshift=6)
+                        for r in order.itertuples()],
+        "margin": {"t": 8},
+    }
 
     hardest, easiest = order.iloc[0], order.iloc[-1]
-    summary = (f"Strength of schedule through week {week}. Toughest so far: {names[hardest.roster_id]} ({_signed(hardest.sos_played)} points "
-               f"a week). Easiest: {names[easiest.roster_id]} ({_signed(easiest.sos_played)}).")
-    if all_average:
-        still_to_come = " Still to come: every team's remaining opponents are exactly average (0.0)."
-        summary += still_to_come
-    elif has_remaining:
-        tough = order.loc[remaining.idxmax()]
-        still_to_come = ""
-        summary += f" Toughest still to come: {names[tough.roster_id]} ({_signed(tough.sos_remaining)})."
-    else:
-        still_to_come = ""
-    scope = "Games played so far and still to come" if two_panels else ("Games played so far" if has_remaining else "Regular-season games")
+    scope = "Games played so far" if standings["sos_remaining"].notna().any() else "Regular-season games"
     return {
         "key": "schedule", "id": f"schedule-{week}",
         "title": "Strength of schedule: how strong opponents are",
         "subtitle": "Opponents' average points a week compared with an average schedule. Right of the line: tougher; left: easier. "
-                    f"{scope}, through week {week}.{still_to_come}",
-        "summary": summary,
-        "figure": {"data": data, "layout": layout, "labels": [], "highlight": highlight, "height": {"phone": 34 * n + 90, "desktop": 32 * n + 90}},
+                    f"{scope}, through week {week}.",
+        "summary": f"Strength of schedule through week {week}. Toughest so far: {names[hardest.roster_id]} ({_signed(hardest.sos_played)} points "
+                   f"a week). Easiest: {names[easiest.roster_id]} ({_signed(easiest.sos_played)}).",
+        "figure": {"data": data, "layout": layout, "labels": [], "highlight": highlight, "height": {"phone": 34 * n + 70, "desktop": 32 * n + 70}},
     }
 
 

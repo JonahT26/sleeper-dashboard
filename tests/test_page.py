@@ -625,21 +625,12 @@ def test_schedule_chart_matches_metrics_season(season):
         if s["sos_played"].isna().all():
             continue
         fig = figure(node, "schedule", week)
-        panels = {t["xaxis"]: t for t in fig["data"]}
-        remaining = s["sos_remaining"]
-        all_average = remaining.notna().any() and bool((remaining.abs() < 0.05).all())
-        two_panels = remaining.notna().any() and not all_average
-        assert set(panels) == ({"x", "x2"} if two_panels else {"x"}), f"week {week}"
-        for axis_name, column in (("x", "sos_played"), ("x2", "sos_remaining")):
-            if axis_name not in panels:
-                continue
-            bars = panels[axis_name]
-            assert sorted(bars["customdata"]) == s.index.tolist()
-            for roster, x, label in zip(bars["customdata"], bars["x"], bars["text"]):
-                value = s.at[roster, column]
-                assert x == pytest.approx(value, abs=0.0051) and label == signed(value), f"week {week}, {column}, roster {roster}"
-        subtitle = node.one("section", "chart-section", **{"aria-labelledby": f"schedule-{week}-title"}).one("p", "sub").text()
-        assert subtitle.endswith("every team's remaining opponents are exactly average (0.0).") == all_average
+        assert len(fig["data"]) == 1 and "xaxis2" not in fig["layout"], f"week {week}"   # played only
+        bars = fig["data"][0]
+        assert sorted(bars["customdata"]) == s.index.tolist()
+        for roster, x, label in zip(bars["customdata"], bars["x"], bars["text"]):
+            value = s.at[roster, "sos_played"]
+            assert x == pytest.approx(value, abs=0.0051) and label == signed(value), f"week {week}, roster {roster}"
         text = summary(node, "schedule", week)
         for label, best in (("Toughest so far: ", s["sos_played"].max()), ("Easiest: ", s["sos_played"].min())):
             roster = named(text, label, names)

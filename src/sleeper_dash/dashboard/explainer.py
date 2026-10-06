@@ -119,8 +119,8 @@ def sections(params, league):
             f"other {others} teams. +5 means your opponents score 5 more points a week than average, a tougher road; −5 means an "
             "easier one.",
             "Each opponent is judged on its average over the whole season so far, not just the points it scored against you, "
-            "because in fantasy football an opponent's score doesn't depend on who it plays. \"Remaining\" uses the teams still "
-            f"on your regular-season schedule. Strength of schedule appears once {params['schedule']['min_weeks']} weeks are complete.",
+            "because in fantasy football an opponent's score doesn't depend on who it plays. "
+            f"Strength of schedule appears once {params['schedule']['min_weeks']} weeks are complete.",
         ]},
     ]
     odds = params.get("playoff_odds")
