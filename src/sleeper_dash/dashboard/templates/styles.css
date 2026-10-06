@@ -134,6 +134,26 @@ details[open]::details-content { block-size: auto; }
 .seed-table td { padding-right: 4px; padding-left: 4px; min-width: 3.2em;
   background: color-mix(in srgb, var(--bar) calc(var(--p) * 60%), transparent); }
 
+/* Playoffs: the winners bracket as of the selected week; rounds stacked on phones, side by side when there's room */
+.bracket-section { container: bracket / inline-size; }
+.champion { font-weight: 700; font-size: 28px; line-height: 1.15; margin-bottom: 16px; }
+.rounds { display: grid; gap: 24px; }
+.round { min-width: 0; }
+.round-head { font-weight: 600; font-size: 20px; line-height: 1.15; margin-bottom: 8px; }
+.round-week { font: 400 13px/1.5 Barlow, system-ui, sans-serif; color: var(--muted); margin-left: 8px; }
+.games { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.game { border: 1px solid var(--hash); border-radius: 6px; padding: 4px 12px; }
+.game-label { font-size: 13px; color: var(--muted); padding-top: 4px; }
+.slot { display: grid; grid-template-columns: 1.4em minmax(0, 1fr) auto; column-gap: 8px; align-items: baseline; padding: 6px 0; line-height: 1.3; }
+.slot + .slot { border-top: 1px solid var(--hash); }
+.slot .seed { font-weight: 700; font-size: 16px; color: var(--muted); text-align: right; }
+.slot .pts { white-space: nowrap; }
+.slot.won { font-weight: 600; }
+.slot.lost .t-name, .slot.lost .pts, .slot.open .t-name { color: var(--muted); }
+.byes { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.seed-inline { font-weight: 600; color: var(--ink); }
+@container bracket (min-width: 640px) { .rounds { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
 /* History: every finished season, once for the whole page (not per week) */
 .history { max-width: 760px; }
 .h-head { font-weight: 600; font-size: 20px; line-height: 1.15; margin: 24px 0 8px; }
@@ -188,7 +208,9 @@ details[open]::details-content { block-size: auto; }
   .odds-section { grid-column: 1; grid-row: 2; }
   .odds-section .section-title { margin-top: 0; }
   .awards { grid-column: 2; grid-row: 1; }
-  .odds-section ~ .awards { grid-row: 1 / span 2; }  /* beside the ladder and the odds below it */
+  .bracket-section { grid-column: 1; grid-row: 2; }  /* playoff weeks: where the odds sit in the regular season */
+  .bracket-section .section-title { margin-top: 0; }
+  .odds-section ~ .awards, .bracket-section ~ .awards { grid-row: 1 / span 2; }  /* beside the ladder and the section below it */
   .tiles { grid-template-columns: 1fr; }
   .tile { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: baseline; }
   .tile > * { grid-column: 1 / -1; }

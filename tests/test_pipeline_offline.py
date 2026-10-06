@@ -139,7 +139,10 @@ def test_playoff_weeks_run_cleanly_and_publish(run_pipeline, tmp_path, behaviour
     assert read(tmp_path, "power_rankings").groupby("week").size().loc[8:9].tolist() == [8, 8]
     root = tmp_path / "a"
     build.build_site(out_dir=root / "site", processed_dir=root / "processed", run_path=root / "cache" / "pipeline_run.json")
-    assert 'id="week-8"' in (root / "site" / "index.html").read_text(encoding="utf-8")
+    html = (root / "site" / "index.html").read_text(encoding="utf-8")
+    assert 'id="week-8"' in html
+    # The Playoffs section in both playoff weeks; the fake's bracket, like a provisional one, has no results.
+    assert html.count('class="bracket-section"') == 2 and "Winner of 1 v " in html and 'class="champion' not in html
 
 
 def check_detail(summary, name):
