@@ -16,6 +16,7 @@ from sleeper_dash.lineup import (
     compare_to_sleeper_max,
     efficiency_season,
     eligible_positions,
+    sleeper_fill,
     solve_lineup,
     starting_slots,
 )
@@ -96,8 +97,13 @@ def test_flex_trap_beats_greedy_fill():
     assert "TE1" not in set(chosen["player_id"])
 
     everyone = TRAP_STARTERS + TRAP_BENCH
-    greedy = greedy_fill(SLOTS, [p[2] for p in everyone], [frozenset(p[1].split("/")) for p in everyone])
+    points, positions = [p[2] for p in everyone], [frozenset(p[1].split("/")) for p in everyone]
+    greedy = greedy_fill(SLOTS, points, positions)
     assert greedy == 174.5 < lineup["optimal_points"]
+    # Sleeper's own fill (the method behind its max points) makes the same mistake
+    picks = sleeper_fill(SLOTS, points, positions)
+    assert [everyone[i][0] for i in picks] == ["QB1", "RB1", "RB2", "WR1", "WR2", "WR3", "TE1", "QB2", "K1", "DEF1"]
+    assert sum(points[i] for i in picks) == greedy
 
 
 def test_dual_position_player_fills_rec_flex_through_te_eligibility():
@@ -232,14 +238,46 @@ def test_validation_flags_inconsistent_lineup_tables():
     assert "used twice" in check_optimal_lineups(lineups, reused, team_weeks).detail
 
 
-def test_sleeper_max_points_soft_check():
-    lineups = pd.DataFrame({"season": 2026, "week": 1, "roster_id": [1, 2, 3], "optimal_points": [100.0, 110.0, 120.0]})
-    team_weeks = lineups[["season", "week", "roster_id"]].assign(is_playoff=False)
-    rosters = [{"roster_id": r, "settings": {"ppts": p, "ppts_decimal": 0}} for r, p in [(1, 100), (2, 104), (3, 121)]]
-    check = compare_to_sleeper_max(lineups, team_weeks, rosters, warn_gap=5.0).set_index("roster_id")
-    assert pd.isna(check.loc[1, "warning"])                 # exact match
-    assert "above" in check.loc[2, "warning"]               # 6 points above, more than 5
-    assert "below" in check.loc[3, "warning"]               # under Sleeper's figure
+def sleeper_check_league(ppts_by_roster):
+    """Three teams with the FLEX trap lineup in week 1 (Sleeper's method 174.50, best lineup 190.50) and a
+    playoff week 2 that must not count; ppts_by_roster gives each roster's Sleeper max points."""
+    frames, eligibility = [], {}
+    for roster_id in ppts_by_roster:
+        for week in (1, 2):
+            player_weeks, team_weeks, positions = team_week(TRAP_STARTERS, TRAP_BENCH, week=week, roster_id=roster_id)
+            frames.append((player_weeks, team_weeks.assign(is_playoff=week == 2)))
+            eligibility.update(positions)
+    player_weeks = pd.concat([f[0] for f in frames], ignore_index=True)
+    team_weeks = pd.concat([f[1] for f in frames], ignore_index=True)
+    lineups, _ = build_optimal_lineups(player_weeks, team_weeks, ROSTER_POSITIONS, eligibility)
+    players = {pid: {"fantasy_positions": sorted(pos)} for pid, pos in eligibility.items()}
+    rosters = [{"roster_id": r, "settings": {"ppts": int(p), "ppts_decimal": round(p % 1 * 100)}} for r, p in ppts_by_roster.items()]
+    return lineups, player_weeks, team_weeks, rosters, players
+
+
+def test_sleeper_max_points_soft_check_rebuilds_sleepers_method_to_the_cent():
+    lineups, player_weeks, team_weeks, rosters, players = sleeper_check_league({1: 174.50, 2: 174.49, 3: 180.00})
+    check = compare_to_sleeper_max(lineups, player_weeks, team_weeks, rosters, ROSTER_POSITIONS, players).set_index("roster_id")
+    assert (check["sleeper_method_points"] == 174.5).all()      # regular season only: the playoff week 2 isn't counted
+    assert (check["optimal_points"] == 190.5).all()
+    assert pd.isna(check.loc[1, "warning"])                      # exact match
+    assert check.loc[1, "optimal_above_ppts"] == 16.0            # the best lineup beating Sleeper's figure never warns
+    assert check.loc[2, "gap"] == 0.01 and "0.01 above" in check.loc[2, "warning"]   # one cent is enough
+    assert check.loc[3, "gap"] == -5.5 and "5.50 below" in check.loc[3, "warning"]
+
+
+def test_sleeper_fill_uses_week_positions_so_a_position_change_shows_up():
+    # The Taysom Hill pattern (2024): listed QB/TE, a 30-point player is taken at QB by Sleeper's fill, leaving
+    # REC_FLEX a 5-point WR; listed TE only, he goes to REC_FLEX and the real QB plays. The totals differ by 15,
+    # which is how the check exposes a player whose position Sleeper lists differently from the players cache.
+    slots = ["QB", "REC_FLEX"]
+    points = [30.0, 20.0, 5.0]
+    as_qb_te = [{"QB", "TE"}, {"QB"}, {"WR"}]
+    as_te = [{"TE"}, {"QB"}, {"WR"}]
+    assert sleeper_fill(slots, points, as_qb_te) == [0, 2]          # 30 + 5 = 35
+    assert sleeper_fill(slots, points, as_te) == [1, 0]             # 20 + 30 = 50
+    assert [solve_lineup(slots, points, as_qb_te)[i] for i in range(2)] == [1, 0]   # the best lineup isn't fooled
+    assert sleeper_fill(["K"], points, as_te) == [None]             # no eligible player: slot left empty
 
 
 @pytest.mark.parametrize("name", ["lineups_optimal", "lineups_optimal_players"])
