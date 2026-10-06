@@ -31,7 +31,7 @@ from test_dashboard import METRICS, RUN, make_tables
 
 MINUS, EN_DASH = "−", "–"
 # The guide's section order (UI_GUIDE.md "Layout"); "How this works" follows, once for the whole page.
-SECTION_ORDER = ["ladder", "awards", "luck", "efficiency", "consistency", "schedule", "rank-history"]
+SECTION_ORDER = ["ladder", "odds", "awards", "luck", "efficiency", "consistency", "schedule", "rank-history"]
 # Bar axes, rounded up to these (UI_GUIDE.md "Ladder row").
 POWER_AXIS_STEPS = [5, 10, 15, 20, 25, 30, 40, 50]
 PART_AXIS_STEPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20]
@@ -120,6 +120,8 @@ def section_keys(node):
     for section in node.all("section"):
         if "ladder-section" in section.classes:
             keys.append("ladder")
+        elif "odds-section" in section.classes:
+            keys.append("odds")
         elif "awards" in section.classes:
             keys.append("awards")
         elif "chart-section" in section.classes:
@@ -201,6 +203,7 @@ def expected_sections(tables, week):
     lineups = tables["lineups_optimal"]
     has = {
         "ladder": True,
+        "odds": "playoff_odds" in tables and bool((tables["playoff_odds"]["week"] == week).any()),
         "awards": bool((tables["awards"]["week"] == week).any()),
         "luck": not s.empty and bool(s["expected_wins"].notna().all()),
         "efficiency": bool((lineups["week"] <= week).any()),
@@ -255,7 +258,7 @@ def test_every_week_shows_exactly_the_sections_its_data_supports_in_guide_order(
 def test_hidden_sections_leave_nothing_behind(season):
     for week, node in week_nodes(season.doc).items():
         keys = section_keys(node)
-        assert bool(node.all("div", "charts")) == any(k not in ("ladder", "awards") for k in keys), f"week {week}"
+        assert bool(node.all("div", "charts")) == any(k not in ("ladder", "odds", "awards") for k in keys), f"week {week}"
         for section in node.all("section"):
             assert section.text().strip(), f"an empty section in week {week}"
         assert not node.all("ul", "tiles") or node.one("ul", "tiles").all("li", "tile")
@@ -348,6 +351,9 @@ def full_season(tables, last_week=17):
         last = table[table[column] == latest]
         out[name] = pd.concat([table, *(last.assign(**{column: w}) for w in range(latest + 1, last_week + 1))], ignore_index=True)
     out["team_weeks"]["is_playoff"] = out["team_weeks"]["week"] >= 15
+    odds = tables["playoff_odds"]  # odds end with the regular season (week 14)
+    last = odds[odds["week"] == latest]
+    out["playoff_odds"] = pd.concat([odds, *(last.assign(week=w) for w in range(latest + 1, 15))], ignore_index=True)
     return out
 
 
@@ -596,3 +602,49 @@ def test_rank_history_matches_power_rankings(season):
         for label, best in (("Biggest riser: ", moved.max()), ("Biggest faller: ", moved.min())):
             roster = named(text, label, names)
             assert moved[roster] == best and f"{names[roster]}, from #{first[roster]} to #{latest[roster]}" in text
+
+
+# --- Playoff odds match playoff_odds.csv ------------------------------------------------------
+
+def chance(p, certain=False):
+    """UI_GUIDE.md "Playoff odds": whole percentages; "<1%" and ">99%" for values that round to 0 or 100 unless certain."""
+    whole = round(p * 100)
+    if certain:
+        return f"{whole}%"
+    return "<1%" if whole == 0 else ">99%" if whole == 100 else f"{whole}%"
+
+
+def test_playoff_odds_numbers_match_the_table_for_every_week(season):
+    tables, params = season.tables, season.params
+    odds, names = tables["playoff_odds"], tables["teams"].set_index("roster_id")["team_name"]
+    final_week = 14
+    checked = 0
+    for week, node in week_nodes(season.doc).items():
+        rows = odds[odds["week"] == week].sort_values(["p_playoffs", "p_bye", "avg_wins", "roster_id"],
+                                                      ascending=[False, False, False, True])
+        sections = node.all("section", "odds-section")
+        assert len(sections) == (0 if rows.empty else 1), f"week {week}"
+        if rows.empty:
+            continue
+        section = sections[0]
+        assert section.one("h2").text() == "Playoff odds"
+        sims = f"{params['playoff_odds']['simulations']:,}"
+        assert sims in section.one("p", "sub").text()
+        body = section.one("table", "odds").one("tbody").all("tr")
+        seed_body = section.one("table", "seed-table").one("tbody").all("tr")
+        assert [int(tr.attrs["data-roster"]) for tr in body] == rows["roster_id"].tolist(), f"week {week}"
+        for tr, seed_tr, r in zip(body, seed_body, rows.itertuples()):
+            final = week == final_week
+            cells = tr.all("td")
+            assert tr.one("th").text() == names[r.roster_id] == seed_tr.one("th").text()
+            assert cells[0].text() == f"{r.avg_wins:.1f}{EN_DASH}{r.avg_losses:.1f}"
+            expected = "Clinched" if r.clinched else "Out" if r.out else chance(r.p_playoffs)
+            assert cells[1].one("span", "po-val").text() == expected
+            bar = cells[1].one("span", "po-bar").one("span").attrs["style"]
+            assert bar == f"width:{r.p_playoffs * 100:.1f}%"
+            assert cells[2].text() == chance(r.p_bye, certain=final or r.out)
+            assert cells[3].text() == chance(r.p_title, certain=r.out)
+            assert [td.text() for td in seed_tr.all("td")] == [chance(getattr(r, f"p_seed_{s}"), certain=final or r.out)
+                                                               for s in range(1, 7)]
+            checked += 1
+    assert checked == len(odds[odds["week"].isin(week_nodes(season.doc))])

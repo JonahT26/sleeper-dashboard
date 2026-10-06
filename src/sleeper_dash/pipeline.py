@@ -17,7 +17,7 @@ in data/processed/. Exits with code 1 on any failure.
 
 A successful run also writes data/cache/pipeline_run.json (gitignored): when it finished,
 the league name, season, weeks, and the league facts the "How this works" copy quotes (number
-of teams, whether there's a median game, playoff start), and whether Sleeper marks the season
+of teams, whether there's a median game, playoff start, playoff teams), and whether Sleeper marks the season
 complete (for the page's stale-data line). The dashboard reads it.
 
 When there is no new completed week, the run is the same full refresh and succeeds. If Sleeper's
@@ -52,7 +52,8 @@ def league_facts(league):
         return None
     return {"teams": int(settings["num_teams"]), "median_game": bool(settings.get("league_average_match")),
             "season_complete": league.get("status") == "complete",  # Sleeper marks a finished season "complete"
-            "playoff_week_start": int(settings["playoff_week_start"])}
+            "playoff_week_start": int(settings["playoff_week_start"]),
+            "playoff_teams": settings.get("playoff_teams")}  # quoted by the playoff odds section and its copy
 
 
 def write_run_record(league, season, weeks, path=None):
@@ -94,7 +95,7 @@ def run():
     data_results = validate.validate(tables, league, rosters, validate.run_data_checks, "Data checks")
 
     tables.update(lineup.build_lineup_tables(tables, league, transform.read_players()))
-    tables.update(metrics.build_metric_tables(tables, config.metrics))
+    tables.update(metrics.build_metric_tables(tables, config.metrics, league))
     metric_results = validate.validate(tables, league, rosters, validate.run_metric_checks, "Metric checks")
 
     before, previous_week = saved_snapshot(config.season, tables)

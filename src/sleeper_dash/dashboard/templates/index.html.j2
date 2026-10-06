@@ -53,6 +53,42 @@
   {% endfor %}
   </ol>
 </section>
+{% if v.odds %}
+<section class="odds-section" aria-labelledby="odds-title-{{ v.week }}">
+  <h2 class="section-title display" id="odds-title-{{ v.week }}">Playoff odds</h2>
+  <p class="sub">{{ v.odds.subtitle }}</p>
+  <div class="table-scroll">
+    <table class="odds">
+      <thead><tr><th scope="col">Team</th><th scope="col">Projected record</th><th scope="col">Playoffs</th><th scope="col">Bye</th><th scope="col">Title</th></tr></thead>
+      <tbody>
+      {% for r in v.odds.rows %}
+        <tr data-roster="{{ r.roster_id }}">
+          <th scope="row">{{ r.team }}</th>
+          <td class="num">{{ r.record }}</td>
+          <td class="num po"><span class="po-val">{{ r.playoffs }}</span><span class="po-bar" aria-hidden="true"><span style="width:{{ r.bar }}%"></span></span></td>
+          <td class="num">{{ r.bye }}</td>
+          <td class="num">{{ r.title }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <details class="seeds">
+    <summary>Chance of each seed</summary>
+    <div class="table-scroll">
+      <table class="seed-table">
+        <caption class="sr">Chance of each playoff seed; seeds 1 and 2 get a bye</caption>
+        <thead><tr><th scope="col">Team</th>{% for s in v.odds.seeds %}<th scope="col"><span class="sr">Seed </span>{{ s }}</th>{% endfor %}</tr></thead>
+        <tbody>
+        {% for r in v.odds.rows %}
+          <tr><th scope="row">{{ r.team }}</th>{% for c in r.seeds %}<td class="num" style="--p:{{ c.shade }}">{{ c.text }}</td>{% endfor %}</tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</section>
+{% endif %}
 {% if v.awards %}
 <section class="awards" aria-labelledby="awards-title-{{ v.week }}">
   <h2 class="section-title display" id="awards-title-{{ v.week }}">Weekly awards</h2>

@@ -49,7 +49,7 @@ def test_summary_says_whether_the_week_and_the_tables_changed(monkeypatch, capsy
 def test_the_run_record_says_whether_sleeper_marks_the_season_complete(status, complete):
     league = {"status": status, "settings": {"num_teams": 12, "playoff_week_start": 15, "league_average_match": 1}}
     assert pipeline.league_facts(league) == {"teams": 12, "median_game": True, "season_complete": complete,
-                                             "playoff_week_start": 15}
+                                             "playoff_week_start": 15, "playoff_teams": None}
 
 
 def test_in_github_actions_the_summary_goes_on_the_run_page(monkeypatch, tmp_path):

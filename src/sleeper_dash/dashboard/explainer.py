@@ -122,6 +122,25 @@ def sections(params, league):
             "because in fantasy football an opponent's score doesn't depend on who it plays. \"Remaining\" uses the teams still "
             f"on your regular-season schedule. Strength of schedule appears once {params['schedule']['min_weeks']} weeks are complete.",
         ]},
+    ]
+    odds = params.get("playoff_odds")
+    if odds and league.get("playoff_teams"):  # owner-approved as drafted, 2026-10-05
+        places, sims, k = league["playoff_teams"], odds["simulations"], odds["shrink_weeks"]
+        out.append({"heading": "Playoff odds", "paragraphs": [
+            f"Each update plays out the rest of the regular season and the playoffs {sims:,} times. A team's playoff odds are "
+            f"the share of those seasons in which it finishes in the top {places}; the top 2 also get a first-round bye, and "
+            "the title odds are how often it wins the final. The projected record is its average final record.",
+            "A team's strength is its average score so far compared with the league average, pulled toward average because a "
+            f"few weeks of scores say little: after {number(k)} weeks its own scores and the league average count equally, and "
+            "its own scores count for more as the season goes on. In each simulated week every team scores its strength plus a "
+            "random swing as big as this season's real week-to-week swings. The simulation knows nothing about injuries, "
+            "trades, or byes to come.",
+            "Seeding follows Sleeper's rules: wins first"
+            + (", median games included," if league["median_game"] else ",")
+            + " then points for. \"Clinched\" and \"Out\" appear only when the standings make them certain; otherwise a chance "
+            f"that rounds to 0% or 100% shows as \"<1%\" or \">99%\". Playoff odds appear once {odds['min_weeks']} weeks are complete.",
+        ]})
+    out += [
         {"heading": "Why past weeks can change", "paragraphs": [
             "Sleeper sometimes corrects player stats a few days after a game, for example when a catch is ruled a fumble on review. "
             "Every update recalculates the whole season from Sleeper's latest scores, so a correction can shift earlier numbers "

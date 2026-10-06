@@ -38,6 +38,11 @@ metrics:
     recent_weeks: 3       # window for recent form
     scale: 15             # component score = 50 + scale * z
     shrink_weeks: 3       # early-season spread is multiplied by n / (n + shrink_weeks); ranking unaffected
+  playoff_odds:
+    simulations: 10000    # simulated seasons per week; Monte Carlo error at most 0.5 percentage points
+    seed: 2026            # base random seed; each week's seed comes from it, the season, and the week
+    shrink_weeks: 6       # k: the prior on a team's strength counts as this many weeks (2025 calibration 6.5)
+    min_weeks: 3          # first week with odds (at least 2: the score SD needs two weeks per team)
   awards:
     enabled:              # awards shown each week, in display order; others defined in the spec can be added
       - top_score

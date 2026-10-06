@@ -5,12 +5,13 @@ from sleeper_dash.dashboard.build import build_view, render
 from sleeper_dash.dashboard.explainer import as_text, sections
 from test_dashboard import METRICS, RUN, make_tables
 
-LEAGUE = {"teams": 12, "median_game": True, "playoff_week_start": 15}
+LEAGUE = {"teams": 12, "median_game": True, "playoff_week_start": 15, "playoff_teams": 6}
 OTHER_PARAMS = {
     "power": {"weights": {"season_scoring": 0.40, "recent_form": 0.30, "roster_strength": 0.15, "results": 0.15},
               "recent_weeks": 4, "scale": 10, "shrink_weeks": 2},
     "consistency": {"min_weeks": 4, "floor_pct": 0.20, "ceiling_pct": 0.75, "boom_margin": 25, "bust_margin": 15},
     "schedule": {"min_weeks": 5},
+    "playoff_odds": {"simulations": 5000, "seed": 1, "shrink_weeks": 4, "min_weeks": 5},
 }
 
 
@@ -19,17 +20,21 @@ def test_the_draft_uses_todays_config():
     for phrase in ["Season scoring (35%)", "Recent form (25%)", "Roster strength (20%)", "Head-to-head wins (20%)",
                    "last 3 weeks", "worth 15 points", "below 2.4 or above 97.6", "spread is 25%", "75% by week 9",
                    "10th percentile", "the 90th", "20 or more points above", "20 or more below",
-                   "played 3 weeks", "once 3 weeks", "top 6 of 12", "goes 11–0", "weeks 1–14", "60% between them"]:
+                   "played 3 weeks", "once 3 weeks", "top 6 of 12", "goes 11–0", "weeks 1–14", "60% between them",
+                   "10,000 times", "finishes in the top 6", "after 6 weeks", "median games included",
+                   "Playoff odds appear once 3 weeks"]:
         assert phrase in text, phrase
 
 
 def test_every_number_follows_the_config_and_league_settings():
-    text = as_text(sections(OTHER_PARAMS, {"teams": 10, "median_game": False, "playoff_week_start": 14}))
+    text = as_text(sections(OTHER_PARAMS, {"teams": 10, "median_game": False, "playoff_week_start": 14, "playoff_teams": 4}))
     for phrase in ["Season scoring (40%)", "Recent form (30%)", "Roster strength (15%)", "Head-to-head wins (15%)",
                    "last 4 weeks", "worth 10 points", "below 21.5 or above 78.5", "spread is 33%", "75% by week 6",
                    "20th percentile", "the 75th", "about 20% of weeks falls below", "about 25% of weeks goes above",
                    "25 or more points above", "15 or more below", "played 4 weeks", "once 5 weeks",
-                   "goes 9–0", "weeks 1–13", "other 9 teams"]:
+                   "goes 9–0", "weeks 1–13", "other 9 teams",
+                   "5,000 times", "finishes in the top 4", "after 4 weeks", "wins first, then points for",
+                   "Playoff odds appear once 5 weeks"]:
         assert phrase in text, phrase
     # This league has no median game, so the copy doesn't mention one.
     assert "median game" not in text and "Records" not in [s["heading"] for s in sections(OTHER_PARAMS, {**LEAGUE, "median_game": False})]

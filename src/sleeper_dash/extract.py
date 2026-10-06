@@ -89,10 +89,12 @@ def extract(config):
     files = []
     calls = 0
 
-    def fetch(path, filename):
+    def fetch(path, filename, empty=None):
         nonlocal calls
         data = api.get(path)
         calls += 1
+        if data is None and empty is not None:
+            data = empty  # Sleeper has nothing to report yet, e.g. no bracket before the season
         if data is None:
             raise ExtractError(f"Sleeper returned an empty response (null) for {path}.")
         target = staging_dir / filename
@@ -114,6 +116,8 @@ def extract(config):
 
     fetch(f"{league_path}/users", "users.json")
     fetch(f"{league_path}/rosters", "rosters.json")
+    # Provisional during the regular season (from the current standings), real in the playoffs.
+    fetch(f"{league_path}/winners_bracket", "winners_bracket.json", empty=[])
     drafts = fetch(f"{league_path}/drafts", "drafts.json")
     for draft in drafts:
         draft_id = draft["draft_id"]
