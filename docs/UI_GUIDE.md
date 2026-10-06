@@ -193,6 +193,15 @@ Added 2026-10-05 (Phase 5; metrics in `METRICS_SPEC.md` section 9). Layout, cont
 - **Layout:** stacked on phones (checked at 360 and 390px; the FAAB table fits without scrolling); three columns side by side once the section is at least 900px wide (1024 and 1280px desktop).
 - **Hidden** until there's something to show: a pickup that has scored, a team that has bid, or a trade.
 
+### League-chat post
+
+Added 2026-10-05 (Phase 5; `chat.py`, RUNBOOK.md section 7). Wording and the award choice approved by the owner, 2026-10-05; changes need approval again. Plain text (GroupMe shows no formatting), at most 1,000 characters, one line each:
+
+- "Week 3 power rankings", then "1. ‹team› (57.8)" for the top 3 (power score to 1 decimal).
+- "Biggest riser: ‹team›, up 4 to #5" and "Biggest faller: ‹team›, down 3 to #9"; ties "Biggest risers: A (to #2) and B (to #6), up 1 each"; left out when nobody moved (week 1).
+- The first two of `chat.awards` given that week (top score, then heartbreaker, then blowout, then bench blunder): "Top score: ‹team›. ‹the award tile's caption›"; co-winners "Blowout: A and B, tied at 40.0".
+- "Full rankings: https://jonaht26.github.io/sleeper-dashboard/". If a message would pass 1,000 characters, the award captions are dropped.
+
 ### History
 
 Design approved by the owner 2026-10-05 (pieces, rows, names, record scale). Wording approved by the owner as drafted, 2026-10-05, season count under the name included. Built by `dashboard/history.py` from every saved season; a season counts once Sleeper's bracket names its champion.

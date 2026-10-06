@@ -50,6 +50,7 @@ gh run list --workflow weekly.yml --limit 5
 | **Page tests (this run's tables)** | The built page didn't match the data, so it wasn't published. A bug | Ask Claude |
 | **Commit refreshed tables** | Saving the new tables to GitHub clashed with another change made at the same moment | Re-run |
 | **deploy** (second job) | GitHub Pages had a hiccup while publishing | Re-run |
+| **post** (third job) | The league-chat post failed; the page is already published and fine | Section 7, "When the post fails" |
 
 **Asking Claude Code.** Open Claude Code in the project and paste this, with the run's link:
 
@@ -138,3 +139,51 @@ Update the pinned dependencies: <which package and version, or "check what's out
 ```
 
 Heads-up: GitHub moves its machines to Ubuntu 26 from **October 19, 2026**. If the first run after that fails at **Install** or while setting up Python, that's the likely reason. Use the failure prompt in section 2.
+
+## 7. The league-chat post (GroupMe)
+
+After each successful update, once the page is published, a short message goes to the league's GroupMe group: this week's top 3, the biggest riser and faller, two awards, and the link to the page. It comes from a GroupMe bot. Each week is posted **at most once**: the Thursday run, a manual rerun, or a stat correction never posts the same week again. A week is written to `data/chat_posts.csv` (and committed as "Chat post: week N") *before* the message is sent.
+
+**The setting** is `chat.mode` in `config.yaml`. Ask Claude to change it; it needs a commit, like any wording change:
+
+| `chat.mode` | What happens after each update |
+|---|---|
+| `"off"` | Nothing |
+| `"dry-run"` | The message appears in the run's summary page (Actions tab → the run → "post" job) under **"Chat post (dry run, not sent)"**. Nothing is sent or recorded |
+| `"on"` | The message is posted to the group, once per week |
+
+To see this week's message on your own computer at any time (nothing is sent):
+
+```bash
+.venv\Scripts\python.exe -m sleeper_dash.chat preview
+```
+
+### Add the bot ID as a GitHub secret (once)
+
+The bot ID is a password-like value: anyone who has it can post in the group as the bot. It never goes in the project, in chat, or to Claude. You add it straight to GitHub:
+
+1. Get it: [dev.groupme.com](https://dev.groupme.com) → **Bots** → your bot → copy the **Bot ID**.
+2. Open the repository on GitHub → **Settings** (top right of the repo) → **Secrets and variables** → **Actions** → **New repository secret**.
+3. **Name:** `GROUPME_BOT_ID` (exactly). **Secret:** paste the Bot ID. Click **Add secret**.
+4. GitHub shows only the name from now on, never the value, and blanks it out of logs. To replace it later, open it and click **Update**.
+
+Or from PowerShell in the project folder (it asks you to paste the value, so it never appears on screen or in your command history):
+
+```bash
+gh secret set GROUPME_BOT_ID
+```
+
+If the bot ID ever leaks: delete the bot on dev.groupme.com, create a new one, and update the secret.
+
+### When the post fails
+
+The page is already published when the post runs, so **a failed post never affects the page**. GitHub emails you as for any failed run; the run's summary says **"Chat post: FAILED"** and why:
+
+| The summary says | What it means | What to do |
+|---|---|---|
+| "the GROUPME_BOT_ID secret isn't set" | `chat.mode` is "on" but the secret is missing | Add it (above), or ask Claude to set the mode back to "dry-run". Nothing was recorded |
+| "GroupMe answered 404" (or 400/401/403) | The bot ID is wrong, or the bot was deleted | Check the bot on dev.groupme.com and update the secret. The week was un-recorded, so the next run posts it |
+| "Couldn't reach GroupMe" or "GroupMe answered 500" | GroupMe was down | Nothing; the week was un-recorded and the next run (or a manual run, section 3) posts it |
+| The "Record the week before sending" step failed | GitHub refused the commit (rare) | Nothing was sent. The next run tries again |
+
+If the "Un-record after a failed send" step itself also fails, the week stays recorded and is simply never posted. That's the safe side: it can't post twice. Post that week by hand if you like.

@@ -48,6 +48,16 @@ sleeper_points_gaps:
 dashboard:
   stale_after_days: 8
 
+# The weekly league-chat post (src/sleeper_dash/chat.py; docs/RUNBOOK.md section 7), owner 2026-10-05.
+# After each successful update the workflow posts the top 3, the biggest riser and faller, two awards, and the
+# link to the league's GroupMe group, at most once per week. mode: "off", "dry-run" (print the message in the
+# run's summary, send nothing), or "on". Keep the quotes: YAML reads a bare off/on as false/true.
+# The GroupMe bot ID is a GitHub Actions secret (GROUPME_BOT_ID), never written here (CLAUDE.md rule 7).
+chat:
+  mode: "dry-run"
+  awards: [top_score, heartbreaker, blowout, bench_blunder]   # the first two given that week are posted
+  page_url: https://jonaht26.github.io/sleeper-dashboard/
+
 # Metric parameters. Definitions and the reasoning behind each value are in
 # docs/METRICS_SPEC.md; change a value there first, with the owner's approval.
 metrics:

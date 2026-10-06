@@ -26,6 +26,9 @@ class Config:
     # scores and its stored season totals (weekly sum minus stored), from stat corrections Sleeper never
     # carried into the totals. The points check allows exactly these and nothing else.
     sleeper_points_gaps: dict = field(default_factory=dict)
+    # The weekly league-chat post (chat.py): mode (off, dry-run, on), award preferences, the page's address.
+    # The GroupMe bot ID is a GitHub Actions secret, never in config (CLAUDE.md rule 7).
+    chat: dict = field(default_factory=lambda: {"mode": "off"})
 
     def start_date(self, season):
         """The season's start date, 'YYYY-MM-DD'. Raises ValueError if config.yaml doesn't have it."""
@@ -92,9 +95,15 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
             raise ValueError(f"season_start_dates in {path} has no date for season(s) {missing}, which history_from "
                              f"{history_from} includes. Add one line per season.")
 
+    chat = raw.get("chat") or {"mode": "off"}
+    if not isinstance(chat, dict):
+        raise ValueError(f'chat in {path} must be a section of named settings, e.g. chat: {{mode: "dry-run"}}')
+    if chat.get("mode") not in ("off", "dry-run", "on"):  # YAML reads a bare off/on as false/true: quote them
+        raise ValueError(f'chat.mode in {path} must be "off", "dry-run", or "on", in quotes (got {chat.get("mode")!r})')
+
     return Config(league_id=league_id, season=season, season_start_dates=start_dates, metrics=metrics,
                   dashboard={**dashboard, "stale_after_days": stale}, history_from=history_from,
-                  sleeper_points_gaps=_points_gaps(raw.get("sleeper_points_gaps") or {}, path))
+                  sleeper_points_gaps=_points_gaps(raw.get("sleeper_points_gaps") or {}, path), chat=chat)
 
 
 def _points_gaps(value, path):
