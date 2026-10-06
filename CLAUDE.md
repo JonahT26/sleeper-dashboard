@@ -88,7 +88,7 @@ Keep this list current as commands are added.
 
 ## Current status
 
-**Phase 4 — Automation: complete (2026-10-03),** including monitoring (run summaries, failure emails tested, the stale-data line), rollback, and the runbook. Phase 5 — Extras is in progress: playoff odds (`docs/METRICS_SPEC.md` section 8) are built on the `playoff-odds` branch (2026-10-05) and the page wording is approved; the branch is merged to `main` once the Tuesday Oct 6 run is checked (`docs/HANDOFF.md` section 9). Past seasons and History (wording approved) follow on `past-seasons`, and the playoff bracket (the Playoffs section, wording approved) on `bracket-view`, merged in that order. The plan for the other extras is in section 9 too. Update this section at the end of every phase.
+**Phase 4 — Automation: complete (2026-10-03),** including monitoring (run summaries, failure emails tested, the stale-data line), rollback, and the runbook. Phase 5 — Extras is in progress: playoff odds, past seasons and History, the playoff bracket, transaction metrics (Roster moves), the boom/bust display and the weekly GroupMe post (dry-run) were merged into `main` on 2026-10-06 after the week 4 run passed. Link previews (`link-preview`, wording awaiting approval) and the rebuilt `ppts` check (`ppts-check`, approved) are still on branches (`docs/HANDOFF.md` section 1). The plan for the other extras is in section 9. Update this section at the end of every phase.
 
 **Starting a new session? Read `docs/HANDOFF.md` first.** It covers working style, environment quirks, the decisions log, open questions, and the next steps.
 

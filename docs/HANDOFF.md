@@ -1,6 +1,6 @@
 # Session handoff
 
-Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 at the close of Phase 4 (automation); **rewritten 2026-10-05 at the end of the first Phase 5 session** (playoff odds, past seasons, History, all on unmerged branches; see section 1). **This file is most current on the `past-seasons` branch**: `main`'s copy is from before Phase 5 work began, so read this one (`git show origin/past-seasons:docs/HANDOFF.md`) before switching branches. A new Claude session should read this file first, then `CLAUDE.md`, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`, before doing anything. Those docs are the source of truth for design, data, metrics, and the page; this file covers everything else: how the owner works, environment quirks, decisions and their reasons, open questions, risks, running the weekly job, and what's next.
+Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 at the close of Phase 4 (automation); **rewritten 2026-10-05 at the end of the first Phase 5 session**; updated 2026-10-06 when six Phase 5 branches were merged into `main` (section 1). **This file is most current on `main` again** (`git pull` first); the two remaining branches (`link-preview`, `ppts-check`) carry older copies, so resolve their `docs/HANDOFF.md` in `main`'s favour when merging and re-add their rows. A new Claude session should read this file first, then `CLAUDE.md`, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md`, and `docs/UI_GUIDE.md`, before doing anything. Those docs are the source of truth for design, data, metrics, and the page; this file covers everything else: how the owner works, environment quirks, decisions and their reasons, open questions, risks, running the weekly job, and what's next.
 
 ## 1. Where things stand
 
@@ -11,30 +11,28 @@ Rewritten 2026-10-02 at the end of Phase 3 (the dashboard); updated 2026-10-03 a
 | 2 · Metrics (seven owner-approved metrics) | **Complete** |
 | 3 · Dashboard | **Complete** (2026-10-02) |
 | 4 · Automation (weekly GitHub Action, GitHub Pages, monitoring, rollback, runbook) | **Complete** (2026-10-03) |
-| 5 · Extras | **In progress** (2026-10-05): playoff odds, past seasons + History, and the playoff bracket view built on three stacked branches, **not merged**; week 15 checks scheduled for Dec 22 (section 9) |
+| 5 · Extras | **In progress**: playoff odds, past seasons + History, the playoff bracket, transaction metrics, boom/bust, the chat post (dry-run) **merged 2026-10-06**; link previews and the `ppts` check on branches; week 15 checks scheduled for Dec 22 (section 9) |
 
-As of **Monday 2026-10-05, end of session** (NFL week 4's Monday game is tonight, so weeks 1–3 are the completed weeks):
+As of **Tuesday 2026-10-06** (NFL week 4 scored; weeks 1–4 are the completed weeks):
 
-**What's live (`main`) hasn't changed since 2026-10-03.** https://jonaht26.github.io/sleeper-dashboard/ shows weeks 1–3: ladder, awards, five charts, "How this works". **No scheduled run has happened yet: the first is Tuesday Oct 6, 12:17 PM ET** (should bring week 4), then Thursday Oct 8 (section 7). The only Phase 5 commit on `main` is the playoff odds spec (`90c3190`, docs only).
+**Six Phase 5 branches merged into `main` on 2026-10-06**, in order: `playoff-odds`, `past-seasons`, `bracket-view`, `transaction-metrics`, `boom-bust`, `chat-post` (owner: merge after the week 4 run passed; 1a "merge the whole approved stack"). Each merge: pipeline (19 of 19 checks in every season 2020–2026 at the end, 263 API calls, ~90–110 s locally), all tests (552 at the end), and the merged page checked at 360, 390, 1024 and 1280px, light and dark (no sideways scroll, Strength of schedule in two panels, all ten sections, no console errors). The next run publishes playoff odds, History, Roster moves and the boom/bust markers; the Playoffs section appears from week 15. The chat post is merged **in dry-run** (section 7a, RUNBOOK.md section 7).
 
-**Seven branches** (all pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
+**Week 4 run (2026-10-06):** the 12:17 PM scheduled run hadn't started by mid-afternoon (see section 7), so Claude ran Weekly refresh by hand at the owner's request: run `37498607716` passed, actor JonahT26, bot commit `6b8e0de` "Weekly refresh: tables through week 4", summary "Latest completed week: 4 (new: the last run ended at week 3)". Its one warning (roster 6 optimal 10.88 above Sleeper's max points) is the old soft check; the new one on `ppts-check` matches all 12 teams to the cent on week 4.
+
+**Two branches remain** (pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
 
 | Branch | Head | Adds | Tests | State |
 |---|---|---|---|---|
-| `main` | `90c3190` | Phase 4 + the playoff odds spec | 433 | Live; the workflow's bot commits refreshed tables here |
-| `playoff-odds` | `e600246` | Playoff odds (metric, `playoff_odds` and `winners_bracket` tables, 2 checks → 16), calibration notebook 04, the Playoff odds section after the ladder, "How this works" paragraph | 467 | **Owner-approved, wording included.** Merge after the Tue Oct 6 run is checked |
-| `past-seasons` | `bfbdc54` | Stacked on `playoff-odds`: seasons 2020–2025 in the pipeline, `managers` table (17 checks), three owner rules from past data, the History section | 489 | Built and checked; **History wording approved** (2026-10-05). Merge after `playoff-odds` |
-| `bracket-view` | `0b586e1` | Stacked on `past-seasons`: the Playoffs section (`dashboard/bracket.py`), shown in playoff weeks in the odds' place | 515 | Built and checked on 2020–2025's brackets; **wording approved** (2026-10-05). Merge after `past-seasons`. |
-| `transaction-metrics` | `1a0ea33` | Stacked on `bracket-view`: transaction metrics (METRICS_SPEC.md section 9): `trade_assets` table, `start_credits`, `pickups`, `trades`, six `metrics_season` columns, 2 checks (19 in all), FAAB balance report, the Roster moves section (`dashboard/moves.py`) | 535 | Spec confirmed and built; Roster moves section built; **layout, wording and "How this works" paragraph approved** (2026-10-05). Merge after `bracket-view`. |
-| `boom-bust` | `597e4c2` | Stacked on `transaction-metrics`: boom and bust weeks as ▲/▼ on the Consistency chart; the owner's order for the remaining extras | 535 | Built; **design and wording approved** (2026-10-05). Merge after `transaction-metrics`. |
-| `chat-post` | see `git log` | Stacked on `boom-bust`: the weekly GroupMe post (`chat.py`, a `post` job in `weekly.yml`, `config.yaml` `chat`, `data/chat_posts.csv`), CLAUDE.md rule 7's one approved secret, RUNBOOK.md section 7 | 552 | Built in dry-run mode; **message wording and award choice approved** (2026-10-05); merge after `boom-bust`; turn on once the owner has added the secret. The local checkout is on this branch |
+| `main` | see `git log` | Phase 4 + the six merged Phase 5 branches | 552 | Live; the workflow's bot commits refreshed tables here |
+| `link-preview` | `65ecc1a` | Stacked on `chat-post`: Open Graph and Twitter card tags, `site/preview.png` drawn each run (`dashboard/preview.py`), Pillow pinned, the Barlow fonts bundled, `dashboard.page_url` | 559 | Built; **wording and image shown to the owner 2026-10-06, approval pending** |
+| `ppts-check` | `0ac5ee2` | Stacked on `link-preview`: the `ppts` soft check rebuilt with Sleeper's own lineup method | 560 | **Owner-approved** (2026-10-06); merge after `link-preview`, or move onto `main` without it if the link preview waits |
 
 **Owner input still pending:**
-- **League-chat post** (built 2026-10-05 on `chat-post`; GroupMe bot; message and award choice approved): the owner added `GROUPME_BOT_ID` as a GitHub Actions secret on 2026-10-05 at 18:14 UTC (`gh secret list` shows its name and date only). A first bot ID was pasted into the Claude chat by mistake; Claude didn't use or store it; the owner deleted that bot and created a new one before adding the secret (confirmed 2026-10-05). Merge `chat-post` last, still in dry-run; check one live run's dry-run message, then set `chat.mode` to "on" in a commit.
+- **League-chat post** (built 2026-10-05 on `chat-post`; GroupMe bot; message and award choice approved): the owner added `GROUPME_BOT_ID` as a GitHub Actions secret on 2026-10-05 at 18:14 UTC (`gh secret list` shows its name and date only). A first bot ID was pasted into the Claude chat by mistake; Claude didn't use or store it; the owner deleted that bot and created a new one before adding the secret (confirmed 2026-10-05). **Merged 2026-10-06 in dry-run.** Next (owner 2a): the owner approves the week 4 dry-run message (`python -m sleeper_dash.chat preview` prints it; the next run's summary shows it), then `chat.mode` goes to "on" in a commit, and Thursday Oct 8's 12:17 PM run posts week 4, once.
 
 **Scheduled:** one-time Claude desktop sessions: `sleeper-week15-playoff-checks`, Tue Dec 22 2026 at 2:00 PM ET (section 7), and `sleeper-season-2027-rollover`, Tue Sep 14 2027 at 2:00 PM ET (section 7a). Both work on a branch and report without merging; they run when the app is open, or on its next launch.
 
-**Pipeline on `past-seasons`, through 2026 week 3:** every season 2020–2026 downloaded, built and checked against its own league settings and Sleeper standings: 17 of 17 checks in every season, 262 API calls, ~80 s locally, byte-identical on a second run, every 2026 row identical to the single-season tables. Raw data for 2020–2026 is in `data/raw/` locally (gitignored).
+**Pipeline on `main`, through 2026 week 4:** every season 2020–2026 downloaded, built and checked against its own league settings and Sleeper standings: 19 of 19 checks in every season, 263 API calls, ~90–110 s locally. Raw data for 2020–2026 is in `data/raw/` locally (gitignored).
 ## 2. Working with the owner
 
 `CLAUDE.md` "About the owner" applies. Patterns that matter just as much:
@@ -240,10 +238,13 @@ Dev/
 | 2026-10-05 | History wording approved as drafted (subtitle, headings, column headers, luck and high-score lines), with the season count under each manager's name rather than its own column, so the table fits 360px; merge `past-seasons` right after `playoff-odds` | Owner | UI_GUIDE.md "History" |
 | 2026-10-05 | Playoff odds wording approved as drafted (section subtitle, column headers, "Clinched"/"Out"/"<1%"/">99%", the "How this works" paragraph); per-seed odds in the spec, the tie reading, and the stopping bracket check confirmed; merge after the Tue Oct 6 run is checked | Owner (1 approve, 2–4 agree) | UI_GUIDE.md "Playoff odds", METRICS_SPEC.md section 8 |
 | 2026-10-05 | Playoff odds definition, every recommended option accepted: normal model on scores relative to the week's league mean; team means shrunk toward the league mean with fixed `shrink_weeks` 6 (2025 calibration 6.5) and posterior uncertainty drawn once per simulated season; one pooled score SD; no recency weighting; median game decided from the same simulated scores; seeding by wins then points for, verified format only (anything else stops the run); a new check that our seeding matches Sleeper's provisional `winners_bracket`; 10,000 simulations; a seed per (season, week); outputs playoff, bye, and title odds and average final record from week 3; "Clinched"/"Out" only when a bound proves it, otherwise "<1%"/">99%" | Owner | METRICS_SPEC.md section 8 |
+| 2026-10-06 | Week 4: the scheduled run hadn't started 25 minutes after 12:17 PM; Weekly refresh run by hand at the owner's request (a later scheduled run would only repeat it: same tables, no commit, the same page; no chat post from `main` then) | Owner | section 1 |
+| 2026-10-06 | After the week 4 run passed: merge `playoff-odds` and `past-seasons`, then the rest of the approved stack through `chat-post` so the chat post can go out this week (1a, over moving the chat post alone onto `main`); merges pushed only after the late scheduled run could no longer overlap | Owner (1a) | section 1 |
+| 2026-10-06 | First real chat post: Thursday Oct 8's 12:17 PM run, after the owner approves the dry-run message and `chat.mode` goes to "on" (2a, over a manual run right away) | Owner (2a) | section 1 |
 
 ## 7. Open questions and assumptions to verify
 
-**Verify at week 4 (Tuesday Oct 6, the first scheduled run):**
+**Week 4 (Tuesday Oct 6): checked.** The manual run passed (section 1): week 4, bot commit, actor JonahT26; the live page showed week 4 and two Strength of schedule panels. **The 12:17 PM scheduled run** is recorded in section 1. The original list:
 - **The run:** it succeeds and its bot commits "Weekly refresh: tables through week 4"; then `git pull`. Its summary should say "Latest completed week: 4 (new: the last run ended at week 3)".
 - **The live page:** the Strength of schedule chart switches to two panels (remaining no longer all 0.0); luck labels and the efficiency chart still read cleanly at 390px with new values; rank-history labels read at 360px.
 - **Who gets the failure emails:** `gh api repos/JonahT26/sleeper-dashboard/actions/runs/<id> --jq .actor.login` should print `JonahT26`. Scheduled-run emails go to whoever set the schedule, and the commits that did so are authored as `jonahtersol@gmail.com`, which GitHub doesn't link to any account (risk 13). Manual-run failure emails do reach the owner (tested).
@@ -316,7 +317,7 @@ Ordered by impact on the unattended weekly job.
 | Playoff bracket view (Playoffs section) | Built; wording approved | `bracket-view` |
 | Transaction metrics (METRICS_SPEC.md section 9) | Spec confirmed, tables and checks built; Roster moves section built and approved | `transaction-metrics` |
 
-**Merging** (in this order; never merge with an unchecked run or unapproved wording):
+**Merging: steps 1–4 done 2026-10-06, along with `boom-bust` and `chat-post`** (section 1). Kept for reference (in this order; never merge with an unchecked run or unapproved wording):
 1. After the Tue Oct 6 run succeeds (and its actor is checked, section 7): `git switch main`, `git pull`, `git merge playoff-odds`. The bot's week 4 commit will conflict on `data/processed/*.csv`: take either side (`git checkout --theirs data/processed/`), run `.venv\Scripts\python.exe -m sleeper_dash.pipeline` (16 of 16 checks; week 4 odds appear), run all tests (467), commit, push. Check the page at 360, 390, 1024 and 1280px, light and dark. The Thursday Oct 8 run publishes it (or run Weekly refresh by hand).
 2. Right after step 1 (History wording approved 2026-10-05): `git merge past-seasons` into `main` the same way (conflicts again only in tables; pipeline 17 of 17 in every season; 489 tests). The first GitHub run afterwards takes about 4 minutes (RUNBOOK.md says so); watch it once with `gh run watch`.
 3. Right after step 2 (Playoffs wording approved 2026-10-05): `git merge bracket-view` the same way (no table changes of its own; 515 tests). Must be on `main` before the Tue Dec 22 run.
@@ -338,13 +339,10 @@ Phase 1 ends at `1ad16d1`; Phase 2 ends at `38eba07 Phase 2: metrics`; Phase 3 r
 
 ## 11. First steps for the new session
 
-1. **Before switching branches, read this file from `past-seasons`** (the local checkout is there): `git fetch`, then `git show origin/past-seasons:docs/HANDOFF.md` if you're elsewhere. `main`'s copy predates Phase 5.
+1. **Read this file from `main`** after `git switch main` and `git pull` (six Phase 5 branches merged 2026-10-06).
 2. Read `CLAUDE.md`, `docs/CODEBASE.md`, `docs/METRICS_SPEC.md` and `docs/UI_GUIDE.md` from the same branch. Skim `docs/RUNBOOK.md`: it's what the owner follows, so match its wording when talking about runs.
 3. Check the weekly job: `gh run list --workflow weekly.yml --limit 5`. Any failure comes first (section 7a, CLAUDE.md rule 13). **Tue Oct 6** should commit "Weekly refresh: tables through week 4"; check its actor is JonahT26 (`gh api repos/JonahT26/sleeper-dashboard/actions/runs/<id> --jq .actor.login`, risk 13). **Thu Oct 8** should report no new week.
-4. Confirm the environment on each branch you touch: `.venv\Scripts\python.exe -m pytest -q` (**433** on `main`, **467** on `playoff-odds`, **489** on `past-seasons`; a `test_dependencies` failure means the environment drifted from the pins) and `git status` (clean, in sync).
-5. If the Tue Oct 6 run passed: merge `playoff-odds` (section 9, "Merging", step 1) and check the page.
-6. Merge `past-seasons` (step 2): the History wording is approved.
-7. Merge `bracket-view` (step 3): the Playoffs wording is approved.
-8. Merge `transaction-metrics` (step 4): everything on it is approved.
-9. Merge `boom-bust` after `transaction-metrics` (approved; it also carries the season-rollover guard).
-10. Chat post (`chat-post`, approved): merge it after `boom-bust`, still in dry-run, so the first runs show the message in their summaries; when the owner has added the secret and says so, set `chat.mode: "on"` in a commit. Then the small items: self-hosted fonts, and "Final rankings" right after the season.
+4. Confirm the environment on each branch you touch: `.venv\Scripts\python.exe -m pytest -q` (**552** on `main`, 559 on `link-preview`, 560 on `ppts-check`; a `test_dependencies` failure means the environment drifted from the pins) and `git status` (clean, in sync).
+5. Steps 5–9 of the old list (merging `playoff-odds` through `boom-bust`) are done (2026-10-06).
+6. Chat post: merged in dry-run 2026-10-06. Once the owner approves the week 4 message, set `chat.mode: "on"` in a commit before Thursday Oct 8's run (owner 2a); check that run posted once and recorded the week in `data/chat_posts.csv`.
+7. `link-preview` (when its wording and image are approved), then `ppts-check` (approved). Then the small items: self-hosted fonts, and "Final rankings" right after the season.
