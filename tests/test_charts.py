@@ -179,20 +179,16 @@ def test_consistency_shows_every_weekly_score_steadiest_first_with_the_league_me
 
 # --- Strength of schedule --------------------------------------------------------------------
 
-def test_schedule_has_played_and_remaining_panels_with_bars_from_the_average():
-    c = chart(view()["latest"], "schedule")["figure"]
-    played, remaining = c["data"]
-    assert played["xaxis"] == "x" and remaining["xaxis"] == "x2" and played["orientation"] == "h"
+def test_schedule_shows_games_played_only_as_bars_from_the_average():
+    s = chart(view()["latest"], "schedule")
+    c = s["figure"]
+    (played,) = c["data"]                                                     # one panel: remaining is left off the page
+    assert played["orientation"] == "h" and "xaxis2" not in c["layout"]
     assert played["x"][0] == 11.0 and played["text"][0] == "+11.0"           # toughest schedule first (team 12)
     assert c["layout"]["xaxis"]["ticktext"] == ["−10", "0", "+10"]          # whole-number ticks
-    assert c["layout"]["xaxis2"]["title"]["font"]["size"] == 13               # second panel styled by the theme too
-    assert {s["xref"] for s in c["layout"]["shapes"]} == {"x", "x2"}          # a zero line in each panel
-
-
-def test_schedule_with_every_remaining_schedule_average_says_so_instead_of_drawing_empty_bars():
-    s = chart(build_view(make_tables(flat_remaining=True), RUN, METRICS)["latest"], "schedule")
-    assert len(s["figure"]["data"]) == 1 and "xaxis2" not in s["figure"]["layout"]
-    assert s["subtitle"].endswith("Still to come: every team's remaining opponents are exactly average (0.0).")
+    assert len(c["layout"]["shapes"]) == 1                                    # one zero line
+    assert "Games played so far, through week 3." in s["subtitle"]
+    assert "remaining" not in (s["subtitle"] + s["summary"]).lower() and "still to come" not in s["summary"].lower()
 
 
 def test_schedule_after_the_regular_season_shows_played_only():

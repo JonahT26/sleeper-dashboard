@@ -32,7 +32,7 @@ ODDS_TITLE = [0.4, 0.2, 0.15, 0.1, 0.06, 0.04, 0.025, 0.015, 0.007, 0.003, 0.0, 
 ODDS_PROVEN_FROM = 10  # team 1 is Clinched and team 12 Out from this week (before it: ">99%" and "<1%")
 
 
-def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining=False):
+def make_tables(weeks=3, n=12, award_weeks=None, team_names=None):
     """A season where team i is ranked i every week. Team 1 wins every game; the rest go 1–1 each week.
 
     Contributions are exact (w × (50 + gap)), so they sum to the power score.
@@ -70,7 +70,7 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None, flat_remaining
                            "volatility": 10.0 + i if week >= 3 else None, "floor": 120.0 - i if week >= 3 else None,
                            "ceiling": 140.0 + i if week >= 3 else None,
                            "boom_weeks": week // 2 if i == 1 else 0, "bust_weeks": 1 if i == n and week >= 2 else 0, "sos_played": (i - 6.5) * 2 if week >= 3 else None,
-                           "sos_remaining": (0.0 if flat_remaining else 6.5 - i) if 3 <= week < 14 else None,
+                           "sos_remaining": 6.5 - i if 3 <= week < 14 else None,
                            "allplay_wins": (n - i) * week, "allplay_losses": (i - 1) * week, "allplay_ties": 0,
                            "h2h_wins": week if i == 1 else 0, "h2h_losses": 0 if i == 1 else week, "h2h_ties": 0})
         if week in award_weeks:

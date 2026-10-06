@@ -19,13 +19,14 @@ As of **Tuesday 2026-10-06** (NFL week 4 scored; weeks 1–4 are the completed w
 
 **Week 4 run (2026-10-06):** the 12:17 PM scheduled run hadn't started by mid-afternoon (see section 7), so Claude ran Weekly refresh by hand at the owner's request: run `37498607716` passed, actor JonahT26, bot commit `6b8e0de` "Weekly refresh: tables through week 4", summary "Latest completed week: 4 (new: the last run ended at week 3)". Its one warning (roster 6 optimal 10.88 above Sleeper's max points) is the old soft check; the new one on `ppts-check` matches all 12 teams to the cent on week 4.
 
-**Two branches remain** (pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
+**Three branches remain** (pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
 
 | Branch | Head | Adds | Tests | State |
 |---|---|---|---|---|
 | `main` | see `git log` | Phase 4 + the six merged Phase 5 branches | 552 | Live; the workflow's bot commits refreshed tables here |
 | `link-preview` | `65ecc1a` | Stacked on `chat-post`: Open Graph and Twitter card tags, `site/preview.png` drawn each run (`dashboard/preview.py`), Pillow pinned, the Barlow fonts bundled, `dashboard.page_url` | 559 | Built; **wording and image shown to the owner 2026-10-06, approval pending** |
 | `ppts-check` | `0ac5ee2` | Stacked on `link-preview`: the `ppts` soft check rebuilt with Sleeper's own lineup method | 560 | **Owner-approved** (2026-10-06); merge after `link-preview`, or move onto `main` without it if the link preview waits |
+| `sos-played-only` | see `git log` | Off `main`: Strength of schedule shows games played only (the "Remaining" panel and its "How this works" sentence removed) | 551 | Built and checked at 390 and 1024px; **new subtitle and the shortened "How this works" paragraph await the owner's approval** |
 
 **Owner input still pending:**
 - **League-chat post** (built 2026-10-05 on `chat-post`; GroupMe bot; message and award choice approved): the owner added `GROUPME_BOT_ID` as a GitHub Actions secret on 2026-10-05 at 18:14 UTC (`gh secret list` shows its name and date only). A first bot ID was pasted into the Claude chat by mistake; Claude didn't use or store it; the owner deleted that bot and created a new one before adding the secret (confirmed 2026-10-05). **Merged 2026-10-06 in dry-run.** Next (owner 2a): the owner approves the week 4 dry-run message (`python -m sleeper_dash.chat preview` prints it; the next run's summary shows it), then `chat.mode` goes to "on" in a commit, and Thursday Oct 8's 12:17 PM run posts week 4, once.
@@ -148,7 +149,7 @@ Dev/
 - **Lineup:** QB, RB, RB, WR, WR, FLEX, REC_FLEX, SUPER_FLEX, K, DEF + 6 bench + 1 IR. No TE slot.
 - **Scoring:** half PPR, TE premium, 4-point passing TDs. Never recompute Sleeper's points.
 - **Weekly median game is on**; records include it.
-- **Calendar:** playoffs from week 15 (6 teams). The 14-week schedule is an 11-week round robin plus weeks 1–3 repeated, so **remaining strength of schedule is exactly 0.0 for everyone after week 3** (the chart shows one panel and says so in its subtitle); from week 4 the second panel appears.
+- **Calendar:** playoffs from week 15 (6 teams). The 14-week schedule is an 11-week round robin plus weeks 1–3 repeated, so **remaining strength of schedule is exactly 0.0 for everyone after week 3**. The page shows only games played (owner, 2026-10-06); `sos_remaining` stays in `metrics_season`.
 - **Completed-week rule:** the smaller of league `last_scored_leg` and `/state/nfl` week − 1. Week 4 becomes available after Monday night's game is scored (likely Tuesday Oct 6).
 - **Playoff format and tiebreaker** (verified 2026-10-05 against the 2025 bracket and Sleeper's provisional 2026 bracket): 6 teams, seeds 1 and 2 on a bye, one week per round (weeks 15–17), fixed bracket with no reseeding (1 v 4/5 winner, 2 v 3/6 winner); seeded by overall wins (head-to-head plus median), then points for. Sleeper publishes a provisional `winners_bracket` from the current standings during the regular season. Details in METRICS_SPEC.md section 8.
 - **Past seasons** (checked 2026-10-05; `previous_league_id` chain): 2025 `1243747994637963265`, 2024 `1111660327269216256`, 2023 `917304836490715136`, 2022 `858463130051809280`, 2021 `650074750328090624`, 2020 `603428374169325568` (the chain ends there). All 12 teams, median game, the same 6-team bracket. 2020: 13-week regular season (playoffs from week 14) and a wrong `start_week` of 4; 2020–2021 had 10 starting slots, 2022–2025 9. Champions: 2020 Coryv9, 2021 jryan7, 2022 jsmetz97, 2023 nicholascole121, 2024 jryan7, 2025 jryan7. 14 managers over the seven seasons; 10 played all of them.
@@ -241,6 +242,7 @@ Dev/
 | 2026-10-06 | Week 4: the scheduled run hadn't started 25 minutes after 12:17 PM; Weekly refresh run by hand at the owner's request (a later scheduled run would only repeat it: same tables, no commit, the same page; no chat post from `main` then) | Owner | section 1 |
 | 2026-10-06 | After the week 4 run passed: merge `playoff-odds` and `past-seasons`, then the rest of the approved stack through `chat-post` so the chat post can go out this week (1a, over moving the chat post alone onto `main`); merges pushed only after the late scheduled run could no longer overlap | Owner (1a) | section 1 |
 | 2026-10-06 | First real chat post: Thursday Oct 8's 12:17 PM run, after the owner approves the dry-run message and `chat.mode` goes to "on" (2a, over a manual run right away) | Owner (2a) | section 1 |
+| 2026-10-06 | Strength of schedule shows games played only; the "Remaining" panel and its "How this works" sentence removed as too confusing (`sos_remaining` still computed and checked). Branch `sos-played-only`, wording awaiting approval | Owner | UI_GUIDE.md, explainer.py |
 
 ## 7. Open questions and assumptions to verify
 
