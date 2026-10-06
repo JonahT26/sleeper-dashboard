@@ -64,8 +64,9 @@ Section order, top to bottom:
 7. **Consistency:** weekly score spread per team
 8. **Strength of schedule:** played and remaining
 9. **Rank history:** bump chart across weeks
-10. **History** (Phase 5): every finished season, once for the whole page, not per week (Components, "History")
-11. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section. **The owner reviews this copy before it is published** (decision 2026-10-02). Approved with no edits on 2026-10-02; the text lives in `dashboard/explainer.py` with every number filled in from `config.yaml`, so any wording change needs the owner's approval again. One section for the whole page (not per week), after the charts, in a reading column under 75 characters.
+10. **Roster moves** (Phase 5): best pickups, FAAB, and trades, per week (Components, "Roster moves")
+11. **History** (Phase 5): every finished season, once for the whole page, not per week (Components, "History")
+12. **How this works:** plain-language explanation of each metric and the power score, with every weight shown. Trust depends on this section. **The owner reviews this copy before it is published** (decision 2026-10-02). Approved with no edits on 2026-10-02; the text lives in `dashboard/explainer.py` with every number filled in from `config.yaml`, so any wording change needs the owner's approval again. One section for the whole page (not per week), after the charts, in a reading column under 75 characters.
 
 
 ### Mobile (360–430px)
@@ -180,6 +181,17 @@ Added 2026-10-05 (Phase 5). Wording approved by the owner as drafted, 2026-10-05
 - **As of the selected week:** a round shows scores and winners from its week on; a later round's slot names its team once the game that sends it there has been played, and until then reads "Winner of 1 v 5" (or "Winner of 1 v 4/5" if that game isn't set either), by seeds. A game not yet played shows the teams without scores. The champion line appears from the final's week.
 - **Layout:** rounds stacked on phones (checked at 360 and 390px); three columns side by side once the section is at least 640px wide (1280px desktop); stacked again in the 1024px left column.
 - Team names are this season's team names, as on the ladder. Only the winners bracket is shown; the consolation bracket isn't.
+
+### Roster moves
+
+Added 2026-10-05 (Phase 5; metrics in `METRICS_SPEC.md` section 9). Layout, contents, and order approved by the owner (1a 2a 3a 4a, 2026-10-05). Wording and the "How this works" paragraph approved by the owner as drafted, 2026-10-05; changes need approval again. Built by `dashboard/moves.py`.
+
+- **One section per week, after Rank history** and before History, full width on desktop. Title "Roster moves"; subtitle "Points each move has put in the starting lineup this regular season." In playoff weeks: "… in the regular season; playoff weeks don't count." The numbers are as of the selected week; in playoff weeks they are the final regular-season numbers.
+- **Best pickups:** the top 5 waiver or free-agent pickups by points credited so far (only those that have scored). Each row: player name (semi-bold) with points at the right, then a muted line "‹team› · waivers, $5, week 2 · 11 starts" ("free agent, week 5"; "before the season" for preseason adds).
+- **FAAB:** a table of every team: Team, Spent, Points (from waiver claims), Per $ (1 decimal), sorted by Per $, with "—" below the minimum spend and those teams last. A note under it: "Points from waiver claims, $0 claims included. — means under $10 spent." No "FAAB left" column (Sleeper's app shows it live; ours would lag a week).
+- **Trades:** this season's trades, newest first, as bordered cards (6px radius): "Week 12", then each side as team name (semi-bold) with points at the right and a muted "got ‹players›" line ("got DJ Moore and $3", "got $5", "got nothing"), then a semi-bold result line: "‹team› ahead by 43.7" during the regular season, "‹team› won by 43.7" once it's over, or "Even so far" / "Even". The newest 3 are shown; the rest fold into a closed `<details>`, "Earlier trades (18)", which opens instantly.
+- **Layout:** stacked on phones (checked at 360 and 390px; the FAAB table fits without scrolling); three columns side by side once the section is at least 900px wide (1024 and 1280px desktop).
+- **Hidden** until there's something to show: a pickup that has scored, a team that has bid, or a trade.
 
 ### History
 

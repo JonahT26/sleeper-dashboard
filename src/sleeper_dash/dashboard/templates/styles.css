@@ -154,6 +154,33 @@ details[open]::details-content { block-size: auto; }
 .seed-inline { font-weight: 600; color: var(--ink); }
 @container bracket (min-width: 640px) { .rounds { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
+/* Roster moves: best pickups, FAAB by team, trades; stacked on phones, three columns when there's room */
+.moves-section { container: moves / inline-size; }
+.moves { display: grid; gap: 8px 40px; }
+.moves-block { min-width: 0; }
+.moves-block .h-head { margin-top: 16px; }
+.pickups, .trades { list-style: none; margin: 0; padding: 0; }
+.pickup { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--hash); }
+.pk-name { font-weight: 600; line-height: 1.3; }
+.pk-pts { font-weight: 600; text-align: right; }
+.pk-detail { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.faab { width: 100%; border-collapse: collapse; }
+.faab th, .faab td { padding: 8px 0 8px 12px; text-align: right; vertical-align: top; border-bottom: 1px solid var(--hash); font-weight: 400; white-space: nowrap; }
+.faab thead th { font-size: 13px; font-weight: 600; color: var(--muted); vertical-align: bottom; padding-top: 4px; padding-bottom: 4px; }
+.faab th:first-child { text-align: left; padding-left: 0; white-space: normal; }
+.faab tbody th { font-weight: 600; line-height: 1.3; }
+.moves-note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.trade { border: 1px solid var(--hash); border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; }
+.trade-week { font-size: 13px; color: var(--muted); }
+.trade-side { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 4px 0; }
+.ts-team { font-weight: 600; line-height: 1.3; }
+.ts-pts { text-align: right; }
+.ts-got { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.trade-result { font-weight: 600; padding-top: 4px; border-top: 1px solid var(--hash); margin-top: 4px; }
+.earlier::details-content { transition: none; }  /* the ladder's breakdown is the page's one expand animation */
+.earlier summary { cursor: pointer; font-weight: 600; padding: 8px 0; width: fit-content; }
+@container moves (min-width: 900px) { .moves { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
 /* History: every finished season, once for the whole page (not per week) */
 .history { max-width: 760px; }
 .h-head { font-weight: 600; font-size: 20px; line-height: 1.15; margin: 24px 0 8px; }
@@ -220,6 +247,7 @@ details[open]::details-content { block-size: auto; }
   .charts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; align-items: start; }
   .chart { height: var(--h-desktop); }
   .chart-section.wide { grid-column: 1 / -1; }
+  .moves-section { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .div .fill, details::details-content { transition: none; }

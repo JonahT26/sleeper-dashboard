@@ -9,7 +9,8 @@ import pandas as pd
 import pytest
 
 from sleeper_dash import validate as v
-from sleeper_dash.transform import (build_player_weeks, build_schedule, build_team_weeks, build_teams, build_transactions,
+from sleeper_dash.transform import (build_player_weeks, build_schedule, build_team_weeks, build_teams, build_trade_assets,
+                                    build_transactions,
                                     build_winners_bracket)
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -84,6 +85,11 @@ def tables(week_1, rosters):
         "team_weeks": build_team_weeks(league, {1: week_1}),
         "player_weeks": build_player_weeks(league, {1: week_1}, players={}),
         "transactions": build_transactions(league, {}, {}, "2026-09-09"),
+        # One trade of FAAB only (no players), as Sleeper reports it: in trade_assets and nowhere else.
+        "trade_assets": build_trade_assets(league, {1: [{"transaction_id": "77", "type": "trade", "status": "complete", "leg": 1,
+                                                         "created": 1789000000000, "adds": None, "drops": None, "roster_ids": [1, 2],
+                                                         "waiver_budget": [{"amount": 5, "sender": 1, "receiver": 2}],
+                                                         "draft_picks": []}]}),
         # Weeks 2-14 not played yet: Sleeper publishes their pairings ahead of time (reused from week 1 here).
         "schedule": build_schedule(league, {1: week_1}, {week: week_1 for week in range(2, 15)}),
         "winners_bracket": build_winners_bracket(league, sleeper_bracket(rosters)),
@@ -102,7 +108,7 @@ def test_settings_helper_matches_a_known_result(week_1):
 
 def test_all_checks_pass_on_fixture_data(tables, rosters):
     results = v.run_checks(tables, make_league(), rosters)
-    assert len(results) == 8  # the 7 data checks plus seeding vs Sleeper's bracket
+    assert len(results) == 9  # the 7 data checks plus seeding vs Sleeper's bracket and the trade assets check
     assert failed(results) == []
 
 

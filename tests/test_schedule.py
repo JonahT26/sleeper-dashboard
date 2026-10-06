@@ -131,13 +131,15 @@ def test_metric_tables_combine_every_module_and_pass_validation():
     params = {"consistency": {"min_weeks": 2, "floor_pct": 0.1, "ceiling_pct": 0.9, "boom_margin": 20, "bust_margin": 20},
               "schedule": {"min_weeks": 1},
               "power": {"weights": {"season_scoring": 0.35, "recent_form": 0.25, "roster_strength": 0.2, "results": 0.2},
-                        "recent_weeks": 3, "scale": 15, "shrink_weeks": 3}}
+                        "recent_weeks": 3, "scale": 15, "shrink_weeks": 3},
+              "transactions": {"min_faab_spend": 10}}
     params["awards"] = {"enabled": ["top_score", "blowout"]}
     lineups = team_weeks[["season", "week", "roster_id"]].assign(
         actual_points=team_weeks["points"], optimal_points=team_weeks["points"] + 5, bench_points_lost=5.0, efficiency=team_weeks["points"] / (team_weeks["points"] + 5))
     players = team_weeks[["season", "week", "roster_id", "points"]].assign(
         player_id=team_weeks["roster_id"].astype(str), full_name="Player", is_starter=True, is_empty_slot=False)
-    moves = pd.DataFrame(columns=["transaction_id", "season", "week", "type", "roster_id", "player_id", "action", "created_at", "is_preseason"])
+    moves = pd.DataFrame(columns=["transaction_id", "season", "week", "type", "roster_id", "player_id", "player_name", "action",
+                                  "waiver_bid", "created_at", "is_preseason"])
     teams = pd.DataFrame({"roster_id": [1, 2, 3, 4], "team_name": ["A", "B", "C", "D"]})
     tables = build_metric_tables({"team_weeks": team_weeks, "schedule": schedule, "lineups_optimal": lineups,
                                   "player_weeks": players, "transactions": moves, "teams": teams}, params)

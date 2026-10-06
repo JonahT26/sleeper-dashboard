@@ -104,8 +104,10 @@ def test_a_new_week_is_reported(run_pipeline):
     assert all_passed(summary) and summary["previous_week"] == 2 and summary["weeks"] == [1, 2, 3]
     # Every weekly table gains week 3 (playoff odds start there); teams, managers, and transactions don't
     # change (the fake league has completed moves in week 1 only), and nor does Sleeper's provisional
-    # bracket, because the seeding is the same after week 3 as after week 2.
-    assert set(summary["changed_tables"]) == set(KEYS) - {"teams", "managers", "transactions", "winners_bracket"}
+    # bracket, because the seeding is the same after week 3 as after week 2. No trades, and the two week 1 pickups
+    # never start, so trade_assets, trades, and pickups don't change either (start_credits gains week 3's starts).
+    assert set(summary["changed_tables"]) == set(KEYS) - {"teams", "managers", "transactions", "winners_bracket",
+                                                          "trade_assets", "trades", "pickups"}
 
 
 # --- playoff weeks (HANDOFF.md risk 4) ---------------------------------------------------------

@@ -14,8 +14,9 @@ The source of truth for every metric. Code follows this file, not the other way 
 | 6 | Power score | **Confirmed** 2026-10-02 |
 | 7 | Weekly awards | **Confirmed** 2026-10-02 |
 | 8 | Playoff odds | **Confirmed** 2026-10-05 (Phase 5); built 2026-10-05 |
+| 9 | Transactions: pickup value, FAAB efficiency, trade outcomes | **Confirmed** 2026-10-05 (Phase 5) |
 
-Metrics 1–7 were confirmed and built in Phase 2; metric 8 in Phase 5.
+Metrics 1–7 were confirmed and built in Phase 2; metrics 8 and 9 in Phase 5.
 
 ## Conventions that apply to every metric
 
@@ -586,3 +587,58 @@ Backtest, predicting each team's next-week relative score from earlier weeks onl
 6. Two runs on the same data give identical tables; a different `seed` moves each probability by no more than Monte Carlo error (4 standard errors).
 7. With the same seed, adding a constant to every past score of one team never lowers its playoff or bye odds. (Title odds are excluded: a better seed can mean a different, stronger first opponent in some simulations.)
 8. **Seeding matches Sleeper:** in the latest completed regular-season week, our seeding (wins, then points for) gives the same bye teams and the same first-round pairings as Sleeper's provisional `winners_bracket`. This checks the tiebreaker against Sleeper every week.
+
+---
+
+## 9. Transactions: pickup value, FAAB efficiency, trade outcomes
+
+**Status:** confirmed by the owner, 2026-10-05 (Phase 5 interview; every recommended option: 1a 2a 3 4a 5a 6a with a $10 minimum, 7, 8a).
+
+**Meaning.** What each team got out of its roster moves, measured by the points those players scored **in that team's starting lineup**. Three views of one idea: what a waiver or free-agent pickup scored for the team that added him (pickup value), how many of those points each FAAB dollar bought (FAAB efficiency), and which side of a trade got more starting-lineup points from the players it received (trade outcomes).
+
+Points in a starting lineup are not the same as value added: a pickup who starts may only have replaced a slightly worse starter. "Points above the player he displaced" would measure that, but needs a rule for who was displaced; it is left for later (owner, 2026-10-05).
+
+**Formula.**
+
+1. **Start credits.** Every regular-season start of a real player (empty slots excluded) by team *T* in week *w* is credited to *T*'s **most recent acquisition of that player in weeks 1..*w*** (latest `created_at`): a `waiver`, `free_agent`, `trade` or `commissioner` add, or `draft` when *T* has no recorded add of him (drafted, or on the roster from the start). This is the rule Pickup of the week already uses (metric 7). A player dropped and picked up again starts a new stint; a player traded on counts for the trade that brought him to his current team. Every started point is credited exactly once.
+2. **Pickup value** of a waiver or free-agent add *a* (made in the regular season, preseason included), through week *t*: the starts and points credited to *a* in weeks 1..*t*.
+3. **FAAB efficiency** of team *T* through week *t*:
+   *F* = *W* / *S*, where *W* = points credited to *T*'s waiver claims in weeks 1..*t* (**every claim, $0 bids included**) and *S* = *T*'s winning bids in weeks 1..*t* (preseason included). FAAB received or sent in trades is not spending and doesn't change *S*. *F* is shown only when *S* ≥ `metrics.transactions.min_faab_spend` ($10), so a $1 spend can't produce 200 points per dollar. Free-agent pickups cost nothing and aren't in *F*; they count in the team's pickup points.
+4. **Trade outcomes.** For a trade between teams *A* and *B* made in a regular-season week, through week *t*: *P*<sub>A</sub> = points credited to that trade on team *A* (from the players *A* received), *P*<sub>B</sub> likewise. *A*'s margin = *P*<sub>A</sub> − *P*<sub>B</sub>; *A* **won** if it's positive, **lost** if negative, **even** if zero (including when nobody received has started yet). FAAB received is listed beside each side, not converted into points.
+
+**Inputs.** `player_weeks`: `season`, `week`, `roster_id`, `player_id`, `is_starter`, `is_empty_slot`, `points`. `transactions`: `transaction_id`, `week`, `type`, `roster_id`, `player_id`, `player_name`, `action`, `waiver_bid`, `created_at`, `is_preseason`. `trade_assets` (new, CODEBASE.md): FAAB and draft picks traded inside trades. `team_weeks`: `is_playoff`.
+
+**Outputs.** `start_credits` (one row per regular-season start), `pickups` (one row per waiver or free-agent add), `trades` (one row per side of each trade), and season-to-date columns in `metrics_season`: `pickup_points`, `waiver_points`, `faab_spent`, `faab_points_per_dollar`, `trades`, `trade_margin`. Schemas in CODEBASE.md.
+
+**Parameters** (`config.yaml`):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `metrics.transactions.min_faab_spend` | `10` | FAAB efficiency is shown only once a team has spent at least this many dollars (owner, 2026-10-05) |
+
+**Edge cases.**
+
+| Case | Rule |
+|---|---|
+| Weeks counted | **Regular season only** (owner, 4a): every team plays every regular-season week, matching records and luck. Starts in playoff weeks earn no credits; in playoff weeks the season-to-date columns stay at their final regular-season values |
+| Trades in playoff weeks | No outcome (nothing after them counts); they are left out of `trades` but kept in `trade_assets` |
+| Trades of FAAB only (no players) | Left out of `trades` (26 in 2020–2025); kept in `trade_assets` |
+| One-sided trades (a player for FAAB) | Kept: the side that received only FAAB has 0 points, so the player side wins by what he scored |
+| Pickups made in playoff weeks | Left out of `pickups` (they can't earn regular-season credits) |
+| Kickers and defenses | Included like any position (owner, 5a); many $0 claims are defense streamers |
+| Trades between three or more teams | Never seen 2020–2026; the run stops with a message rather than guess how to compare three sides |
+| $0 bids | Count in *W* (owner, 6a), so a team whose best claims cost nothing has high efficiency |
+| A player added and dropped before playing | A pickup with 0 starts and 0 points |
+| Draft picks traded | Never seen 2020–2026 (redraft league); recorded in `trade_assets` if it ever happens, with no effect on these metrics |
+| Stat corrections | Flow through on the next run (full refresh) |
+
+**Expected range** (2025, regular season, as built). About half of pickups never start (51% of 323). Best pickup: 146.4 points. FAAB efficiency 1.1 to 3.7 points per dollar. 21 trades; margin median 32 points, largest 167. A team's net trade margin ranged from −502 to +222.
+
+**FAAB balance report** (owner, 2a; printed, never stops the run). For each team: budget − winning bids − FAAB sent + FAAB received, against Sleeper's `waiver_budget_used`. Exact for 2020 and 2025. Sleeper's current-season figure includes the week in progress, and 2021–2024 have gaps on 1–5 teams that no transaction explains (probably budget edits by the commissioner), so it can't be a stopping check.
+
+**Sanity checks** (one metric check, "Transaction credits add up", plus a data check on `trade_assets`):
+1. For every regular-season team-week, the start credits sum to `team_weeks.points` (empty slots score 0), and no start is credited twice.
+2. `pickups` points sum to the credits from waiver and free-agent adds; `trades` points sum to the credits from trades; the two sides of each trade have opposite margins.
+3. `faab_points_per_dollar` is null exactly when `faab_spent` < `min_faab_spend`, and otherwise equals `waiver_points` / `faab_spent`.
+4. The latest week's season-to-date columns equal the totals in `pickups` and `trades`.
+5. `trade_assets`: every FAAB amount is positive; sender and receiver differ.

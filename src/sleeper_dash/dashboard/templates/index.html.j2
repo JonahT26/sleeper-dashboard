@@ -152,6 +152,65 @@
 {% endfor %}
 </div>
 {% endif %}
+{% if v.moves %}
+{% macro trade_card(t) %}
+<li class="trade">
+  <p class="trade-week">Week {{ t.week }}</p>
+  {% for s in t.sides %}
+  <p class="trade-side"><span class="ts-team">{{ s.team }}</span><span class="ts-pts num">{{ s.points }}</span><span class="ts-got">got {{ s.got }}</span></p>
+  {% endfor %}
+  <p class="trade-result">{{ t.result }}</p>
+</li>
+{% endmacro %}
+<section class="moves-section" aria-labelledby="moves-title-{{ v.week }}">
+  <h2 class="section-title display" id="moves-title-{{ v.week }}">Roster moves</h2>
+  <p class="sub">{{ v.moves.subtitle }}</p>
+  <div class="moves">
+    {% if v.moves.pickups %}
+    <div class="moves-block">
+      <h3 class="h-head">Best pickups</h3>
+      <ol class="pickups" role="list">
+      {% for p in v.moves.pickups %}
+        <li class="pickup"><span class="pk-name">{{ p.player }}</span><span class="pk-pts num">{{ p.points }}</span><span class="pk-detail">{{ p.team }} · {{ p.how }} · {{ p.starts }}</span></li>
+      {% endfor %}
+      </ol>
+    </div>
+    {% endif %}
+    {% if v.moves.faab %}
+    <div class="moves-block">
+      <h3 class="h-head">FAAB</h3>
+      <div class="table-scroll">
+        <table class="faab">
+          <thead><tr><th scope="col">Team</th><th scope="col">Spent</th><th scope="col">Points</th><th scope="col">Per $</th></tr></thead>
+          <tbody>
+          {% for r in v.moves.faab %}
+            <tr><th scope="row">{{ r.team }}</th><td class="num">{{ r.spent }}</td><td class="num">{{ r.points }}</td><td class="num">{{ r.per_dollar }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="moves-note">Points from waiver claims, $0 claims included. — means under {{ v.moves.min_spend }} spent.</p>
+    </div>
+    {% endif %}
+    {% if v.moves.trades %}
+    <div class="moves-block">
+      <h3 class="h-head">Trades</h3>
+      <ol class="trades" role="list">
+      {% for t in v.moves.trades %}{{ trade_card(t) }}{% endfor %}
+      </ol>
+      {% if v.moves.earlier_trades %}
+      <details class="earlier">
+        <summary>Earlier trades ({{ v.moves.earlier_trades|length }})</summary>
+        <ol class="trades" role="list">
+        {% for t in v.moves.earlier_trades %}{{ trade_card(t) }}{% endfor %}
+        </ol>
+      </details>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
 {% endmacro %}
 
 <header class="mast">

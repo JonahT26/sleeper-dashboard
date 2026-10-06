@@ -75,6 +75,8 @@ metrics:
     seed: 2026            # base random seed; each week's seed comes from it, the season, and the week
     shrink_weeks: 6       # k: the prior on a team's strength counts as this many weeks (2025 calibration 6.5)
     min_weeks: 3          # first week with odds (at least 2: the score SD needs two weeks per team)
+  transactions:
+    min_faab_spend: 10    # FAAB efficiency (points per dollar) is shown once a team has spent at least this many dollars
   awards:
     enabled:              # awards shown each week, in display order; others defined in the spec can be added
       - top_score
