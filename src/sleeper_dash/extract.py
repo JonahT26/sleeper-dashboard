@@ -1,4 +1,4 @@
-"""Pull the season's raw Sleeper data into data/raw/{season}/ as untouched JSON.
+"""Pull every configured season's raw Sleeper data into data/raw/{season}/ as untouched JSON.
 
 Run with:  python -m sleeper_dash.extract
 
@@ -79,10 +79,22 @@ def _record_count(data):
     return len(data) if isinstance(data, list) else 1
 
 
-def extract(config):
-    """Download the season into data/raw/{season}/. Returns a run summary dict."""
-    season_dir = RAW_DIR / str(config.season)
-    staging_dir = RAW_DIR / f"{config.season}.partial"
+def _write_json(target, data):
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with open(target, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+
+
+def extract_season(league_id, season, state):
+    """Download one season's league into data/raw/{season}/. Returns (league, summary dict).
+
+    Everything goes to a staging folder first and replaces the season's folder only when every call
+    has succeeded. /state/nfl (fetched once per run) is saved with each season, because transform
+    cross-checks the season start date against it while it still describes that season.
+    """
+    season_dir = RAW_DIR / str(season)
+    staging_dir = RAW_DIR / f"{season}.partial"
     if staging_dir.exists():
         shutil.rmtree(staging_dir)
 
@@ -97,22 +109,17 @@ def extract(config):
             data = empty  # Sleeper has nothing to report yet, e.g. no bracket before the season
         if data is None:
             raise ExtractError(f"Sleeper returned an empty response (null) for {path}.")
-        target = staging_dir / filename
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with open(target, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-            f.write("\n")
+        _write_json(staging_dir / filename, data)
         files.append({"file": filename, "records": _record_count(data)})
         return data
 
-    league_path = f"/league/{config.league_id}"
-    state = fetch("/state/nfl", "state.json")
+    _write_json(staging_dir / "state.json", state)
+    files.append({"file": "state.json", "records": 1})
+    league_path = f"/league/{league_id}"
     league = fetch(league_path, "league.json")
-    if str(league["season"]) != str(config.season):
-        raise ExtractError(
-            f"League {config.league_id} is for season {league['season']}, "
-            f"but config.yaml says season {config.season}."
-        )
+    if str(league["season"]) != str(season):
+        raise ExtractError(f"League {league_id} is for season {league['season']}, but season {season} was expected "
+                           "(config.yaml season, or one season before the next league in the history).")
 
     fetch(f"{league_path}/users", "users.json")
     fetch(f"{league_path}/rosters", "rosters.json")
@@ -123,13 +130,6 @@ def extract(config):
         draft_id = draft["draft_id"]
         fetch(f"/draft/{draft_id}/picks", f"picks/draft_{draft_id}.json")
 
-    # The players list is cached separately (data/cache/) and re-downloaded at most once a day.
-    cache_path = api.PLAYERS_CACHE_PATH
-    mtime_before = cache_path.stat().st_mtime if cache_path.exists() else None
-    players = api.get_players()
-    players_refreshed = cache_path.stat().st_mtime != mtime_before
-    calls += players_refreshed
-
     last_week = latest_completed_week(state, league)
     for week in range(1, last_week + 1):
         fetch(f"{league_path}/matchups/{week}", f"matchups/week_{week:02d}.json")
@@ -138,15 +138,52 @@ def extract(config):
         fetch(f"{league_path}/matchups/{week}", f"schedule/week_{week:02d}.json")
 
     _swap_in(staging_dir, season_dir)
+    return league, {"season_dir": season_dir, "files": files, "calls": calls, "latest_completed_week": last_week,
+                    "last_scored_leg": league["settings"]["last_scored_leg"]}
 
+
+def extract(config):
+    """Download every configured season (config.seasons) into data/raw/{season}/. Returns a run summary dict.
+
+    The configured league comes first; each earlier season is the league its previous_league_id names,
+    back to config.yaml history_from. A season that can't be reached stops the run.
+    """
+    state = api.get("/state/nfl")
+    if state is None:
+        raise ExtractError("Sleeper returned an empty response (null) for /state/nfl.")
+    calls = 1
+
+    # The players list is cached separately (data/cache/) and re-downloaded at most once a day.
+    cache_path = api.PLAYERS_CACHE_PATH
+    mtime_before = cache_path.stat().st_mtime if cache_path.exists() else None
+    players = api.get_players()
+    players_refreshed = cache_path.stat().st_mtime != mtime_before
+    calls += players_refreshed
+
+    seasons = {}
+    league_id, season, first = config.league_id, config.season, config.seasons[0]
+    while True:
+        league, summary = extract_season(league_id, season, state)
+        calls += summary["calls"]
+        seasons[season] = {**summary, "league_id": league_id}
+        if season <= first:
+            break
+        previous = league.get("previous_league_id")
+        if not previous or previous == "0":
+            raise ExtractError(f"Sleeper has no league before season {season} (no previous_league_id), but config.yaml "
+                               f"history_from is {first}. Set history_from to {season} or later.")
+        league_id, season = str(previous), season - 1
+
+    current = seasons[config.season]
     return {
-        "season_dir": season_dir,
-        "files": files,
+        "season_dir": current["season_dir"],
+        "files": current["files"],
         "calls": calls,
-        "latest_completed_week": last_week,
+        "seasons": seasons,  # {season: summary}, newest first
+        "latest_completed_week": current["latest_completed_week"],
         "nfl_week": state["week"],
         "nfl_season_type": state["season_type"],
-        "last_scored_leg": league["settings"]["last_scored_leg"],
+        "last_scored_leg": current["last_scored_leg"],
         "players_cached": len(players),
         "players_refreshed": players_refreshed,
     }
@@ -166,9 +203,12 @@ def main():
     for f in summary["files"]:
         print(f"  {f['file']:<{width}}  {f['records']:>7}")
     print()
+    print("SEASONS")
+    for season, s in summary["seasons"].items():
+        print(f"  {season}: league {s['league_id']}, weeks 1–{s['latest_completed_week']}, {len(s['files'])} files, {s['calls']} calls")
     status = "downloaded fresh" if summary["players_refreshed"] else "reused (less than 24 hours old)"
     print(f"  Players cache: {summary['players_cached']} players, {status}")
-    print(f"  {len(summary['files'])} files, {summary['calls']} API calls")
+    print(f"  {summary['calls']} API calls in all")
 
 
 if __name__ == "__main__":

@@ -151,6 +151,55 @@
 {{ week_sections(latest) }}
   </div>
   <div class="wrap">
+    {% if history %}
+    {% macro history_rows(rows) %}
+      {% for m in rows %}
+        <tr>
+          <th scope="row"><span class="h-name">{{ m.manager }}</span><span class="h-team">{{ m.detail }}</span></th>
+          <td class="num">{{ m.record }}</td><td class="num">{{ m.win_pct }}</td>
+          <td class="num">{{ m.playoffs }}</td><td class="num">{{ m.titles }}</td>
+        </tr>
+      {% endfor %}
+    {% endmacro %}
+    {% macro history_head() %}<thead><tr><th scope="col">Manager</th><th scope="col">Record</th><th scope="col">Win %</th><th scope="col">Playoffs</th><th scope="col">Titles</th></tr></thead>{% endmacro %}
+    <section class="history" aria-labelledby="history-title">
+      <h2 class="section-title display" id="history-title">History</h2>
+      <p class="sub">Every finished season, {{ history.span }}. Records are regular-season records, median games included; playoff results count as appearances and titles.</p>
+      <h3 class="h-head">Champions</h3>
+      <ol class="champions" role="list">
+      {% for c in history.champions %}
+        <li><span class="c-season display num">{{ c.season }}</span> <span class="c-name">{{ c.manager }}</span></li>
+      {% endfor %}
+      </ol>
+      <h3 class="h-head">All-time records</h3>
+      <div class="table-scroll">
+        <table class="alltime">
+          {{ history_head() }}
+          <tbody>
+          {{ history_rows(history.current) }}
+          </tbody>
+        </table>
+      </div>
+      {% if history.former %}
+      <details class="former">
+        <summary>Former managers ({{ history.former|length }})</summary>
+        <div class="table-scroll">
+          <table class="alltime">
+            {{ history_head() }}
+            <tbody>
+            {{ history_rows(history.former) }}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      {% endif %}
+      <h3 class="h-head">{{ history.last_season }} luck</h3>
+      <p class="h-line">Luckiest: <strong>{{ history.luckiest.manager }}</strong>, {{ history.luckiest.record }} with {{ history.luckiest.expected }} expected wins ({{ history.luckiest.luck }}).</p>
+      <p class="h-line">Unluckiest: <strong>{{ history.unluckiest.manager }}</strong>, {{ history.unluckiest.record }} with {{ history.unluckiest.expected }} expected wins ({{ history.unluckiest.luck }}).</p>
+      <h3 class="h-head">Highest weekly score</h3>
+      <p class="h-line"><strong>{{ history.high_score.points }}</strong> by {{ history.high_score.manager }}, week {{ history.high_score.week }} of {{ history.high_score.season }}.</p>
+    </section>
+    {% endif %}
     <section class="how" aria-labelledby="how-title">
     {% for s in how_it_works %}
       {% if loop.first %}<h2 class="section-title display" id="how-title">{{ s.heading }}</h2>{% else %}<h3 class="how-head">{{ s.heading }}</h3>{% endif %}

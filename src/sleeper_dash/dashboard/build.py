@@ -22,10 +22,11 @@ import yaml
 from jinja2 import Environment, PackageLoader
 
 from sleeper_dash.config import PROJECT_ROOT
-from sleeper_dash.dashboard import charts, explainer, theme
+from sleeper_dash.dashboard import charts, explainer, history, theme
 
 SITE_DIR = PROJECT_ROOT / "site"
-TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards", "playoff_odds"]
+TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards", "playoff_odds",
+          "managers", "winners_bracket"]
 EASTERN = ZoneInfo("America/New_York")
 # The weekly workflow's schedule is the one source for "next update due" (UI_GUIDE.md "Status bar").
 WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "weekly.yml"
@@ -175,7 +176,12 @@ def build_view(tables, run, params, fresh=None):
     tables: teams, team_weeks, power_rankings, metrics_season, lineups_optimal, awards. run: the pipeline's run record.
     params: config.yaml metrics (power weights and windows for the ladder; every weight and threshold for "How this works").
     fresh: freshness() for the stale-data line; build_site always passes it. Without it the page has no stale-data line.
+    The saved tables hold every season (Phase 5); the page shows the run's season only, except the History
+    section, which summarises every finished season.
     """
+    past = history.history_view(tables, run["season"])
+    tables = {name: table[table["season"] == run["season"]].reset_index(drop=True) if "season" in table.columns else table
+              for name, table in tables.items()}
     teams = tables["teams"].set_index("roster_id")
     power, season, awards = tables["power_rankings"], tables["metrics_season"], tables["awards"]
     lineups, team_weeks = tables["lineups_optimal"], tables["team_weeks"]
@@ -243,7 +249,7 @@ def build_view(tables, run, params, fresh=None):
     stale = fresh and {"after_days": fresh["stale_after_days"], "next_updates_json": theme.to_script_json(fresh["next_updates"]),
                        "final": bool(run["league"].get("season_complete"))}  # season over: "Final rankings", no next update
     return {"league_name": run["league_name"], "season": run["season"], "updated": updated_text(run["finished_at"]), "updated_at": run["finished_at"],
-            "stale": stale, "latest": views[-1], "earlier": views[:-1], "weeks": weeks,
+            "stale": stale, "latest": views[-1], "earlier": views[:-1], "weeks": weeks, "history": past,
             "plotly_cdn": theme.PLOTLY_CDN, "chart_theme": chart_theme,
             "how_it_works": explainer.sections(params, run["league"])}  # owner-approved copy, numbers from config.yaml
 

@@ -102,10 +102,10 @@ def test_a_new_week_is_reported(run_pipeline):
     run_pipeline(FakeSleeper(last_scored_leg=2, state={**IN_SEASON, "week": 3}))
     summary = run_pipeline(FakeSleeper(last_scored_leg=3))
     assert all_passed(summary) and summary["previous_week"] == 2 and summary["weeks"] == [1, 2, 3]
-    # Every weekly table gains week 3 (playoff odds start there); teams and transactions don't change (the
-    # fake league has completed moves in week 1 only), and nor does Sleeper's provisional bracket, because
-    # the seeding is the same after week 3 as after week 2.
-    assert set(summary["changed_tables"]) == set(KEYS) - {"teams", "transactions", "winners_bracket"}
+    # Every weekly table gains week 3 (playoff odds start there); teams, managers, and transactions don't
+    # change (the fake league has completed moves in week 1 only), and nor does Sleeper's provisional
+    # bracket, because the seeding is the same after week 3 as after week 2.
+    assert set(summary["changed_tables"]) == set(KEYS) - {"teams", "managers", "transactions", "winners_bracket"}
 
 
 # --- playoff weeks (HANDOFF.md risk 4) ---------------------------------------------------------

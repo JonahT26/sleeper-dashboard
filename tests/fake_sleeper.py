@@ -18,6 +18,11 @@ does in each case.
 (wins including the median game, then points for), seeds 3 v 6 and 4 v 5 in round 1, seeds 1 and 2
 waiting for those winners in round 2, then the final, 3rd-place and 5th-place games. Like Sleeper's,
 it doesn't change once the regular season is over, whatever the roster standings count.
+
+Past seasons: `FakeSleeper(league_id=..., season=..., previous_league_id=...)` makes another season's
+league, and `FakeHistory(current, past, ...)` serves several at once, routing each request to the league
+(or draft) it names, the way Sleeper's previous_league_id chain works. `owners` maps roster_id to owner ID,
+so a manager can have a different roster number, or be gone, in another season.
 """
 
 import random
@@ -83,9 +88,12 @@ def _round_robin(teams, weeks):
 
 class FakeSleeper:
     def __init__(self, last_scored_leg=3, state=IN_SEASON, teams=TEAMS, playoff_week_start=PLAYOFF_WEEK_START,
-                 playoffs=None, behaviours=()):
+                 playoffs=None, behaviours=(), league_id=LEAGUE_ID, season=SEASON, previous_league_id=None, owners=None):
         unknown = set(behaviours) - set(PLAYOFF_BEHAVIOURS)
         assert not unknown, f"unknown behaviours {unknown}"
+        self.league_id, self.season, self.previous_league_id = league_id, season, previous_league_id
+        self.owners = owners or {r: f"90000000000000000{r}" for r in range(1, teams + 1)}
+        self.draft_id = f"8000000000000{season}0"
         self.last_scored_leg = last_scored_leg
         self.state = state
         self.teams = teams
@@ -181,7 +189,7 @@ class FakeSleeper:
                 if count_median:
                     t["wins" if points > median else "losses"] += 1
         return [
-            {"roster_id": r, "owner_id": f"90000000000000000{r}", "co_owners": None, "players": self._team_players(r),
+            {"roster_id": r, "owner_id": self.owners[r], "co_owners": None, "players": self._team_players(r),
              "settings": {"wins": t["wins"], "losses": t["losses"], "ties": t["ties"],
                           "fpts": t["pf"] // 100, "fpts_decimal": t["pf"] % 100,
                           "fpts_against": t["pa"] // 100, "fpts_against_decimal": t["pa"] % 100}}
@@ -230,27 +238,28 @@ class FakeSleeper:
     # --- the API -------------------------------------------------------------------------------
 
     def get(self, path):
-        league = f"/league/{LEAGUE_ID}"
+        league = f"/league/{self.league_id}"
         if path == "/state/nfl":
             return dict(self.state)
         if path == "/players/nfl":
             return self.players
         if path == league:
-            return {"league_id": LEAGUE_ID, "name": "Fake League", "season": SEASON, "status": "in_season",
+            return {"league_id": self.league_id, "name": "Fake League", "season": self.season, "status": "in_season",
+                    "previous_league_id": self.previous_league_id,
                     "roster_positions": ROSTER_POSITIONS,
                     "settings": {"num_teams": self.teams, "playoff_week_start": self.playoff_week_start, "start_week": 1,
                                  "league_average_match": 1, "last_scored_leg": self.last_scored_leg,
                                  "playoff_teams": 6, "playoff_round_type": 0, "playoff_seed_type": 0}}
         if path == f"{league}/users":
-            return [{"user_id": f"90000000000000000{r}", "display_name": f"manager{r}",
-                     "metadata": {"team_name": f"Team {r}"}} for r in range(1, self.teams + 1)]
+            return [{"user_id": owner, "display_name": f"manager{owner[-2:].lstrip('0')}",
+                     "metadata": {"team_name": f"Team {r} ({self.season})"}} for r, owner in self.owners.items()]
         if path == f"{league}/rosters":
             return self._rosters()
         if path == f"{league}/winners_bracket":
             return self._winners_bracket()
         if path == f"{league}/drafts":
-            return [{"draft_id": "800000000000000000", "season": SEASON, "status": "complete"}]
-        if path == "/draft/800000000000000000/picks":
+            return [{"draft_id": self.draft_id, "season": self.season, "status": "complete"}]
+        if path == f"/draft/{self.draft_id}/picks":
             return []
         for kind, build in (("matchups", self._matchups), ("transactions", self._transactions)):
             prefix = f"{league}/{kind}/"
@@ -264,3 +273,22 @@ def PlayoffLeague(behaviours=(), last_scored_leg=9):
     state = {**IN_SEASON, "week": last_scored_leg + 1, "leg": last_scored_leg + 1}
     return FakeSleeper(last_scored_leg=last_scored_leg, state=state, teams=8, playoff_week_start=8,
                        playoffs=PLAYOFFS_8, behaviours=behaviours)
+
+
+class FakeHistory:
+    """Several seasons of one league: /state/nfl and the players list from the current season, everything
+    else from whichever season's league (or draft) the request names."""
+
+    def __init__(self, *leagues):
+        self.leagues = leagues
+        self.current = leagues[0]
+
+    def get(self, path):
+        if path in ("/state/nfl", "/players/nfl"):
+            return self.current.get(path)
+        for fake in self.leagues:
+            if path.startswith(f"/league/{fake.league_id}") or path.startswith(f"/draft/{fake.draft_id}/"):
+                return fake.get(path)
+        if path.startswith("/league/"):
+            return None  # Sleeper answers null for a league that doesn't exist
+        raise AssertionError(f"the fake Sleeper has no response for {path}")

@@ -10,7 +10,7 @@ For the owner, on a Tuesday morning. Everything here works from a web browser si
 
 ## 1. Did this week's update work?
 
-The update runs every **Tuesday and Thursday at 12:17 PM Eastern**. GitHub often starts it late, sometimes by an hour, so don't worry before about 1:30 PM. It takes about 2 minutes.
+The update runs every **Tuesday and Thursday at 12:17 PM Eastern**. GitHub often starts it late, sometimes by an hour, so don't worry before about 1:30 PM. It takes about 4 minutes (it rebuilds every season since 2020).
 
 Three checks, in order:
 
@@ -43,7 +43,7 @@ gh run list --workflow weekly.yml --limit 5
 | **Install** | GitHub couldn't download Python or a package. Usually a temporary outage | Re-run (section 3). If it fails twice, ask Claude |
 | **Tests (committed tables)** | Something in the project itself is broken, usually after a code change. Nothing to do with Sleeper | Ask Claude |
 | **Pipeline**, and the log says **"Gave up on …"** or mentions a connection or timeout | Sleeper's site was down or slow | Re-run in an hour |
-| **Pipeline**, and the log says **"validation"** and names a check (e.g. "Records match Sleeper") | Sleeper's numbers didn't add up the way the checks expect. Usually Sleeper was mid-way through a stat correction, or Sleeper changed how it reports something | Re-run once in a few hours. If it fails the same way, ask Claude |
+| **Pipeline**, and the log says **"validation"** and names a check (e.g. "Records match Sleeper") | Sleeper's numbers didn't add up the way the checks expect. Usually Sleeper was mid-way through a stat correction, or Sleeper changed how it reports something. The check's detail starts with the season it failed in (e.g. "2023: …"): every season since 2020 is checked on every run | Re-run once in a few hours. If it fails the same way, ask Claude. If the season named is a past one, the live page is unaffected and nothing urgent is wrong |
 | **Pipeline**, any other message (e.g. "missing", a config setting) | A settings problem, most likely around the start of a new season | Ask Claude |
 | **Dashboard** | The page couldn't be built | Ask Claude |
 | **Page tests (this run's tables)** | The built page didn't match the data, so it wasn't published. A bug | Ask Claude |
@@ -74,7 +74,7 @@ The live page shows <what looks wrong, e.g. "Team X's record is 3–1 but Sleepe
 
 It's safe to run at any time. It does the same full refresh as the schedule, saves tables only if something changed, and publishes only if every check passes.
 
-On the Actions tab: click **Weekly refresh** in the left-hand list → the **Run workflow** button on the right → leave the branch as **main** → green **Run workflow**. Refresh the page after a few seconds to see the new run. It takes about 2 minutes.
+On the Actions tab: click **Weekly refresh** in the left-hand list → the **Run workflow** button on the right → leave the branch as **main** → green **Run workflow**. Refresh the page after a few seconds to see the new run. It takes about 4 minutes.
 
 Or:
 

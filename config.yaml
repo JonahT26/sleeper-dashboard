@@ -3,12 +3,44 @@
 # Keep the quotes: without them YAML reads the ID as a number.
 league_id: "1369887235935059968"
 season: 2026
+# Past seasons are rebuilt too, back to this one, by following each league's previous_league_id
+# (owner, 2026-10-05: every season Sleeper has, 2020 on). Each needs a season start date below.
+history_from: 2020
 # First day of each NFL season (Sleeper's /state/nfl season_start_date); week 1 transactions
 # before it count as preseason. Stored here because /state/nfl only describes the current
 # season and rolls over in the off-season. While Sleeper still describes a season, every run
-# checks the two agree. Add a line for each new season, and for past seasons (Phase 5).
+# checks the two agree. Add a line for each new season. Past seasons use the same rule as Sleeper's 2026
+# date, the Wednesday before the NFL's opening game (owner, 2026-10-05).
 season_start_dates:
+  2020: 2020-09-09
+  2021: 2021-09-08
+  2022: 2022-09-07
+  2023: 2023-09-06
+  2024: 2024-09-04
+  2025: 2025-09-03
   2026: 2026-09-09
+
+# Known gaps between the sum of Sleeper's weekly scores and its stored season totals (weekly sum minus
+# stored total, points). Each is one game whose score Sleeper corrected without updating its season totals;
+# records and every weekly score still agree. "Points for/against match Sleeper" allows exactly these, so
+# any new or vanished gap still stops the run (owner, 2026-10-05; found when past seasons were added).
+sleeper_points_gaps:
+  2020:
+    - {roster_id: 1, points_for: -2.00}
+    - {roster_id: 5, points_against: -2.00}
+    - {roster_id: 2, points_for: -21.36}
+    - {roster_id: 9, points_against: -21.36}
+    - {roster_id: 12, points_for: 17.70}
+    - {roster_id: 8, points_against: 17.70}
+  2021:
+    - {roster_id: 3, points_for: 2.00}
+    - {roster_id: 4, points_against: 2.00}
+    - {roster_id: 11, points_for: -16.20}
+    - {roster_id: 9, points_against: -16.20}
+  2023:
+    - {roster_id: 5, points_for: 1.00}
+    - {roster_id: 8, points_for: -1.00, points_against: 1.00}
+    - {roster_id: 10, points_against: -1.00}
 
 # The page's freshness warning (docs/UI_GUIDE.md "Status bar"). When the last update is more than
 # this many days old on the viewer's clock, the page says which week the rankings are from and

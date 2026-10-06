@@ -46,19 +46,26 @@ def build_metric_tables(tables, params, league=None):
 
 def rebuild_from_saved():
     """For the metric modules' command-line reports: rebuild every metric table from the saved
-    tidy and lineup tables, validate, and save. Returns (input tables, metric tables, config)."""
+    tidy and lineup tables, season by season (each with its own league settings), validate, and save.
+    Returns (input tables, metric tables, config) for the current season, which the reports describe."""
     from sleeper_dash.config import PROJECT_ROOT, load_config
-    from sleeper_dash.transform import read_raw, save_tables
-    from sleeper_dash.validate import BASE_TABLES, ValidationError, load_tables, validate
+    from sleeper_dash.seasons import league_files, season_slice, stack
+    from sleeper_dash.transform import save_tables
+    from sleeper_dash.validate import BASE_TABLES, ValidationError, load_tables, validate_seasons
 
     config = load_config()
-    league, rosters = read_raw(config.season, "league.json"), read_raw(config.season, "rosters.json")
-    tables = load_tables(names=BASE_TABLES + ["lineups_optimal", "lineups_optimal_players"])
-    metric_tables = build_metric_tables(tables, config.metrics, league)
+    saved = load_tables(names=BASE_TABLES + ["lineups_optimal", "lineups_optimal_players"])
+    files = league_files(config.seasons, config.sleeper_points_gaps)
+    by_season, built = {}, {}
+    for season in config.seasons:
+        season_tables = season_slice(saved, season)
+        built[season] = build_metric_tables(season_tables, config.metrics, files[season][0])
+        by_season[season] = ({**season_tables, **built[season]}, *files[season])
     try:
-        validate({**tables, **metric_tables}, league, rosters)
+        validate_seasons(by_season)
     except ValidationError as error:
         raise SystemExit(str(error))
+    metric_tables = stack(built)
     for name, path in save_tables(metric_tables).items():
         print(f"Saved {len(metric_tables[name])} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
-    return tables, metric_tables, config
+    return season_slice(saved, config.season), built[config.season], config

@@ -1,4 +1,915 @@
 ﻿season,week,award,award_name,roster_id,value,caption,player_id
+2020,1,top_score,Top score,11,158.72,"Put up 158.7, the best of the week.",
+2020,1,lowest_score,Lowest score,8,102.56,Managed 102.6. Everyone else did better.,
+2020,1,heartbreaker,Heartbreaker,9,144.08,"Scored 144.1, 5th-best of the week, and still lost.",
+2020,1,robbery,Robbery,7,127.68,"Won with 127.7, the 8th-best score.",
+2020,1,blowout,Blowout,10,43.6,Beat Post Mahomes by 43.6.,
+2020,1,nail_biter,Nail-biter,6,6.34,Edged #1 Billy Rule Beneficiary by 6.3.,
+2020,1,bench_blunder,Bench blunder,8,36.24,Left 36.2 points on the bench.,
+2020,1,mvp,MVP,1,34.6,Davante Adams scored 34.6.,2133
+2020,1,pickup_of_the_week,Pickup of the week,9,24.28,"Mitchell Trubisky, added as a free agent before the season, scored 24.3.",3976
+2020,2,top_score,Top score,2,159.1,"Put up 159.1, the best of the week.",
+2020,2,lowest_score,Lowest score,6,75.42,Managed 75.4. Everyone else did better.,
+2020,2,heartbreaker,Heartbreaker,9,143.78,"Scored 143.8, 4th-best of the week, and still lost.",
+2020,2,robbery,Robbery,4,122.86,"Won with 122.9, the 10th-best score.",
+2020,2,blowout,Blowout,4,47.44,Beat Jesus is King by 47.4.,
+2020,2,nail_biter,Nail-biter,8,1.24,Edged I am Iron Man by 1.2.,
+2020,2,bench_blunder,Bench blunder,9,33.8,Left 33.8 points on the bench.,
+2020,2,mvp,MVP,11,43.6,Aaron Jones scored 43.6.,4199
+2020,2,pickup_of_the_week,Pickup of the week,8,22.4,"Jonnu Smith, added as a free agent in week 2, scored 22.4.",4144
+2020,3,top_score,Top score,7,195.88,"Put up 195.9, the best of the week.",
+2020,3,lowest_score,Lowest score,11,108.28,Managed 108.3. Everyone else did better.,
+2020,3,heartbreaker,Heartbreaker,4,133.78,"Scored 133.8, 5th-best of the week, and still lost.",
+2020,3,robbery,Robbery,3,129.72,"Won with 129.7, the 7th-best score.",
+2020,3,blowout,Blowout,7,87.6,Beat ItradedStefonDiggs by 87.6.,
+2020,3,nail_biter,Nail-biter,9,6.62,Edged King of the Hill by 6.6.,
+2020,3,bench_blunder,Bench blunder,1,33.24,Left 33.2 points on the bench.,
+2020,3,mvp,MVP,8,40.0,Patrick Mahomes scored 40.0.,4046
+2020,3,pickup_of_the_week,Pickup of the week,2,26.0,"Indianapolis Colts, added off waivers in week 2, scored 26.0.",IND
+2020,4,top_score,Top score,4,169.28,"Put up 169.3, the best of the week.",
+2020,4,lowest_score,Lowest score,1,101.4,Managed 101.4. Everyone else did better.,
+2020,4,heartbreaker,Heartbreaker,8,146.78,"Scored 146.8, 3rd-best of the week, and still lost.",
+2020,4,robbery,Robbery,5,120.72,"Won with 120.7, the 7th-best score.",
+2020,4,blowout,Blowout,7,40.92,Beat Batman and J-Robinson by 40.9.,
+2020,4,nail_biter,Nail-biter,9,7.1,Edged Attack on Titans by 7.1.,
+2020,4,bench_blunder,Bench blunder,1,34.84,Left 34.8 points on the bench.,
+2020,4,mvp,MVP,10,39.1,Joe Mixon scored 39.1.,4018
+2020,4,pickup_of_the_week,Pickup of the week,7,19.6,"Mike Davis, added off waivers in week 2, scored 19.6.",2431
+2020,5,top_score,Top score,10,158.62,"Put up 158.6, the best of the week.",
+2020,5,lowest_score,Lowest score,9,101.66,Managed 101.7. Everyone else did better.,
+2020,5,heartbreaker,Heartbreaker,6,143.18,"Scored 143.2, 4th-best of the week, and still lost.",
+2020,5,robbery,Robbery,8,119.32,"Won with 119.3, the 8th-best score.",
+2020,5,blowout,Blowout,7,39.0,Beat I am Iron Man by 39.0.,
+2020,5,nail_biter,Nail-biter,3,0.48,Edged Jesus is King by 0.5.,
+2020,5,bench_blunder,Bench blunder,4,30.42,Left 30.4 points on the bench.,
+2020,5,mvp,MVP,8,30.7,Patrick Mahomes scored 30.7.,4046
+2020,5,pickup_of_the_week,Pickup of the week,4,27.36,"Justin Herbert, added off waivers in week 2, scored 27.4.",6797
+2020,6,top_score,Top score,5,160.74,"Put up 160.7, the best of the week.",
+2020,6,lowest_score,Lowest score,12,74.26,Managed 74.3. Everyone else did better.,
+2020,6,heartbreaker,Heartbreaker,10,113.36,"Scored 113.4, 6th-best of the week, and still lost.",
+2020,6,robbery,Robbery,6,79.02,"Won with 79.0, the 11th-best score.",
+2020,6,blowout,Blowout,5,73.28,Beat King of the Hill by 73.3.,
+2020,6,nail_biter,Nail-biter,6,4.76,Edged Cane Gang by 4.8.,
+2020,6,bench_blunder,Bench blunder,6,49.32,Left 49.3 points on the bench.,
+2020,6,mvp,MVP,3,39.4,Derrick Henry scored 39.4.,3198
+2020,6,pickup_of_the_week,Pickup of the week,2,35.1,"Justin Jefferson, added off waivers in week 3, scored 35.1.",6794
+2020,7,top_score,Top score,1,197.96,"Put up 198.0, the best of the week.",
+2020,7,lowest_score,Lowest score,12,70.16,Managed 70.2. Everyone else did better.,
+2020,7,heartbreaker,Heartbreaker,4,130.36,"Scored 130.4, 5th-best of the week, and still lost.",
+2020,7,robbery,Robbery,10,124.46,"Won with 124.5, the 7th-best score.",
+2020,7,blowout,Blowout,2,67.86,Beat I am Iron Man by 67.9.,
+2020,7,nail_biter,Nail-biter,3,17.16,Edged Post Mahomes by 17.2.,
+2020,7,bench_blunder,Bench blunder,12,28.28,Left 28.3 points on the bench.,
+2020,7,mvp,MVP,7,45.5,Tyler Lockett scored 45.5.,2374
+2020,7,pickup_of_the_week,Pickup of the week,4,38.48,"Justin Herbert, added off waivers in week 2, scored 38.5.",6797
+2020,8,top_score,Top score,10,159.08,"Put up 159.1, the best of the week.",
+2020,8,lowest_score,Lowest score,6,68.12,Managed 68.1. Everyone else did better.,
+2020,8,heartbreaker,Heartbreaker,7,129.76,"Scored 129.8, 5th-best of the week, and still lost.",
+2020,8,robbery,Robbery,5,80.3,"Won with 80.3, the 10th-best score.",
+2020,8,blowout,Blowout,8,57.14,Beat Cane Gang by 57.1.,
+2020,8,nail_biter,Nail-biter,5,12.18,Edged Jesus is King by 12.2.,
+2020,8,bench_blunder,Bench blunder,3,33.5,Left 33.5 points on the bench.,
+2020,8,mvp,MVP,4,47.6,Dalvin Cook scored 47.6.,4029
+2020,8,pickup_of_the_week,Pickup of the week,4,23.22,"Justin Herbert, added off waivers in week 2, scored 23.2.",6797
+2020,9,top_score,Top score,4,154.14,"Put up 154.1, the best of the week.",
+2020,9,lowest_score,Lowest score,12,73.72,Managed 73.7. Everyone else did better.,
+2020,9,heartbreaker,Heartbreaker,6,124.72,"Scored 124.7, 5th-best of the week, and still lost.",
+2020,9,robbery,Robbery,10,104.68,"Won with 104.7, the 10th-best score.",
+2020,9,blowout,Blowout,4,60.58,Beat Attack on Titans by 60.6.,
+2020,9,nail_biter,Nail-biter,2,0.88,Edged ItradedStefonDiggs by 0.9.,
+2020,9,bench_blunder,Bench blunder,10,36.66,Left 36.7 points on the bench.,
+2020,9,mvp,MVP,4,38.2,Dalvin Cook scored 38.2.,4029
+2020,9,pickup_of_the_week,Pickup of the week,4,23.44,"Justin Herbert, added off waivers in week 2, scored 23.4.",6797
+2020,10,top_score,Top score,2,132.22,"Put up 132.2, the best of the week.",
+2020,10,lowest_score,Lowest score,12,70.68,Managed 70.7. Everyone else did better.,
+2020,10,heartbreaker,Heartbreaker,7,120.58,"Scored 120.6, 3rd-best of the week, and still lost.",
+2020,10,robbery,Robbery,4,88.96,"Won with 89.0, the 10th-best score.",
+2020,10,blowout,Blowout,6,25.4,Beat Post Mahomes by 25.4.,
+2020,10,nail_biter,Nail-biter,9,3.74,Edged Team uncreative name by 3.7.,
+2020,10,bench_blunder,Bench blunder,4,35.6,Left 35.6 points on the bench.,
+2020,10,mvp,MVP,10,31.84,Tom Brady scored 31.8.,167
+2020,10,pickup_of_the_week,Pickup of the week,4,21.48,"Justin Herbert, added off waivers in week 2, scored 21.5.",6797
+2020,11,top_score,Top score,2,162.22,"Put up 162.2, the best of the week.",
+2020,11,lowest_score,Lowest score,12,46.82,Managed 46.8. Everyone else did better.,
+2020,11,heartbreaker,Heartbreaker,3,141.34,"Scored 141.3, 4th-best of the week, and still lost.",
+2020,11,robbery,Robbery,10,97.46,"Won with 97.5, the 10th-best score.",
+2020,11,blowout,Blowout,2,115.4,Beat Cane Gang by 115.4.,
+2020,11,nail_biter,Nail-biter,4,2.48,Edged Lamarvel Universe by 2.5.,
+2020,11,bench_blunder,Bench blunder,12,30.3,Left 30.3 points on the bench.,
+2020,11,mvp,MVP,11,31.36,Deshaun Watson scored 31.4.,4017
+2020,11,pickup_of_the_week,Pickup of the week,4,27.74,"Justin Herbert, added off waivers in week 2, scored 27.7.",6797
+2020,12,top_score,Top score,10,156.72,"Put up 156.7, the best of the week.",
+2020,12,lowest_score,Lowest score,9,78.66,Managed 78.7. Everyone else did better.,
+2020,12,heartbreaker,Heartbreaker,1,141.52,"Scored 141.5, 5th-best of the week, and still lost.",
+2020,12,robbery,Robbery,6,113.5,"Won with 113.5, the 9th-best score.",
+2020,12,blowout,Blowout,10,43.42,Beat Post Mahomes by 43.4.,
+2020,12,nail_biter,Nail-biter,12,5.92,Edged Lamarvel Universe by 5.9.,
+2020,12,bench_blunder,Bench blunder,7,26.0,Left 26.0 points on the bench.,
+2020,12,mvp,MVP,4,51.4,Tyreek Hill scored 51.4.,3321
+2020,12,pickup_of_the_week,Pickup of the week,1,24.4,"James Robinson, added as a free agent before the season, scored 24.4.",6955
+2020,13,top_score,Top score,2,163.76,"Put up 163.8, the best of the week.",
+2020,13,lowest_score,Lowest score,4,84.94,Managed 84.9. Everyone else did better.,
+2020,13,heartbreaker,Heartbreaker,8,120.68,"Scored 120.7, 7th-best of the week, and still lost.",
+2020,13,robbery,Robbery,7,122.9,"Won with 122.9, the 6th-best score.",
+2020,13,blowout,Blowout,1,60.24,Beat King of the Hill by 60.2.,
+2020,13,nail_biter,Nail-biter,12,5.24,Edged Jesus is King by 5.2.,
+2020,13,bench_blunder,Bench blunder,12,52.34,Left 52.3 points on the bench.,
+2020,13,mvp,MVP,2,38.5,Darren Waller scored 38.5.,2505
+2020,13,pickup_of_the_week,Pickup of the week,10,29.7,"Corey Davis, added off waivers in week 1, scored 29.7.",4036
+2020,14,top_score,Top score,7,172.76,"Put up 172.8, the best of the week.",
+2020,14,lowest_score,Lowest score,2,50.52,Managed 50.5. Everyone else did better.,
+2020,14,heartbreaker,Heartbreaker,10,119.18,"Scored 119.2, 6th-best of the week, and still lost.",
+2020,14,robbery,Robbery,8,120.64,"Won with 120.6, the 5th-best score.",
+2020,14,blowout,Blowout,5,97.96,Beat Attack on Titans by 98.0.,
+2020,14,nail_biter,Nail-biter,8,1.46,Edged Team uncreative name by 1.5.,
+2020,14,bench_blunder,Bench blunder,2,114.36,Left 114.4 points on the bench.,
+2020,14,mvp,MVP,7,34.92,Lamar Jackson scored 34.9.,4881
+2020,14,pickup_of_the_week,Pickup of the week,9,24.98,"Mitchell Trubisky, added off waivers in week 12, scored 25.0.",3976
+2020,15,top_score,Top score,8,176.08,"Put up 176.1, the best of the week.",
+2020,15,lowest_score,Lowest score,6,50.96,Managed 51.0. Everyone else did better.,
+2020,15,heartbreaker,Heartbreaker,2,163.02,"Scored 163.0, 2nd-best of the week, and still lost.",
+2020,15,robbery,Robbery,3,67.4,"Won with 67.4, the 11th-best score.",
+2020,15,blowout,Blowout,7,62.08,Beat Batman and J-Robinson by 62.1.,
+2020,15,nail_biter,Nail-biter,10,3.3,Edged King of the Hill by 3.3.,
+2020,15,bench_blunder,Bench blunder,3,101.42,Left 101.4 points on the bench.,
+2020,15,mvp,MVP,8,37.82,Jalen Hurts scored 37.8.,6904
+2020,15,pickup_of_the_week,Pickup of the week,8,37.82,"Jalen Hurts, added as a free agent in week 12, scored 37.8.",6904
+2020,16,top_score,Top score,2,176.98,"Put up 177.0, the best of the week.",
+2020,16,lowest_score,Lowest score,3,48.94,Managed 48.9. Everyone else did better.,
+2020,16,heartbreaker,Heartbreaker,8,147.1,"Scored 147.1, 5th-best of the week, and still lost.",
+2020,16,robbery,Robbery,6,80.96,"Won with 81.0, the 9th-best score.",
+2020,16,blowout,Blowout,11,123.26,Beat Attack on Titans by 123.3.,
+2020,16,nail_biter,Nail-biter,7,12.82,Edged Post Mahomes by 12.8.,
+2020,16,bench_blunder,Bench blunder,3,57.34,Left 57.3 points on the bench.,
+2020,16,mvp,MVP,9,54.7,Alvin Kamara scored 54.7.,4035
+2020,16,pickup_of_the_week,Pickup of the week,2,27.58,"Andy Dalton, added off waivers in week 9, scored 27.6.",829
+2021,1,top_score,Top score,2,177.12,"Put up 177.1, the best of the week.",
+2021,1,lowest_score,Lowest score,6,94.94,Managed 94.9. Everyone else did better.,
+2021,1,heartbreaker,Heartbreaker,10,135.86,"Scored 135.9, 6th-best of the week, and still lost.",
+2021,1,robbery,Robbery,9,130.54,"Won with 130.5, the 9th-best score.",
+2021,1,blowout,Blowout,2,82.18,Beat Omicron by 82.2.,
+2021,1,nail_biter,Nail-biter,1,4.22,Edged Not Kermitted to Mahomes by 4.2.,
+2021,1,bench_blunder,Bench blunder,7,33.98,Left 34.0 points on the bench.,
+2021,1,mvp,MVP,2,34.56,Kyler Murray scored 34.6.,5849
+2021,1,pickup_of_the_week,Pickup of the week,11,19.06,"Sam Darnold, added as a free agent in week 1, scored 19.1.",4943
+2021,2,top_score,Top score,2,201.74,"Put up 201.7, the best of the week.",
+2021,2,lowest_score,Lowest score,3,91.02,Managed 91.0. Everyone else did better.,
+2021,2,heartbreaker,Heartbreaker,12,136.22,"Scored 136.2, 4th-best of the week, and still lost.",
+2021,2,robbery,Robbery,6,104.04,"Won with 104.0, the 9th-best score.",
+2021,2,blowout,Blowout,5,75.52,Beat We’re in the endgame now by 75.5.,
+2021,2,nail_biter,Nail-biter,11,0.08,Edged Everything Hurts: Endgame by 0.1.,
+2021,2,bench_blunder,Bench blunder,7,38.02,Left 38.0 points on the bench.,
+2021,2,mvp,MVP,5,44.7,Derrick Henry scored 44.7.,3198
+2021,2,pickup_of_the_week,Pickup of the week,5,21.0,"Chicago Bears, added as a free agent in week 2, scored 21.0.",CHI
+2021,3,top_score,Top score,8,153.16,"Put up 153.2, the best of the week.",
+2021,3,lowest_score,Lowest score,5,101.86,Managed 101.9. Everyone else did better.,
+2021,3,heartbreaker,Heartbreaker,4,131.68,"Scored 131.7, 3rd-best of the week, and still lost.",
+2021,3,robbery,Robbery,10,112.34,"Won with 112.3, the 8th-best score.",
+2021,3,blowout,Blowout,8,47.78,Beat The Lance Sweepstakes by 47.8.,
+2021,3,nail_biter,Nail-biter,10,2.48,Edged The ER by 2.5.,
+2021,3,bench_blunder,Bench blunder,7,34.7,Left 34.7 points on the bench.,
+2021,3,mvp,MVP,6,37.22,Josh Allen scored 37.2.,4984
+2021,3,pickup_of_the_week,Pickup of the week,11,25.26,"Sam Darnold, added as a free agent in week 1, scored 25.3.",4943
+2021,4,top_score,Top score,3,169.82,"Put up 169.8, the best of the week.",
+2021,4,lowest_score,Lowest score,1,97.66,Managed 97.7. Everyone else did better.,
+2021,4,heartbreaker,Heartbreaker,10,151.9,"Scored 151.9, 3rd-best of the week, and still lost.",
+2021,4,robbery,Robbery,7,113.84,"Won with 113.8, the 9th-best score.",
+2021,4,blowout,Blowout,11,36.38,Beat The Lance Sweepstakes by 36.4.,
+2021,4,nail_biter,Nail-biter,12,2.58,Edged Tinker Town by 2.6.,
+2021,4,bench_blunder,Bench blunder,11,32.5,Left 32.5 points on the bench.,
+2021,4,mvp,MVP,3,42.1,Tyreek Hill scored 42.1.,3321
+2021,4,pickup_of_the_week,Pickup of the week,11,33.54,"Sam Darnold, added as a free agent in week 1, scored 33.5.",4943
+2021,5,top_score,Top score,4,173.66,"Put up 173.7, the best of the week.",
+2021,5,lowest_score,Lowest score,11,93.94,Managed 93.9. Everyone else did better.,
+2021,5,heartbreaker,Heartbreaker,5,150.6,"Scored 150.6, 5th-best of the week, and still lost.",
+2021,5,robbery,Robbery,10,131.9,"Won with 131.9, the 9th-best score.",
+2021,5,blowout,Blowout,9,42.98,Beat Gay kicks straight by 43.0.,
+2021,5,nail_biter,Nail-biter,2,0.3,Edged I am Iron Man by 0.3.,
+2021,5,bench_blunder,Bench blunder,5,35.9,Left 35.9 points on the bench.,
+2021,5,mvp,MVP,12,42.82,Justin Herbert scored 42.8.,6797
+2021,5,pickup_of_the_week,Pickup of the week,11,26.76,"Jameis Winston, added off waivers in week 5, scored 26.8.",2306
+2021,6,top_score,Top score,5,171.48,"Put up 171.5, the best of the week.",
+2021,6,lowest_score,Lowest score,6,111.98,Managed 112.0. Everyone else did better.,
+2021,6,heartbreaker,Heartbreaker,8,143.28,"Scored 143.3, 3rd-best of the week, and still lost.",
+2021,6,robbery,Robbery,3,121.82,"Won with 121.8, the 8th-best score.",
+2021,6,blowout,Blowout,5,28.2,Beat Gay kicks straight by 28.2.,
+2021,6,nail_biter,Nail-biter,4,4.16,Edged Not Kermitted to Mahomes by 4.2.,
+2021,6,bench_blunder,Bench blunder,12,36.3,Left 36.3 points on the bench.,
+2021,6,mvp,MVP,5,34.6,Derrick Henry scored 34.6.,3198
+2021,6,pickup_of_the_week,Pickup of the week,8,22.4,"Darrel Williams, added off waivers in week 5, scored 22.4.",5549
+2021,7,top_score,Top score,2,149.08,"Put up 149.1, the best of the week.",
+2021,7,lowest_score,Lowest score,9,86.42,Managed 86.4. Everyone else did better.,
+2021,7,heartbreaker,Heartbreaker,7,138.14,"Scored 138.1, 4th-best of the week, and still lost.",
+2021,7,robbery,Robbery,6,115.72,"Won with 115.7, the 9th-best score.",
+2021,7,blowout,Blowout,10,50.84,Beat Fire Fuente by 50.8.,
+2021,7,nail_biter,Nail-biter,4,0.96,Edged The Lance Sweepstakes by 1.0.,
+2021,7,bench_blunder,Bench blunder,4,18.54,Left 18.5 points on the bench.,
+2021,7,mvp,MVP,2,32.6,Cooper Kupp scored 32.6.,4039
+2021,7,pickup_of_the_week,Pickup of the week,4,23.8,"D'Ernest Johnson, added as a free agent in week 6, scored 23.8.",6694
+2021,8,top_score,Top score,2,142.46,"Put up 142.5, the best of the week.",
+2021,8,lowest_score,Lowest score,11,89.24,Managed 89.2. Everyone else did better.,
+2021,8,heartbreaker,Heartbreaker,7,140.48,"Scored 140.5, 3rd-best of the week, and still lost.",
+2021,8,robbery,Robbery,9,106.2,"Won with 106.2, the 8th-best score.",
+2021,8,blowout,Blowout,3,42.64,Beat Blown Job by 42.6.,
+2021,8,nail_biter,Nail-biter,2,1.98,Edged The ER by 2.0.,
+2021,8,bench_blunder,Bench blunder,11,31.26,Left 31.3 points on the bench.,
+2021,8,mvp,MVP,6,29.46,Josh Allen scored 29.5.,4984
+2021,8,pickup_of_the_week,Pickup of the week,4,22.6,"Geno Smith, added as a free agent in week 8, scored 22.6.",1373
+2021,9,top_score,Top score,7,141.8,"Put up 141.8, the best of the week.",
+2021,9,lowest_score,Lowest score,4,76.94,Managed 76.9. Everyone else did better.,
+2021,9,heartbreaker,Heartbreaker,6,128.22,"Scored 128.2, 3rd-best of the week, and still lost.",
+2021,9,robbery,Robbery,9,113.26,"Won with 113.3, the 8th-best score.",
+2021,9,blowout,Blowout,11,54.16,Beat Blown Job by 54.2.,
+2021,9,nail_biter,Nail-biter,2,2.48,Edged Gay kicks straight by 2.5.,
+2021,9,bench_blunder,Bench blunder,12,40.22,Left 40.2 points on the bench.,
+2021,9,mvp,MVP,11,37.8,James Conner scored 37.8.,4137
+2021,9,pickup_of_the_week,Pickup of the week,7,28.52,"Matt Ryan, added off waivers in week 9, scored 28.5.",24
+2021,10,top_score,Top score,1,161.46,"Put up 161.5, the best of the week.",
+2021,10,lowest_score,Lowest score,9,76.0,Managed 76.0. Everyone else did better.,
+2021,10,heartbreaker,Heartbreaker,2,129.34,"Scored 129.3, 3rd-best of the week, and still lost.",
+2021,10,robbery,Robbery,12,96.92,"Won with 96.9, the 9th-best score.",
+2021,10,blowout,Blowout,10,47.8,Beat Omicron by 47.8.,
+2021,10,nail_biter,Nail-biter,7,8.1,Edged 2 “wins” from da playoffs by 8.1.,
+2021,10,bench_blunder,Bench blunder,7,16.6,Left 16.6 points on the bench.,
+2021,10,mvp,MVP,2,36.24,Patrick Mahomes scored 36.2.,4046
+2021,10,pickup_of_the_week,Pickup of the week,1,25.4,"Rhamondre Stevenson, added as a free agent in week 8, scored 25.4.",7611
+2021,11,top_score,Top score,7,164.04,"Put up 164.0, the best of the week.",
+2021,11,lowest_score,Lowest score,8,74.36,Managed 74.4. Everyone else did better.,
+2021,11,heartbreaker,Heartbreaker,2,140.66,"Scored 140.7, 5th-best of the week, and still lost.",
+2021,11,robbery,Robbery,9,107.98,"Won with 108.0, the 9th-best score.",
+2021,11,blowout,Blowout,11,56.7,Beat Gay kicks straight by 56.7.,
+2021,11,nail_biter,Nail-biter,10,1.3,Edged Tinker Town by 1.3.,
+2021,11,bench_blunder,Bench blunder,12,20.7,Left 20.7 points on the bench.,
+2021,11,mvp,MVP,10,51.9,Jonathan Taylor scored 51.9.,6813
+2021,11,pickup_of_the_week,Pickup of the week,2,28.0,"New England Patriots, added off waivers in week 4, scored 28.0.",NE
+2021,12,top_score,Top score,5,146.82,"Put up 146.8, the best of the week.",
+2021,12,lowest_score,Lowest score,3,71.34,Managed 71.3. Everyone else did better.,
+2021,12,heartbreaker,Heartbreaker,8,116.1,"Scored 116.1, 7th-best of the week, and still lost.",
+2021,12,robbery,Robbery,11,117.9,"Won with 117.9, the 6th-best score.",
+2021,12,blowout,Blowout,11,46.56,Beat We’re in the endgame now by 46.6.,
+2021,12,nail_biter,Nail-biter,10,7.34,Edged The Lance Sweepstakes by 7.3.,
+2021,12,bench_blunder,Bench blunder,3,41.0,Left 41.0 points on the bench.,
+2021,12,mvp,MVP,5,40.6,Leonard Fournette scored 40.6.,3969
+2021,12,pickup_of_the_week,Pickup of the week,7,26.5,"Cordarrelle Patterson, added off waivers in week 1, scored 26.5.",1535
+2021,13,top_score,Top score,10,183.68,"Put up 183.7, the best of the week.",
+2021,13,lowest_score,Lowest score,3,81.82,Managed 81.8. Everyone else did better.,
+2021,13,heartbreaker,Heartbreaker,8,135.26,"Scored 135.3, 3rd-best of the week, and still lost.",
+2021,13,robbery,Robbery,5,99.96,"Won with 100.0, the 11th-best score.",
+2021,13,blowout,Blowout,2,57.58,Beat Fire Fuente by 57.6.,
+2021,13,nail_biter,Nail-biter,6,3.54,Edged Blown Job by 3.5.,
+2021,13,bench_blunder,Bench blunder,9,33.2,Left 33.2 points on the bench.,
+2021,13,mvp,MVP,10,35.1,George Kittle scored 35.1.,4217
+2021,13,pickup_of_the_week,Pickup of the week,10,24.66,"Taysom Hill, added off waivers in week 12, scored 24.7.",4381
+2021,14,top_score,Top score,5,191.22,"Put up 191.2, the best of the week.",
+2021,14,lowest_score,Lowest score,9,89.98,Managed 90.0. Everyone else did better.,
+2021,14,heartbreaker,Heartbreaker,11,134.84,"Scored 134.8, 7th-best of the week, and still lost.",
+2021,14,robbery,Robbery,6,144.94,"Won with 144.9, the 6th-best score.",
+2021,14,blowout,Blowout,5,85.28,Beat The Lance Sweepstakes by 85.3.,
+2021,14,nail_biter,Nail-biter,6,10.1,Edged 2 “wins” from da playoffs by 10.1.,
+2021,14,bench_blunder,Bench blunder,2,23.2,Left 23.2 points on the bench.,
+2021,14,mvp,MVP,6,36.22,Josh Allen scored 36.2.,4984
+2021,14,pickup_of_the_week,Pickup of the week,3,28.0,"Kansas City Chiefs, added as a free agent in week 14, scored 28.0.",KC
+2021,15,top_score,Top score,12,121.08,"Put up 121.1, the best of the week.",
+2021,15,lowest_score,Lowest score,7,91.1,Managed 91.1. Everyone else did better.,
+2021,15,heartbreaker,Heartbreaker,1,108.68,"Scored 108.7, 5th-best of the week, and still lost.",
+2021,15,robbery,Robbery,6,95.02,"Won with 95.0, the 10th-best score.",
+2021,15,blowout,Blowout,9,22.04,Beat 2 “wins” from da playoffs by 22.0.,
+2021,15,nail_biter,Nail-biter,6,3.92,Edged The ER by 3.9.,
+2021,15,bench_blunder,Bench blunder,6,32.0,Left 32.0 points on the bench.,
+2021,15,mvp,MVP,8,36.1,Travis Kelce scored 36.1.,1466
+2021,15,pickup_of_the_week,Pickup of the week,9,24.34,"Cam Newton, added as a free agent in week 15, scored 24.3.",954
+2021,16,top_score,Top score,4,191.1,"Put up 191.1, the best of the week.",
+2021,16,lowest_score,Lowest score,9,103.04,Managed 103.0. Everyone else did better.,
+2021,16,heartbreaker,Heartbreaker,8,123.42,"Scored 123.4, 5th-best of the week, and still lost.",
+2021,16,robbery,Robbery,3,109.34,"Won with 109.3, the 10th-best score.",
+2021,16,blowout,Blowout,4,68.5,Beat 2 “wins” from da playoffs by 68.5.,
+2021,16,nail_biter,Nail-biter,3,6.3,Edged Fire Fuente by 6.3.,
+2021,16,bench_blunder,Bench blunder,2,25.3,Left 25.3 points on the bench.,
+2021,16,mvp,MVP,4,38.1,Joe Burrow scored 38.1.,6770
+2021,16,pickup_of_the_week,Pickup of the week,4,30.2,"Justin Jackson, added as a free agent in week 15, scored 30.2.",5131
+2021,17,top_score,Top score,2,150.08,"Put up 150.1, the best of the week.",
+2021,17,lowest_score,Lowest score,11,49.6,Managed 49.6. Everyone else did better.,
+2021,17,heartbreaker,Heartbreaker,3,142.98,"Scored 143.0, 3rd-best of the week, and still lost.",
+2021,17,robbery,Robbery,8,111.56,"Won with 111.6, the 9th-best score.",
+2021,17,blowout,Blowout,2,25.1,Beat Not Kermitted to Mahomes by 25.1.,
+2021,17,nail_biter,Nail-biter,6,1.68,Edged Everything Hurts: Endgame by 1.7.,
+2021,17,bench_blunder,Bench blunder,4,49.08,Left 49.1 points on the bench.,
+2021,17,mvp,MVP,3,50.1,Ja'Marr Chase scored 50.1.,7564
+2021,17,pickup_of_the_week,Pickup of the week,2,31.5,"Rashaad Penny, added as a free agent in week 14, scored 31.5.",4985
+2022,1,top_score,Top score,2,135.76,"Put up 135.8, the best of the week.",
+2022,1,lowest_score,Lowest score,6,87.0,Managed 87.0. Everyone else did better.,
+2022,1,heartbreaker,Heartbreaker,9,112.52,"Scored 112.5, 7th-best of the week, and still lost.",
+2022,1,robbery,Robbery,5,115.56,"Won with 115.6, the 6th-best score.",
+2022,1,blowout,Blowout,8,37.06,Beat The FAAB prince himself by 37.1.,
+2022,1,nail_biter,Nail-biter,12,16.98,Edged Illiterate SherlockHolmes by 17.0.,
+2022,1,bench_blunder,Bench blunder,10,32.0,Left 32.0 points on the bench.,
+2022,1,mvp,MVP,4,34.9,Patrick Mahomes scored 34.9.,4046
+2022,1,mvp,MVP,9,34.9,Justin Jefferson scored 34.9.,6794
+2022,1,pickup_of_the_week,Pickup of the week,8,11.0,"Tennessee Titans, added as a free agent before the season, scored 11.0.",TEN
+2022,2,top_score,Top score,12,169.86,"Put up 169.9, the best of the week.",
+2022,2,lowest_score,Lowest score,6,72.48,Managed 72.5. Everyone else did better.,
+2022,2,heartbreaker,Heartbreaker,7,125.76,"Scored 125.8, 4th-best of the week, and still lost.",
+2022,2,robbery,Robbery,4,78.18,"Won with 78.2, the 11th-best score.",
+2022,2,blowout,Blowout,10,62.66,Beat The Abella DangerZone by 62.7.,
+2022,2,nail_biter,Nail-biter,4,5.7,Edged The FAAB prince himself by 5.7.,
+2022,2,bench_blunder,Bench blunder,8,39.06,Left 39.1 points on the bench.,
+2022,2,mvp,MVP,5,42.62,Lamar Jackson scored 42.6.,4881
+2022,2,pickup_of_the_week,Pickup of the week,7,10.6,"Tyler Higbee, added off waivers in week 1, scored 10.6.",3271
+2022,3,top_score,Top score,5,140.68,"Put up 140.7, the best of the week.",
+2022,3,lowest_score,Lowest score,10,80.9,Managed 80.9. Everyone else did better.,
+2022,3,heartbreaker,Heartbreaker,3,113.46,"Scored 113.5, 5th-best of the week, and still lost.",
+2022,3,robbery,Robbery,9,84.34,"Won with 84.3, the 11th-best score.",
+2022,3,blowout,Blowout,5,49.24,Beat Smells like 💩 by 49.2.,
+2022,3,nail_biter,Nail-biter,4,3.26,Edged Rest in Breece by 3.3.,
+2022,3,bench_blunder,Bench blunder,8,38.8,Left 38.8 points on the bench.,
+2022,3,mvp,MVP,5,39.42,Lamar Jackson scored 39.4.,4881
+2022,3,pickup_of_the_week,Pickup of the week,4,20.0,"Philadelphia Eagles, added off waivers in week 2, scored 20.0.",PHI
+2022,4,top_score,Top score,4,171.56,"Put up 171.6, the best of the week.",
+2022,4,lowest_score,Lowest score,12,80.84,Managed 80.8. Everyone else did better.,
+2022,4,heartbreaker,Heartbreaker,7,124.68,"Scored 124.7, 4th-best of the week, and still lost.",
+2022,4,robbery,Robbery,11,108.8,"Won with 108.8, the 9th-best score.",
+2022,4,blowout,Blowout,4,46.88,"Beat Cory Country, Let’s Ride by 46.9.",
+2022,4,nail_biter,Nail-biter,2,2.98,Edged The FAAB prince himself by 3.0.,
+2022,4,bench_blunder,Bench blunder,7,36.52,Left 36.5 points on the bench.,
+2022,4,mvp,MVP,9,35.9,T.J. Hockenson scored 35.9.,5844
+2022,4,pickup_of_the_week,Pickup of the week,4,31.7,"Geno Smith, added as a free agent in week 2, scored 31.7.",1373
+2022,5,top_score,Top score,10,138.96,"Put up 139.0, the best of the week.",
+2022,5,lowest_score,Lowest score,12,68.3,Managed 68.3. Everyone else did better.,
+2022,5,heartbreaker,Heartbreaker,4,117.56,"Scored 117.6, 6th-best of the week, and still lost.",
+2022,5,robbery,Robbery,2,113.04,"Won with 113.0, the 7th-best score.",
+2022,5,blowout,Blowout,11,56.04,Beat Smells like 💩 by 56.0.,
+2022,5,nail_biter,Nail-biter,5,1.64,Edged Big Dak Energy by 1.6.,
+2022,5,bench_blunder,Bench blunder,7,36.38,Left 36.4 points on the bench.,
+2022,5,mvp,MVP,7,35.16,Josh Allen scored 35.2.,4984
+2022,5,pickup_of_the_week,Pickup of the week,9,17.0,"Denver Broncos, added off waivers in week 3, scored 17.0.",DEN
+2022,6,top_score,Top score,3,128.02,"Put up 128.0, the best of the week.",
+2022,6,lowest_score,Lowest score,12,70.14,Managed 70.1. Everyone else did better.,
+2022,6,heartbreaker,Heartbreaker,9,107.32,"Scored 107.3, 4th-best of the week, and still lost.",
+2022,6,robbery,Robbery,2,83.5,"Won with 83.5, the 11th-best score.",
+2022,6,blowout,Blowout,3,20.7,Beat Long live King Charles by 20.7.,
+2022,6,nail_biter,Nail-biter,7,1.98,Edged The FAAB prince himself by 2.0.,
+2022,6,bench_blunder,Bench blunder,10,31.5,Left 31.5 points on the bench.,
+2022,6,mvp,MVP,9,32.5,Joe Burrow scored 32.5.,6770
+2022,6,pickup_of_the_week,Pickup of the week,3,23.1,"Deon Jackson, added as a free agent in week 6, scored 23.1.",7551
+2022,7,top_score,Top score,6,147.3,"Put up 147.3, the best of the week.",
+2022,7,lowest_score,Lowest score,3,64.36,Managed 64.4. Everyone else did better.,
+2022,7,heartbreaker,Heartbreaker,5,123.48,"Scored 123.5, 5th-best of the week, and still lost.",
+2022,7,robbery,Robbery,9,107.24,"Won with 107.2, the 9th-best score.",
+2022,7,blowout,Blowout,2,74.68,Beat Illiterate SherlockHolmes by 74.7.,
+2022,7,nail_biter,Nail-biter,7,5.16,Edged Rest in Breece by 5.2.,
+2022,7,bench_blunder,Bench blunder,12,26.2,Left 26.2 points on the bench.,
+2022,7,mvp,MVP,9,39.24,Joe Burrow scored 39.2.,6770
+2022,7,pickup_of_the_week,Pickup of the week,6,26.54,"Andy Dalton, added off waivers in week 6, scored 26.5.",829
+2022,8,top_score,Top score,2,174.92,"Put up 174.9, the best of the week.",
+2022,8,lowest_score,Lowest score,1,72.02,Managed 72.0. Everyone else did better.,
+2022,8,heartbreaker,Heartbreaker,10,126.66,"Scored 126.7, 6th-best of the week, and still lost.",
+2022,8,robbery,Robbery,5,109.62,"Won with 109.6, the 9th-best score.",
+2022,8,blowout,Blowout,3,68.4,Beat I’m Stuck Step Burrow by 68.4.,
+2022,8,nail_biter,Nail-biter,5,0.14,Edged Long live King Charles by 0.1.,
+2022,8,bench_blunder,Bench blunder,5,24.42,Left 24.4 points on the bench.,
+2022,8,mvp,MVP,2,38.3,Alvin Kamara scored 38.3.,4035
+2022,8,pickup_of_the_week,Pickup of the week,4,19.08,"Geno Smith, added as a free agent in week 2, scored 19.1.",1373
+2022,9,top_score,Top score,2,139.42,"Put up 139.4, the best of the week.",
+2022,9,lowest_score,Lowest score,6,61.5,Managed 61.5. Everyone else did better.,
+2022,9,heartbreaker,Heartbreaker,5,124.08,"Scored 124.1, 4th-best of the week, and still lost.",
+2022,9,robbery,Robbery,10,78.36,"Won with 78.4, the 9th-best score.",
+2022,9,blowout,Blowout,4,72.36,Beat Illiterate SherlockHolmes by 72.4.,
+2022,9,nail_biter,Nail-biter,10,0.92,Edged Rest in Breece by 0.9.,
+2022,9,bench_blunder,Bench blunder,11,21.8,Left 21.8 points on the bench.,
+2022,9,mvp,MVP,1,53.1,Joe Mixon scored 53.1.,4018
+2022,9,pickup_of_the_week,Pickup of the week,9,26.0,"New England Patriots, added off waivers in week 5, scored 26.0.",NE
+2022,10,top_score,Top score,7,146.5,"Put up 146.5, the best of the week.",
+2022,10,lowest_score,Lowest score,11,92.3,Managed 92.3. Everyone else did better.,
+2022,10,heartbreaker,Heartbreaker,10,108.22,"Scored 108.2, 5th-best of the week, and still lost.",
+2022,10,robbery,Robbery,9,96.52,"Won with 96.5, the 10th-best score.",
+2022,10,blowout,Blowout,7,38.28,Beat Turkey day let downs by 38.3.,
+2022,10,nail_biter,Nail-biter,9,1.46,Edged I’m Stuck Step Burrow by 1.5.,
+2022,10,bench_blunder,Bench blunder,2,42.6,Left 42.6 points on the bench.,
+2022,10,mvp,MVP,2,39.38,Justin Fields scored 39.4.,7591
+2022,10,pickup_of_the_week,Pickup of the week,3,21.4,"Cole Kmet, added off waivers in week 9, scored 21.4.",6826
+2022,11,top_score,Top score,4,149.7,"Put up 149.7, the best of the week.",
+2022,11,lowest_score,Lowest score,7,60.14,Managed 60.1. Everyone else did better.,
+2022,11,heartbreaker,Heartbreaker,8,101.64,"Scored 101.6, 7th-best of the week, and still lost.",
+2022,11,robbery,Robbery,11,106.68,"Won with 106.7, the 6th-best score.",
+2022,11,blowout,Blowout,4,58.6,Beat Long live King Charles by 58.6.,
+2022,11,nail_biter,Nail-biter,2,27.16,Edged I’m Stuck Step Burrow by 27.2.,
+2022,11,nail_biter,Nail-biter,3,27.16,Edged The FAAB prince himself by 27.2.,
+2022,11,bench_blunder,Bench blunder,5,26.98,Left 27.0 points on the bench.,
+2022,11,mvp,MVP,4,33.9,Tony Pollard scored 33.9.,5967
+2022,11,pickup_of_the_week,Pickup of the week,4,19.1,"Christian Watson, added off waivers in week 10, scored 19.1.",8167
+2022,12,top_score,Top score,5,152.68,"Put up 152.7, the best of the week.",
+2022,12,lowest_score,Lowest score,3,92.54,Managed 92.5. Everyone else did better.,
+2022,12,heartbreaker,Heartbreaker,7,128.22,"Scored 128.2, 4th-best of the week, and still lost.",
+2022,12,robbery,Robbery,12,103.26,"Won with 103.3, the 8th-best score.",
+2022,12,blowout,Blowout,8,35.6,Beat The FAAB prince himself by 35.6.,
+2022,12,nail_biter,Nail-biter,4,2.7,Edged I’m Stuck Step Burrow by 2.7.,
+2022,12,bench_blunder,Bench blunder,10,29.84,Left 29.8 points on the bench.,
+2022,12,mvp,MVP,5,45.3,Josh Jacobs scored 45.3.,5850
+2022,12,pickup_of_the_week,Pickup of the week,5,21.0,"Miami Dolphins, added off waivers in week 11, scored 21.0.",MIA
+2022,13,top_score,Top score,5,161.98,"Put up 162.0, the best of the week.",
+2022,13,lowest_score,Lowest score,1,63.32,Managed 63.3. Everyone else did better.,
+2022,13,heartbreaker,Heartbreaker,11,117.88,"Scored 117.9, 5th-best of the week, and still lost.",
+2022,13,robbery,Robbery,12,102.32,"Won with 102.3, the 8th-best score.",
+2022,13,blowout,Blowout,5,67.96,Beat Illiterate SherlockHolmes by 68.0.,
+2022,13,nail_biter,Nail-biter,9,1.5,Edged Hurts don’t it by 1.5.,
+2022,13,bench_blunder,Bench blunder,4,19.4,Left 19.4 points on the bench.,
+2022,13,mvp,MVP,11,34.4,Jalen Hurts scored 34.4.,6904
+2022,13,pickup_of_the_week,Pickup of the week,5,31.0,"Cleveland Browns, added off waivers in week 12, scored 31.0.",CLE
+2022,14,top_score,Top score,1,143.3,"Put up 143.3, the best of the week.",
+2022,14,lowest_score,Lowest score,12,81.7,Managed 81.7. Everyone else did better.,
+2022,14,heartbreaker,Heartbreaker,6,99.68,"Scored 99.7, 6th-best of the week, and still lost.",
+2022,14,robbery,Robbery,3,92.1,"Won with 92.1, the 7th-best score.",
+2022,14,blowout,Blowout,4,50.4,Beat The Abella DangerZone by 50.4.,
+2022,14,nail_biter,Nail-biter,3,10.4,Edged Smells like 💩 by 10.4.,
+2022,14,bench_blunder,Bench blunder,12,29.8,Left 29.8 points on the bench.,
+2022,14,mvp,MVP,10,33.7,Evan Engram scored 33.7.,4066
+2022,14,pickup_of_the_week,Pickup of the week,10,33.7,"Evan Engram, added as a free agent in week 5, scored 33.7.",4066
+2022,15,top_score,Top score,7,141.74,"Put up 141.7, the best of the week.",
+2022,15,lowest_score,Lowest score,5,73.52,Managed 73.5. Everyone else did better.,
+2022,15,heartbreaker,Heartbreaker,12,125.2,"Scored 125.2, 5th-best of the week, and still lost.",
+2022,15,robbery,Robbery,3,102.8,"Won with 102.8, the 8th-best score.",
+2022,15,blowout,Blowout,2,27.9,Beat Turkey day let downs by 27.9.,
+2022,15,nail_biter,Nail-biter,3,13.04,Edged The FAAB prince himself by 13.0.,
+2022,15,bench_blunder,Bench blunder,1,35.0,Left 35.0 points on the bench.,
+2022,15,mvp,MVP,7,35.86,Josh Allen scored 35.9.,4984
+2022,15,pickup_of_the_week,Pickup of the week,1,30.2,"Jerick McKinnon, added as a free agent in week 12, scored 30.2.",2161
+2022,16,top_score,Top score,4,150.44,"Put up 150.4, the best of the week.",
+2022,16,lowest_score,Lowest score,6,52.32,Managed 52.3. Everyone else did better.,
+2022,16,heartbreaker,Heartbreaker,7,105.66,"Scored 105.7, 7th-best of the week, and still lost.",
+2022,16,robbery,Robbery,12,106.0,"Won with 106.0, the 6th-best score.",
+2022,16,blowout,Blowout,9,75.7,Beat I am Iron Man by 75.7.,
+2022,16,nail_biter,Nail-biter,10,9.94,Edged Hurts don’t it by 9.9.,
+2022,16,bench_blunder,Bench blunder,8,48.7,Left 48.7 points on the bench.,
+2022,16,mvp,MVP,4,29.4,T.J. Hockenson scored 29.4.,5844
+2022,16,pickup_of_the_week,Pickup of the week,12,22.7,"Gardner Minshew, added off waivers in week 15, scored 22.7.",6011
+2022,17,top_score,Top score,3,158.14,"Put up 158.1, the best of the week.",
+2022,17,lowest_score,Lowest score,10,56.96,Managed 57.0. Everyone else did better.,
+2022,17,heartbreaker,Heartbreaker,1,130.04,"Scored 130.0, 2nd-best of the week, and still lost.",
+2022,17,robbery,Robbery,8,115.98,"Won with 116.0, the 5th-best score.",
+2022,17,blowout,Blowout,8,40.36,"Beat Cory Country, Let’s Ride by 40.4.",
+2022,17,nail_biter,Nail-biter,4,11.04,Edged Long live King Charles by 11.0.,
+2022,17,bench_blunder,Bench blunder,11,37.96,Left 38.0 points on the bench.,
+2022,17,mvp,MVP,1,43.7,Mike Evans scored 43.7.,2216
+2022,17,pickup_of_the_week,Pickup of the week,3,20.7,"DJ Moore, added off waivers in week 11, scored 20.7.",4983
+2023,1,top_score,Top score,10,149.14,"Put up 149.1, the best of the week.",
+2023,1,lowest_score,Lowest score,1,74.56,Managed 74.6. Everyone else did better.,
+2023,1,heartbreaker,Heartbreaker,5,114.4,"Scored 114.4, 2nd-best of the week, and still lost.",
+2023,1,robbery,Robbery,9,87.8,"Won with 87.8, the 8th-best score.",
+2023,1,blowout,Blowout,3,36.46,Beat QB Whore No More by 36.5.,
+2023,1,nail_biter,Nail-biter,7,7.5,Edged Rub A Dub Dub by 7.5.,
+2023,1,bench_blunder,Bench blunder,12,46.64,Left 46.6 points on the bench.,
+2023,1,mvp,MVP,3,40.0,Dallas Cowboys scored 40.0.,DAL
+2023,1,pickup_of_the_week,Pickup of the week,1,13.0,"Washington Commanders, added as a free agent before the season, scored 13.0.",WAS
+2023,2,top_score,Top score,11,173.78,"Put up 173.8, the best of the week.",
+2023,2,lowest_score,Lowest score,12,87.94,Managed 87.9. Everyone else did better.,
+2023,2,heartbreaker,Heartbreaker,8,122.92,"Scored 122.9, 6th-best of the week, and still lost.",
+2023,2,robbery,Robbery,9,108.06,"Won with 108.1, the 8th-best score.",
+2023,2,blowout,Blowout,11,77.04,Beat I am Iron Man by 77.0.,
+2023,2,nail_biter,Nail-biter,9,5.26,Edged Can’t get Ridley of me by 5.3.,
+2023,2,bench_blunder,Bench blunder,12,58.4,Left 58.4 points on the bench.,
+2023,2,mvp,MVP,12,30.74,Daniel Jones scored 30.7.,5870
+2023,2,pickup_of_the_week,Pickup of the week,11,25.0,"Kyren Williams, added off waivers in week 1, scored 25.0.",8150
+2023,3,top_score,Top score,4,144.18,"Put up 144.2, the best of the week.",
+2023,3,lowest_score,Lowest score,1,97.1,Managed 97.1. Everyone else did better.,
+2023,3,heartbreaker,Heartbreaker,2,141.34,"Scored 141.3, 2nd-best of the week, and still lost.",
+2023,3,robbery,Robbery,12,105.24,"Won with 105.2, the 11th-best score.",
+2023,3,blowout,Blowout,7,25.7,Beat Im sorry Breece Hall by 25.7.,
+2023,3,nail_biter,Nail-biter,4,2.84,Edged Dak’s my nude egg by 2.8.,
+2023,3,bench_blunder,Bench blunder,1,29.4,Left 29.4 points on the bench.,
+2023,3,mvp,MVP,2,41.7,Raheem Mostert scored 41.7.,2749
+2023,3,pickup_of_the_week,Pickup of the week,4,15.2,"Tutu Atwell, added as a free agent in week 3, scored 15.2.",7562
+2023,4,top_score,Top score,11,149.44,"Put up 149.4, the best of the week.",
+2023,4,lowest_score,Lowest score,6,91.8,Managed 91.8. Everyone else did better.,
+2023,4,heartbreaker,Heartbreaker,8,115.14,"Scored 115.1, 6th-best of the week, and still lost.",
+2023,4,robbery,Robbery,7,104.16,"Won with 104.2, the 7th-best score.",
+2023,4,blowout,Blowout,9,47.94,Beat Dak’s my nude egg by 47.9.,
+2023,4,nail_biter,Nail-biter,7,3.94,Edged The Death Star by 3.9.,
+2023,4,bench_blunder,Bench blunder,7,38.74,Left 38.7 points on the bench.,
+2023,4,mvp,MVP,12,45.2,Christian McCaffrey scored 45.2.,4034
+2023,4,pickup_of_the_week,Pickup of the week,9,32.3,"Nico Collins, added as a free agent before the season, scored 32.3.",7569
+2023,5,top_score,Top score,6,193.82,"Put up 193.8, the best of the week.",
+2023,5,lowest_score,Lowest score,12,84.14,Managed 84.1. Everyone else did better.,
+2023,5,heartbreaker,Heartbreaker,5,110.86,"Scored 110.9, 6th-best of the week, and still lost.",
+2023,5,robbery,Robbery,4,88.06,"Won with 88.1, the 10th-best score.",
+2023,5,blowout,Blowout,6,99.7,Beat Oh Saquon You See by 99.7.,
+2023,5,nail_biter,Nail-biter,4,3.92,Edged Rub A Dub Dub by 3.9.,
+2023,5,bench_blunder,Bench blunder,4,29.58,Left 29.6 points on the bench.,
+2023,5,mvp,MVP,6,45.0,DJ Moore scored 45.0.,4983
+2023,5,pickup_of_the_week,Pickup of the week,6,32.5,"Zack Moss, added as a free agent before the season, scored 32.5.",6845
+2023,6,top_score,Top score,2,130.58,"Put up 130.6, the best of the week.",
+2023,6,lowest_score,Lowest score,4,70.74,Managed 70.7. Everyone else did better.,
+2023,6,heartbreaker,Heartbreaker,10,101.74,"Scored 101.7, 7th-best of the week, and still lost.",
+2023,6,robbery,Robbery,8,102.22,"Won with 102.2, the 6th-best score.",
+2023,6,blowout,Blowout,1,56.16,Beat The Death Star by 56.2.,
+2023,6,nail_biter,Nail-biter,8,6.82,Edged I am Iron Man by 6.8.,
+2023,6,bench_blunder,Bench blunder,6,33.9,Left 33.9 points on the bench.,
+2023,6,mvp,MVP,2,32.7,Raheem Mostert scored 32.7.,2749
+2023,6,pickup_of_the_week,Pickup of the week,3,23.0,"Adam Thielen, added off waivers in week 3, scored 23.0.",1689
+2023,7,top_score,Top score,6,147.76,"Put up 147.8, the best of the week.",
+2023,7,lowest_score,Lowest score,8,82.74,Managed 82.7. Everyone else did better.,
+2023,7,heartbreaker,Heartbreaker,1,117.36,"Scored 117.4, 5th-best of the week, and still lost.",
+2023,7,robbery,Robbery,10,99.9,"Won with 99.9, the 9th-best score.",
+2023,7,blowout,Blowout,9,59.76,Beat Oh Saquon You See by 59.8.,
+2023,7,nail_biter,Nail-biter,3,5.32,Edged The Death Star by 5.3.,
+2023,7,bench_blunder,Bench blunder,12,30.5,Left 30.5 points on the bench.,
+2023,7,mvp,MVP,1,35.9,Travis Kelce scored 35.9.,1466
+2023,7,pickup_of_the_week,Pickup of the week,12,27.1,"Gardner Minshew, added off waivers in week 5, scored 27.1.",6011
+2023,8,top_score,Top score,11,150.02,"Put up 150.0, the best of the week.",
+2023,8,lowest_score,Lowest score,10,95.58,Managed 95.6. Everyone else did better.,
+2023,8,heartbreaker,Heartbreaker,3,130.5,"Scored 130.5, 3rd-best of the week, and still lost.",
+2023,8,robbery,Robbery,6,103.02,"Won with 103.0, the 10th-best score.",
+2023,8,blowout,Blowout,11,40.84,Beat QB Whore No More by 40.8.,
+2023,8,nail_biter,Nail-biter,9,1.58,Edged Im sorry Breece Hall by 1.6.,
+2023,8,bench_blunder,Bench blunder,9,47.7,Left 47.7 points on the bench.,
+2023,8,mvp,MVP,11,35.0,CeeDee Lamb scored 35.0.,6786
+2023,8,pickup_of_the_week,Pickup of the week,10,19.7,"Sam LaPorta, added off waivers in week 1, scored 19.7.",10859
+2023,9,top_score,Top score,11,139.36,"Put up 139.4, the best of the week.",
+2023,9,lowest_score,Lowest score,10,55.52,Managed 55.5. Everyone else did better.,
+2023,9,heartbreaker,Heartbreaker,1,114.3,"Scored 114.3, 4th-best of the week, and still lost.",
+2023,9,robbery,Robbery,12,85.88,"Won with 85.9, the 9th-best score.",
+2023,9,blowout,Blowout,4,40.7,Beat Can’t get Ridley of me by 40.7.,
+2023,9,nail_biter,Nail-biter,9,2.16,Edged QB Whore No More by 2.2.,
+2023,9,bench_blunder,Bench blunder,1,39.1,Left 39.1 points on the bench.,
+2023,9,mvp,MVP,1,41.8,C.J. Stroud scored 41.8.,9758
+2023,9,pickup_of_the_week,Pickup of the week,6,24.0,"Cleveland Browns, added off waivers in week 3, scored 24.0.",CLE
+2023,10,top_score,Top score,2,145.16,"Put up 145.2, the best of the week.",
+2023,10,lowest_score,Lowest score,4,82.8,Managed 82.8. Everyone else did better.,
+2023,10,heartbreaker,Heartbreaker,3,144.7,"Scored 144.7, 2nd-best of the week, and still lost.",
+2023,10,robbery,Robbery,6,106.56,"Won with 106.6, the 8th-best score.",
+2023,10,blowout,Blowout,7,52.88,Beat I am Iron Man by 52.9.,
+2023,10,nail_biter,Nail-biter,2,0.46,Edged Im sorry Breece Hall by 0.5.,
+2023,10,bench_blunder,Bench blunder,11,27.06,Left 27.1 points on the bench.,
+2023,10,mvp,MVP,2,37.86,Dak Prescott scored 37.9.,3294
+2023,10,pickup_of_the_week,Pickup of the week,7,21.1,"Trey McBride, added off waivers in week 8, scored 21.1.",8130
+2023,11,top_score,Top score,3,135.42,"Put up 135.4, the best of the week.",
+2023,11,lowest_score,Lowest score,4,87.32,Managed 87.3. Everyone else did better.,
+2023,11,heartbreaker,Heartbreaker,8,132.02,"Scored 132.0, 2nd-best of the week, and still lost.",
+2023,11,robbery,Robbery,1,98.28,"Won with 98.3, the 9th-best score.",
+2023,11,blowout,Blowout,11,23.58,Beat The FAAB prince himself by 23.6.,
+2023,11,nail_biter,Nail-biter,1,1.48,Edged Dak’s my nude egg by 1.5.,
+2023,11,bench_blunder,Bench blunder,10,28.4,Left 28.4 points on the bench.,
+2023,11,mvp,MVP,3,32.18,Trevor Lawrence scored 32.2.,7523
+2023,11,pickup_of_the_week,Pickup of the week,4,22.54,"Tommy DeVito, added as a free agent in week 11, scored 22.5.",11292
+2023,12,top_score,Top score,11,189.38,"Put up 189.4, the best of the week.",
+2023,12,lowest_score,Lowest score,4,71.64,Managed 71.6. Everyone else did better.,
+2023,12,heartbreaker,Heartbreaker,9,140.9,"Scored 140.9, 2nd-best of the week, and still lost.",
+2023,12,robbery,Robbery,6,89.56,"Won with 89.6, the 10th-best score.",
+2023,12,blowout,Blowout,12,58.28,Beat Oh Saquon You See by 58.3.,
+2023,12,nail_biter,Nail-biter,1,2.54,Edged Im sorry Breece Hall by 2.5.,
+2023,12,bench_blunder,Bench blunder,3,28.5,Left 28.5 points on the bench.,
+2023,12,mvp,MVP,11,39.66,Josh Allen scored 39.7.,4984
+2023,12,pickup_of_the_week,Pickup of the week,11,35.4,"Kyren Williams, added off waivers in week 1, scored 35.4.",8150
+2023,13,top_score,Top score,7,149.96,"Put up 150.0, the best of the week.",
+2023,13,lowest_score,Lowest score,12,88.08,Managed 88.1. Everyone else did better.,
+2023,13,heartbreaker,Heartbreaker,11,139.92,"Scored 139.9, 5th-best of the week, and still lost.",
+2023,13,robbery,Robbery,3,104.0,"Won with 104.0, the 8th-best score.",
+2023,13,blowout,Blowout,10,55.76,Beat Just an Asterik Champ by 55.8.,
+2023,13,nail_biter,Nail-biter,5,3.72,Edged CeeDee’s Nuts by 3.7.,
+2023,13,bench_blunder,Bench blunder,11,25.76,Left 25.8 points on the bench.,
+2023,13,mvp,MVP,2,34.4,DK Metcalf scored 34.4.,5846
+2023,13,pickup_of_the_week,Pickup of the week,10,29.0,"Sam LaPorta, added off waivers in week 1, scored 29.0.",10859
+2023,14,top_score,Top score,5,153.38,"Put up 153.4, the best of the week.",
+2023,14,lowest_score,Lowest score,9,58.5,Managed 58.5. Everyone else did better.,
+2023,14,heartbreaker,Heartbreaker,2,122.04,"Scored 122.0, 6th-best of the week, and still lost.",
+2023,14,robbery,Robbery,10,97.72,"Won with 97.7, the 9th-best score.",
+2023,14,blowout,Blowout,11,65.74,Beat Just an Asterik Champ by 65.7.,
+2023,14,nail_biter,Nail-biter,10,1.56,Edged The Trade Slut by 1.6.,
+2023,14,bench_blunder,Bench blunder,9,35.36,Left 35.4 points on the bench.,
+2023,14,mvp,MVP,3,32.5,Evan Engram scored 32.5.,4066
+2023,14,pickup_of_the_week,Pickup of the week,12,27.1,"David Njoku, added off waivers in week 10, scored 27.1.",4033
+2023,15,top_score,Top score,11,168.92,"Put up 168.9, the best of the week.",
+2023,15,lowest_score,Lowest score,3,71.92,Managed 71.9. Everyone else did better.,
+2023,15,heartbreaker,Heartbreaker,5,113.64,"Scored 113.6, 7th-best of the week, and still lost.",
+2023,15,robbery,Robbery,6,114.56,"Won with 114.6, the 6th-best score.",
+2023,15,blowout,Blowout,10,45.98,Beat Dak’s my nude egg by 46.0.,
+2023,15,nail_biter,Nail-biter,6,10.18,Edged QB Whore No More by 10.2.,
+2023,15,bench_blunder,Bench blunder,6,44.68,Left 44.7 points on the bench.,
+2023,15,mvp,MVP,12,39.2,Christian McCaffrey scored 39.2.,4034
+2023,15,pickup_of_the_week,Pickup of the week,4,29.0,"Las Vegas Raiders, added as a free agent in week 15, scored 29.0.",LV
+2023,16,top_score,Top score,5,161.26,"Put up 161.3, the best of the week.",
+2023,16,lowest_score,Lowest score,6,73.88,Managed 73.9. Everyone else did better.,
+2023,16,heartbreaker,Heartbreaker,9,128.9,"Scored 128.9, 3rd-best of the week, and still lost.",
+2023,16,robbery,Robbery,8,79.2,"Won with 79.2, the 11th-best score.",
+2023,16,blowout,Blowout,5,60.4,Beat Dak’s my nude egg by 60.4.,
+2023,16,nail_biter,Nail-biter,8,5.32,Edged The FAAB prince himself by 5.3.,
+2023,16,bench_blunder,Bench blunder,9,45.64,Left 45.6 points on the bench.,
+2023,16,mvp,MVP,5,46.0,Amari Cooper scored 46.0.,2309
+2023,16,pickup_of_the_week,Pickup of the week,4,22.0,"Las Vegas Raiders, added as a free agent in week 15, scored 22.0.",LV
+2023,17,top_score,Top score,11,148.8,"Put up 148.8, the best of the week.",
+2023,17,lowest_score,Lowest score,8,87.38,Managed 87.4. Everyone else did better.,
+2023,17,heartbreaker,Heartbreaker,3,133.34,"Scored 133.3, 3rd-best of the week, and still lost.",
+2023,17,robbery,Robbery,7,110.16,"Won with 110.2, the 7th-best score.",
+2023,17,blowout,Blowout,11,51.32,Beat Can’t get Ridley of me by 51.3.,
+2023,17,nail_biter,Nail-biter,9,12.86,Edged Im sorry Breece Hall by 12.9.,
+2023,17,bench_blunder,Bench blunder,12,32.4,Left 32.4 points on the bench.,
+2023,17,mvp,MVP,5,36.34,Lamar Jackson scored 36.3.,4881
+2023,17,pickup_of_the_week,Pickup of the week,11,29.1,"Kyren Williams, added off waivers in week 1, scored 29.1.",8150
+2024,1,top_score,Top score,10,134.54,"Put up 134.5, the best of the week.",
+2024,1,lowest_score,Lowest score,6,76.8,Managed 76.8. Everyone else did better.,
+2024,1,heartbreaker,Heartbreaker,3,108.66,"Scored 108.7, 5th-best of the week, and still lost.",
+2024,1,robbery,Robbery,7,103.58,"Won with 103.6, the 8th-best score.",
+2024,1,blowout,Blowout,1,34.98,Beat The Stroud Cloud by 35.0.,
+2024,1,nail_biter,Nail-biter,12,1.02,Edged Dreams and Nightmares by 1.0.,
+2024,1,bench_blunder,Bench blunder,11,35.78,Left 35.8 points on the bench.,
+2024,1,mvp,MVP,9,32.2,Saquon Barkley scored 32.2.,4866
+2024,1,pickup_of_the_week,Pickup of the week,1,25.0,"Chicago Bears, added as a free agent before the season, scored 25.0.",CHI
+2024,2,top_score,Top score,8,143.8,"Put up 143.8, the best of the week.",
+2024,2,lowest_score,Lowest score,1,81.64,Managed 81.6. Everyone else did better.,
+2024,2,heartbreaker,Heartbreaker,3,119.18,"Scored 119.2, 4th-best of the week, and still lost.",
+2024,2,robbery,Robbery,12,90.5,"Won with 90.5, the 10th-best score.",
+2024,2,blowout,Blowout,10,51.66,Beat QB Whore No More by 51.7.,
+2024,2,nail_biter,Nail-biter,12,4.9,Edged 🖕Josh Allen by 4.9.,
+2024,2,bench_blunder,Bench blunder,1,23.9,Left 23.9 points on the bench.,
+2024,2,mvp,MVP,10,43.0,Alvin Kamara scored 43.0.,4035
+2024,2,pickup_of_the_week,Pickup of the week,10,15.4,"Zach Charbonnet, added as a free agent before the season, scored 15.4.",9753
+2024,3,top_score,Top score,9,150.12,"Put up 150.1, the best of the week.",
+2024,3,lowest_score,Lowest score,1,67.82,Managed 67.8. Everyone else did better.,
+2024,3,heartbreaker,Heartbreaker,10,126.02,"Scored 126.0, 3rd-best of the week, and still lost.",
+2024,3,robbery,Robbery,12,80.08,"Won with 80.1, the 11th-best score.",
+2024,3,blowout,Blowout,9,27.68,Beat The Trade Slut by 27.7.,
+2024,3,nail_biter,Nail-biter,12,12.26,Edged QB Whore No More by 12.3.,
+2024,3,bench_blunder,Bench blunder,5,72.3,Left 72.3 points on the bench.,
+2024,3,mvp,MVP,9,31.6,Saquon Barkley scored 31.6.,4866
+2024,3,pickup_of_the_week,Pickup of the week,8,24.56,"Andy Dalton, added off waivers in week 2, scored 24.6.",829
+2024,4,top_score,Top score,11,153.26,"Put up 153.3, the best of the week.",
+2024,4,lowest_score,Lowest score,1,62.96,Managed 63.0. Everyone else did better.,
+2024,4,heartbreaker,Heartbreaker,6,122.6,"Scored 122.6, 5th-best of the week, and still lost.",
+2024,4,robbery,Robbery,10,112.02,"Won with 112.0, the 8th-best score.",
+2024,4,blowout,Blowout,10,49.06,Beat QB Whore No More by 49.1.,
+2024,4,nail_biter,Nail-biter,2,7.02,Edged The Trade Slut by 7.0.,
+2024,4,bench_blunder,Bench blunder,12,29.8,Left 29.8 points on the bench.,
+2024,4,mvp,MVP,9,34.4,Derrick Henry scored 34.4.,3198
+2024,4,pickup_of_the_week,Pickup of the week,7,20.1,"Chuba Hubbard, added off waivers in week 2, scored 20.1.",7594
+2024,5,top_score,Top score,2,153.8,"Put up 153.8, the best of the week.",
+2024,5,lowest_score,Lowest score,10,92.78,Managed 92.8. Everyone else did better.,
+2024,5,heartbreaker,Heartbreaker,5,128.08,"Scored 128.1, 3rd-best of the week, and still lost.",
+2024,5,robbery,Robbery,4,117.06,"Won with 117.1, the 8th-best score.",
+2024,5,blowout,Blowout,2,42.18,Beat The FAAB prince himself by 42.2.,
+2024,5,nail_biter,Nail-biter,8,2.46,Edged I am Iron Man by 2.5.,
+2024,5,bench_blunder,Bench blunder,8,39.6,Left 39.6 points on the bench.,
+2024,5,mvp,MVP,2,36.3,Ja'Marr Chase scored 36.3.,7564
+2024,5,pickup_of_the_week,Pickup of the week,3,27.0,"Darnell Mooney, added off waivers in week 2, scored 27.0.",7090
+2024,6,top_score,Top score,11,154.28,"Put up 154.3, the best of the week.",
+2024,6,lowest_score,Lowest score,6,78.26,Managed 78.3. Everyone else did better.,
+2024,6,heartbreaker,Heartbreaker,3,132.76,"Scored 132.8, 3rd-best of the week, and still lost.",
+2024,6,robbery,Robbery,7,104.6,"Won with 104.6, the 9th-best score.",
+2024,6,blowout,Blowout,11,76.02,Beat The FAAB prince himself by 76.0.,
+2024,6,nail_biter,Nail-biter,7,2.42,Edged Burrow this DK by 2.4.,
+2024,6,bench_blunder,Bench blunder,1,28.1,Left 28.1 points on the bench.,
+2024,6,mvp,MVP,4,30.0,Chris Godwin scored 30.0.,4037
+2024,6,pickup_of_the_week,Pickup of the week,1,19.7,"Tyrone Tracy, added as a free agent in week 5, scored 19.7.",11655
+2024,7,top_score,Top score,5,134.44,"Put up 134.4, the best of the week.",
+2024,7,lowest_score,Lowest score,10,63.44,Managed 63.4. Everyone else did better.,
+2024,7,heartbreaker,Heartbreaker,8,112.46,"Scored 112.5, 6th-best of the week, and still lost.",
+2024,7,robbery,Robbery,9,111.14,"Won with 111.1, the 7th-best score.",
+2024,7,blowout,Blowout,3,61.6,Beat The Golden Receivers by 61.6.,
+2024,7,nail_biter,Nail-biter,11,0.54,Edged The Trade Slut by 0.5.,
+2024,7,bench_blunder,Bench blunder,3,29.0,Left 29.0 points on the bench.,
+2024,7,mvp,MVP,5,34.44,Lamar Jackson scored 34.4.,4881
+2024,7,pickup_of_the_week,Pickup of the week,1,23.6,"David Njoku, added as a free agent in week 6, scored 23.6.",4033
+2024,8,top_score,Top score,4,158.64,"Put up 158.6, the best of the week.",
+2024,8,lowest_score,Lowest score,5,104.3,Managed 104.3. Everyone else did better.,
+2024,8,heartbreaker,Heartbreaker,10,130.82,"Scored 130.8, 6th-best of the week, and still lost.",
+2024,8,robbery,Robbery,9,106.18,"Won with 106.2, the 11th-best score.",
+2024,8,blowout,Blowout,4,50.94,Beat Don’t Touch my Penix by 50.9.,
+2024,8,nail_biter,Nail-biter,9,1.88,Edged I am Iron Man by 1.9.,
+2024,8,bench_blunder,Bench blunder,6,40.8,Left 40.8 points on the bench.,
+2024,8,mvp,MVP,3,35.14,Jalen Hurts scored 35.1.,6904
+2024,8,pickup_of_the_week,Pickup of the week,4,29.1,"Cade Otton, added as a free agent in week 5, scored 29.1.",8111
+2024,9,top_score,Top score,7,146.16,"Put up 146.2, the best of the week.",
+2024,9,lowest_score,Lowest score,1,86.34,Managed 86.3. Everyone else did better.,
+2024,9,heartbreaker,Heartbreaker,2,126.2,"Scored 126.2, 5th-best of the week, and still lost.",
+2024,9,robbery,Robbery,8,107.68,"Won with 107.7, the 10th-best score.",
+2024,9,blowout,Blowout,7,49.5,Beat The FAAB prince himself by 49.5.,
+2024,9,nail_biter,Nail-biter,4,2.34,Edged The Stroud Cloud by 2.3.,
+2024,9,bench_blunder,Bench blunder,6,28.22,Left 28.2 points on the bench.,
+2024,9,mvp,MVP,6,33.5,Jaxon Smith-Njigba scored 33.5.,9488
+2024,9,pickup_of_the_week,Pickup of the week,9,24.6,"DeAndre Hopkins, added off waivers in week 7, scored 24.6.",1426
+2024,10,top_score,Top score,2,175.0,"Put up 175.0, the best of the week.",
+2024,10,lowest_score,Lowest score,5,77.1,Managed 77.1. Everyone else did better.,
+2024,10,heartbreaker,Heartbreaker,7,111.28,"Scored 111.3, 4th-best of the week, and still lost.",
+2024,10,robbery,Robbery,11,83.42,"Won with 83.4, the 10th-best score.",
+2024,10,blowout,Blowout,2,93.26,Beat Don’t Touch my Penix by 93.3.,
+2024,10,nail_biter,Nail-biter,11,6.32,Edged I am Iron Man by 6.3.,
+2024,10,bench_blunder,Bench blunder,5,23.2,Left 23.2 points on the bench.,
+2024,10,mvp,MVP,2,49.9,Ja'Marr Chase scored 49.9.,7564
+2024,10,pickup_of_the_week,Pickup of the week,9,23.0,"Philadelphia Eagles, added as a free agent in week 9, scored 23.0.",PHI
+2024,11,top_score,Top score,11,154.48,"Put up 154.5, the best of the week.",
+2024,11,lowest_score,Lowest score,7,100.66,Managed 100.7. Everyone else did better.,
+2024,11,heartbreaker,Heartbreaker,2,143.88,"Scored 143.9, 2nd-best of the week, and still lost.",
+2024,11,robbery,Robbery,8,112.16,"Won with 112.2, the 7th-best score.",
+2024,11,blowout,Blowout,1,36.2,Beat Gibbs me victory or death by 36.2.,
+2024,11,nail_biter,Nail-biter,8,4.6,Edged The Golden Receivers by 4.6.,
+2024,11,bench_blunder,Bench blunder,8,47.02,Left 47.0 points on the bench.,
+2024,11,mvp,MVP,10,34.58,Jared Goff scored 34.6.,3163
+2024,11,pickup_of_the_week,Pickup of the week,7,21.0,"Houston Texans, added off waivers in week 10, scored 21.0.",HOU
+2024,12,top_score,Top score,3,133.26,"Put up 133.3, the best of the week.",
+2024,12,lowest_score,Lowest score,10,48.94,Managed 48.9. Everyone else did better.,
+2024,12,heartbreaker,Heartbreaker,7,126.8,"Scored 126.8, 3rd-best of the week, and still lost.",
+2024,12,robbery,Robbery,4,79.58,"Won with 79.6, the 11th-best score.",
+2024,12,blowout,Blowout,4,30.64,Beat The Golden Receivers by 30.6.,
+2024,12,nail_biter,Nail-biter,12,1.68,Edged The Stroud Cloud by 1.7.,
+2024,12,bench_blunder,Bench blunder,12,44.04,Left 44.0 points on the bench.,
+2024,12,mvp,MVP,9,44.2,Saquon Barkley scored 44.2.,4866
+2024,12,pickup_of_the_week,Pickup of the week,3,24.2,"Bucky Irving, added as a free agent before the season, scored 24.2.",11584
+2024,13,top_score,Top score,5,161.54,"Put up 161.5, the best of the week.",
+2024,13,lowest_score,Lowest score,7,94.2,Managed 94.2. Everyone else did better.,
+2024,13,heartbreaker,Heartbreaker,1,120.78,"Scored 120.8, 7th-best of the week, and still lost.",
+2024,13,robbery,Robbery,9,125.16,"Won with 125.2, the 6th-best score.",
+2024,13,blowout,Blowout,5,66.78,Beat The Golden Receivers by 66.8.,
+2024,13,nail_biter,Nail-biter,9,10.96,Edged The FAAB prince himself by 11.0.,
+2024,13,bench_blunder,Bench blunder,12,44.5,Left 44.5 points on the bench.,
+2024,13,mvp,MVP,5,36.0,Jerry Jeudy scored 36.0.,6783
+2024,13,pickup_of_the_week,Pickup of the week,5,36.0,"Jerry Jeudy, added off waivers in week 6, scored 36.0.",6783
+2024,14,top_score,Top score,2,195.28,"Put up 195.3, the best of the week.",
+2024,14,lowest_score,Lowest score,9,85.96,Managed 86.0. Everyone else did better.,
+2024,14,heartbreaker,Heartbreaker,4,136.38,"Scored 136.4, 4th-best of the week, and still lost.",
+2024,14,robbery,Robbery,11,105.98,"Won with 106.0, the 10th-best score.",
+2024,14,blowout,Blowout,2,88.56,Beat Don’t Touch my Penix by 88.6.,
+2024,14,nail_biter,Nail-biter,7,1.36,Edged On Stranger Tides by 1.4.,
+2024,14,bench_blunder,Bench blunder,3,22.5,Left 22.5 points on the bench.,
+2024,14,mvp,MVP,4,51.88,Josh Allen scored 51.9.,4984
+2024,14,pickup_of_the_week,Pickup of the week,10,34.8,"Zach Charbonnet, added as a free agent before the season, scored 34.8.",9753
+2024,15,top_score,Top score,5,171.66,"Put up 171.7, the best of the week.",
+2024,15,lowest_score,Lowest score,12,90.52,Managed 90.5. Everyone else did better.,
+2024,15,heartbreaker,Heartbreaker,11,112.98,"Scored 113.0, 8th-best of the week, and still lost.",
+2024,15,robbery,Robbery,9,117.24,"Won with 117.2, the 6th-best score.",
+2024,15,blowout,Blowout,5,62.22,Beat The Golden Receivers by 62.2.,
+2024,15,nail_biter,Nail-biter,9,4.26,Edged The Stroud Cloud by 4.3.,
+2024,15,bench_blunder,Bench blunder,1,43.96,Left 44.0 points on the bench.,
+2024,15,mvp,MVP,4,41.28,Josh Allen scored 41.3.,4984
+2024,15,pickup_of_the_week,Pickup of the week,9,23.0,"Kansas City Chiefs, added as a free agent in week 11, scored 23.0.",KC
+2024,16,top_score,Top score,2,181.0,"Put up 181.0, the best of the week.",
+2024,16,lowest_score,Lowest score,10,81.74,Managed 81.7. Everyone else did better.,
+2024,16,heartbreaker,Heartbreaker,5,116.06,"Scored 116.1, 6th-best of the week, and still lost.",
+2024,16,robbery,Robbery,6,86.2,"Won with 86.2, the 11th-best score.",
+2024,16,blowout,Blowout,2,67.52,Beat On Stranger Tides by 67.5.,
+2024,16,nail_biter,Nail-biter,6,4.46,Edged The Golden Receivers by 4.5.,
+2024,16,bench_blunder,Bench blunder,10,30.14,Left 30.1 points on the bench.,
+2024,16,mvp,MVP,12,39.8,Jonathan Taylor scored 39.8.,6813
+2024,16,pickup_of_the_week,Pickup of the week,7,30.5,"Chuba Hubbard, added off waivers in week 2, scored 30.5.",7594
+2024,17,top_score,Top score,8,167.4,"Put up 167.4, the best of the week.",
+2024,17,lowest_score,Lowest score,11,59.9,Managed 59.9. Everyone else did better.,
+2024,17,heartbreaker,Heartbreaker,3,147.28,"Scored 147.3, 3rd-best of the week, and still lost.",
+2024,17,robbery,Robbery,9,128.98,"Won with 129.0, the 6th-best score.",
+2024,17,blowout,Blowout,8,25.28,Beat I am Iron Man by 25.3.,
+2024,17,nail_biter,Nail-biter,9,2.04,Edged On Stranger Tides by 2.0.,
+2024,17,bench_blunder,Bench blunder,12,27.52,Left 27.5 points on the bench.,
+2024,17,mvp,MVP,2,36.98,Joe Burrow scored 37.0.,6770
+2024,17,pickup_of_the_week,Pickup of the week,10,34.36,"Drew Lock, added off waivers in week 14, scored 34.4.",5854
+2025,1,top_score,Top score,4,129.64,"Put up 129.6, the best of the week.",
+2025,1,lowest_score,Lowest score,12,63.14,Managed 63.1. Everyone else did better.,
+2025,1,heartbreaker,Heartbreaker,9,119.76,"Scored 119.8, 4th-best of the week, and still lost.",
+2025,1,robbery,Robbery,3,108.94,"Won with 108.9, the 7th-best score.",
+2025,1,blowout,Blowout,6,64.7,Beat Team 12 by 64.7.,
+2025,1,nail_biter,Nail-biter,11,6.58,Edged Saint Domingo by 6.6.,
+2025,1,bench_blunder,Bench blunder,11,31.14,Left 31.1 points on the bench.,
+2025,1,mvp,MVP,1,38.76,Josh Allen scored 38.8.,4984
+2025,1,pickup_of_the_week,Pickup of the week,8,11.0,"Los Angeles Rams, added as a free agent before the season, scored 11.0.",LAR
+2025,2,top_score,Top score,5,131.04,"Put up 131.0, the best of the week.",
+2025,2,lowest_score,Lowest score,4,104.04,Managed 104.0. Everyone else did better.,
+2025,2,heartbreaker,Heartbreaker,9,130.7,"Scored 130.7, 2nd-best of the week, and still lost.",
+2025,2,robbery,Robbery,12,112.28,"Won with 112.3, the 7th-best score.",
+2025,2,blowout,Blowout,8,19.7,Beat The Alpha and Emeka by 19.7.,
+2025,2,nail_biter,Nail-biter,5,0.34,Edged Saint Domingo by 0.3.,
+2025,2,bench_blunder,Bench blunder,10,33.0,Left 33.0 points on the bench.,
+2025,2,mvp,MVP,12,34.7,Amon-Ra St. Brown scored 34.7.,7547
+2025,2,pickup_of_the_week,Pickup of the week,9,21.76,"Mac Jones, added off waivers in week 1, scored 21.8.",7527
+2025,3,top_score,Top score,1,163.18,"Put up 163.2, the best of the week.",
+2025,3,lowest_score,Lowest score,7,92.06,Managed 92.1. Everyone else did better.,
+2025,3,heartbreaker,Heartbreaker,3,126.32,"Scored 126.3, 4th-best of the week, and still lost.",
+2025,3,robbery,Robbery,6,100.5,"Won with 100.5, the 9th-best score.",
+2025,3,blowout,Blowout,1,40.38,Beat The Alpha and Emeka by 40.4.,
+2025,3,nail_biter,Nail-biter,6,2.76,Edged Fantasy Pros’ #1 Opp by 2.8.,
+2025,3,bench_blunder,Bench blunder,5,21.2,Left 21.2 points on the bench.,
+2025,3,mvp,MVP,9,31.3,Jonathan Taylor scored 31.3.,6813
+2025,3,pickup_of_the_week,Pickup of the week,3,21.2,"Jake Ferguson, added off waivers in week 2, scored 21.2.",8110
+2025,4,top_score,Top score,7,167.38,"Put up 167.4, the best of the week.",
+2025,4,lowest_score,Lowest score,12,92.28,Managed 92.3. Everyone else did better.,
+2025,4,heartbreaker,Heartbreaker,1,130.44,"Scored 130.4, 4th-best of the week, and still lost.",
+2025,4,robbery,Robbery,8,106.38,"Won with 106.4, the 10th-best score.",
+2025,4,blowout,Blowout,7,55.18,Beat Bolts and Ho’s ⚡️ by 55.2.,
+2025,4,nail_biter,Nail-biter,11,9.12,Edged Back 2 Dak by 9.1.,
+2025,4,bench_blunder,Bench blunder,12,33.94,Left 33.9 points on the bench.,
+2025,4,mvp,MVP,6,32.5,Ashton Jeanty scored 32.5.,12527
+2025,4,pickup_of_the_week,Pickup of the week,11,21.2,"Carson Wentz, added off waivers in week 2, scored 21.2.",3161
+2025,5,top_score,Top score,9,180.08,"Put up 180.1, the best of the week.",
+2025,5,lowest_score,Lowest score,1,77.64,Managed 77.6. Everyone else did better.,
+2025,5,heartbreaker,Heartbreaker,2,132.36,"Scored 132.4, 6th-best of the week, and still lost.",
+2025,5,robbery,Robbery,12,118.96,"Won with 119.0, the 7th-best score.",
+2025,5,blowout,Blowout,4,59.56,Beat Bolts and Ho’s ⚡️ by 59.6.,
+2025,5,nail_biter,Nail-biter,11,36.4,Edged Fantasy Pros’ #1 Opp by 36.4.,
+2025,5,bench_blunder,Bench blunder,12,23.56,Left 23.6 points on the bench.,
+2025,5,mvp,MVP,9,30.9,Rico Dowdle scored 30.9.,7021
+2025,5,pickup_of_the_week,Pickup of the week,9,30.9,"Rico Dowdle, added as a free agent in week 5, scored 30.9.",7021
+2025,6,top_score,Top score,6,133.4,"Put up 133.4, the best of the week.",
+2025,6,lowest_score,Lowest score,7,83.16,Managed 83.2. Everyone else did better.,
+2025,6,heartbreaker,Heartbreaker,1,123.76,"Scored 123.8, 4th-best of the week, and still lost.",
+2025,6,robbery,Robbery,9,106.6,"Won with 106.6, the 7th-best score.",
+2025,6,blowout,Blowout,6,50.24,Beat Justice for Jordon by 50.2.,
+2025,6,nail_biter,Nail-biter,11,5.46,Edged QB Whore No More by 5.5.,
+2025,6,bench_blunder,Bench blunder,7,43.1,Left 43.1 points on the bench.,
+2025,6,mvp,MVP,10,32.8,Bijan Robinson scored 32.8.,9509
+2025,6,pickup_of_the_week,Pickup of the week,9,31.9,"Rico Dowdle, added as a free agent in week 5, scored 31.9.",7021
+2025,7,top_score,Top score,2,137.84,"Put up 137.8, the best of the week.",
+2025,7,lowest_score,Lowest score,5,74.12,Managed 74.1. Everyone else did better.,
+2025,7,heartbreaker,Heartbreaker,11,122.0,"Scored 122.0, 5th-best of the week, and still lost.",
+2025,7,robbery,Robbery,3,118.2,"Won with 118.2, the 8th-best score.",
+2025,7,blowout,Blowout,2,63.72,Beat Griddy Little Liars by 63.7.,
+2025,7,nail_biter,Nail-biter,8,12.36,Edged Achane-Smoker by 12.4.,
+2025,7,bench_blunder,Bench blunder,5,54.44,Left 54.4 points on the bench.,
+2025,7,mvp,MVP,7,39.96,Bo Nix scored 40.0.,11563
+2025,7,pickup_of_the_week,Pickup of the week,9,29.4,"Oronde Gadsden, added off waivers in week 6, scored 29.4.",12493
+2025,8,top_score,Top score,7,160.94,"Put up 160.9, the best of the week.",
+2025,8,lowest_score,Lowest score,4,56.68,Managed 56.7. Everyone else did better.,
+2025,8,heartbreaker,Heartbreaker,11,126.72,"Scored 126.7, 4th-best of the week, and still lost.",
+2025,8,robbery,Robbery,12,104.88,"Won with 104.9, the 7th-best score.",
+2025,8,blowout,Blowout,9,71.8,Beat The Alpha and Emeka by 71.8.,
+2025,8,nail_biter,Nail-biter,12,0.66,Edged Griddy Little Liars by 0.7.,
+2025,8,bench_blunder,Bench blunder,4,55.18,Left 55.2 points on the bench.,
+2025,8,mvp,MVP,9,36.4,Jonathan Taylor scored 36.4.,6813
+2025,8,pickup_of_the_week,Pickup of the week,7,28.0,"Tampa Bay Buccaneers, added as a free agent in week 8, scored 28.0.",TB
+2025,9,top_score,Top score,1,151.48,"Put up 151.5, the best of the week.",
+2025,9,lowest_score,Lowest score,11,74.12,Managed 74.1. Everyone else did better.,
+2025,9,heartbreaker,Heartbreaker,10,120.26,"Scored 120.3, 5th-best of the week, and still lost.",
+2025,9,robbery,Robbery,4,88.64,"Won with 88.6, the 11th-best score.",
+2025,9,blowout,Blowout,2,43.46,Beat The Trade Slut by 43.5.,
+2025,9,nail_biter,Nail-biter,5,5.58,Edged Love and Warren by 5.6.,
+2025,9,bench_blunder,Bench blunder,9,39.9,Left 39.9 points on the bench.,
+2025,9,mvp,MVP,2,43.3,Brock Bowers scored 43.3.,11604
+2025,9,pickup_of_the_week,Pickup of the week,6,30.7,"Joe Flacco, added off waivers in week 5, scored 30.7.",19
+2025,10,top_score,Top score,9,141.62,"Put up 141.6, the best of the week.",
+2025,10,lowest_score,Lowest score,7,77.46,Managed 77.5. Everyone else did better.,
+2025,10,heartbreaker,Heartbreaker,12,126.0,"Scored 126.0, 6th-best of the week, and still lost.",
+2025,10,robbery,Robbery,5,107.48,"Won with 107.5, the 10th-best score.",
+2025,10,blowout,Blowout,2,50.7,Beat Justice for Jordon by 50.7.,
+2025,10,nail_biter,Nail-biter,5,3.12,Edged The Trade Slut by 3.1.,
+2025,10,bench_blunder,Bench blunder,8,20.16,Left 20.2 points on the bench.,
+2025,10,mvp,MVP,9,48.1,Jonathan Taylor scored 48.1.,6813
+2025,10,pickup_of_the_week,Pickup of the week,12,27.68,"Davis Mills, added as a free agent in week 10, scored 27.7.",7585
+2025,11,top_score,Top score,8,166.24,"Put up 166.2, the best of the week.",
+2025,11,lowest_score,Lowest score,3,50.56,Managed 50.6. Everyone else did better.,
+2025,11,heartbreaker,Heartbreaker,7,101.54,"Scored 101.5, 5th-best of the week, and still lost.",
+2025,11,robbery,Robbery,11,87.58,"Won with 87.6, the 9th-best score.",
+2025,11,blowout,Blowout,8,115.68,Beat Bolts and Ho’s ⚡️ by 115.7.,
+2025,11,nail_biter,Nail-biter,6,0.4,Edged Saint Domingo by 0.4.,
+2025,11,bench_blunder,Bench blunder,3,49.76,Left 49.8 points on the bench.,
+2025,11,mvp,MVP,1,42.68,Josh Allen scored 42.7.,4984
+2025,11,pickup_of_the_week,Pickup of the week,9,22.0,"Pittsburgh Steelers, added off waivers in week 9, scored 22.0.",PIT
+2025,12,top_score,Top score,6,157.08,"Put up 157.1, the best of the week.",
+2025,12,lowest_score,Lowest score,10,80.2,Managed 80.2. Everyone else did better.,
+2025,12,heartbreaker,Heartbreaker,12,133.68,"Scored 133.7, 3rd-best of the week, and still lost.",
+2025,12,robbery,Robbery,3,94.82,"Won with 94.8, the 9th-best score.",
+2025,12,blowout,Blowout,2,37.92,Beat Fantasy Pros’ #1 Opp by 37.9.,
+2025,12,nail_biter,Nail-biter,3,10.18,Edged Griddy Little Liars by 10.2.,
+2025,12,bench_blunder,Bench blunder,2,27.5,Left 27.5 points on the bench.,
+2025,12,mvp,MVP,6,49.9,Jahmyr Gibbs scored 49.9.,9221
+2025,12,pickup_of_the_week,Pickup of the week,3,25.5,"Emanuel Wilson, added off waivers in week 11, scored 25.5.",11435
+2025,13,top_score,Top score,1,133.76,"Put up 133.8, the best of the week.",
+2025,13,lowest_score,Lowest score,12,68.36,Managed 68.4. Everyone else did better.,
+2025,13,heartbreaker,Heartbreaker,6,117.12,"Scored 117.1, 4th-best of the week, and still lost.",
+2025,13,robbery,Robbery,5,89.38,"Won with 89.4, the 10th-best score.",
+2025,13,blowout,Blowout,1,43.84,Beat Justice for Jordon by 43.8.,
+2025,13,nail_biter,Nail-biter,11,2.4,Edged Bolts and Ho’s ⚡️ by 2.4.,
+2025,13,bench_blunder,Bench blunder,10,35.6,Left 35.6 points on the bench.,
+2025,13,mvp,MVP,4,31.0,Seattle Seahawks scored 31.0.,SEA
+2025,13,pickup_of_the_week,Pickup of the week,4,31.0,"Seattle Seahawks, added off waivers in week 9, scored 31.0.",SEA
+2025,14,top_score,Top score,6,148.82,"Put up 148.8, the best of the week.",
+2025,14,lowest_score,Lowest score,7,70.62,Managed 70.6. Everyone else did better.,
+2025,14,heartbreaker,Heartbreaker,1,140.48,"Scored 140.5, 2nd-best of the week, and still lost.",
+2025,14,robbery,Robbery,5,94.12,"Won with 94.1, the 9th-best score.",
+2025,14,blowout,Blowout,11,59.34,Beat Justice for Jordon by 59.3.,
+2025,14,nail_biter,Nail-biter,5,0.34,Edged Team 12 by 0.3.,
+2025,14,bench_blunder,Bench blunder,7,34.04,Left 34.0 points on the bench.,
+2025,14,mvp,MVP,1,37.84,Josh Allen scored 37.8.,4984
+2025,14,pickup_of_the_week,Pickup of the week,1,31.7,"Michael Wilson, added off waivers in week 11, scored 31.7.",10232
+2025,15,top_score,Top score,1,143.98,"Put up 144.0, the best of the week.",
+2025,15,lowest_score,Lowest score,11,97.86,Managed 97.9. Everyone else did better.,
+2025,15,heartbreaker,Heartbreaker,4,115.18,"Scored 115.2, 7th-best of the week, and still lost.",
+2025,15,robbery,Robbery,5,114.64,"Won with 114.6, the 8th-best score.",
+2025,15,blowout,Blowout,1,46.12,Beat Achane-Smoker by 46.1.,
+2025,15,nail_biter,Nail-biter,5,1.84,Edged Bolts and Ho’s ⚡️ by 1.8.,
+2025,15,bench_blunder,Bench blunder,7,62.62,Left 62.6 points on the bench.,
+2025,15,mvp,MVP,6,44.3,Trevor Lawrence scored 44.3.,7523
+2025,15,pickup_of_the_week,Pickup of the week,5,25.6,"Darren Waller, added as a free agent in week 14, scored 25.6.",2505
+2025,16,top_score,Top score,6,168.64,"Put up 168.6, the best of the week.",
+2025,16,lowest_score,Lowest score,12,69.28,Managed 69.3. Everyone else did better.,
+2025,16,heartbreaker,Heartbreaker,11,133.6,"Scored 133.6, 4th-best of the week, and still lost.",
+2025,16,robbery,Robbery,3,100.84,"Won with 100.8, the 8th-best score.",
+2025,16,blowout,Blowout,6,83.82,Beat QB Whore No More by 83.8.,
+2025,16,nail_biter,Nail-biter,3,0.06,Edged The Alpha and Emeka by 0.1.,
+2025,16,bench_blunder,Bench blunder,10,52.3,Left 52.3 points on the bench.,
+2025,16,mvp,MVP,9,40.5,Puka Nacua scored 40.5.,9493
+2025,16,pickup_of_the_week,Pickup of the week,6,21.0,"New Orleans Saints, added as a free agent in week 15, scored 21.0.",NO
+2025,17,top_score,Top score,2,172.02,"Put up 172.0, the best of the week.",
+2025,17,lowest_score,Lowest score,3,49.04,Managed 49.0. Everyone else did better.,
+2025,17,heartbreaker,Heartbreaker,6,120.44,"Scored 120.4, 3rd-best of the week, and still lost.",
+2025,17,robbery,Robbery,1,93.16,"Won with 93.2, the 10th-best score.",
+2025,17,blowout,Blowout,2,51.58,Beat Love and Warren by 51.6.,
+2025,17,nail_biter,Nail-biter,7,14.9,Edged Fantasy Pros’ #1 Opp by 14.9.,
+2025,17,bench_blunder,Bench blunder,9,42.14,Left 42.1 points on the bench.,
+2025,17,mvp,MVP,2,45.6,Derrick Henry scored 45.6.,3198
+2025,17,pickup_of_the_week,Pickup of the week,6,31.52,"Malik Willis, added off waivers in week 16, scored 31.5.",8161
 2026,1,top_score,Top score,1,195.12,"Put up 195.1, the best of the week.",
 2026,1,lowest_score,Lowest score,7,89.02,Managed 89.0. Everyone else did better.,
 2026,1,heartbreaker,Heartbreaker,2,162.52,"Scored 162.5, 3rd-best of the week, and still lost.",

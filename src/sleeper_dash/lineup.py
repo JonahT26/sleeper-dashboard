@@ -78,6 +78,15 @@ def eligible_positions(player_ids, players):
     return result
 
 
+def week_positions(today, started_slot):
+    """A player's positions for one week: his positions today, plus the position of the single-position
+    slot he actually started in that week (QB, RB, WR, TE, K, DEF). Sleeper only lets a player start in a
+    slot his position allowed at the time, so that start proves he had the position then, even if Sleeper
+    lists him differently now (METRICS_SPEC.md section 3; owner, 2026-10-05). Flex starts prove nothing more."""
+    allowed = SLOT_ELIGIBILITY.get(started_slot) if isinstance(started_slot, str) else None
+    return today | allowed if allowed and len(allowed) == 1 else today
+
+
 def solve_lineup(slots, points, positions, started_in=None):
     """Return, for each slot, the index of the player filling it in the optimal lineup.
 
@@ -122,7 +131,8 @@ def build_optimal_lineups(player_weeks, team_weeks, roster_positions, positions_
         chosen = solve_lineup(
             slots,
             pool["points"].tolist(),
-            [positions_by_player[pid] for pid in pool["player_id"]],
+            [week_positions(positions_by_player[pid], slot if started else None)
+             for pid, slot, started in zip(pool["player_id"], pool["lineup_slot"], pool["is_starter"])],
             started_in,
         )
 
@@ -220,19 +230,27 @@ def compare_to_sleeper_max(lineups, team_weeks, rosters, warn_gap):
 
 def main():
     from sleeper_dash.config import PROJECT_ROOT, load_config
-    from sleeper_dash.transform import read_players, read_raw, save_tables
-    from sleeper_dash.validate import BASE_TABLES, ValidationError, load_tables, validate
+    from sleeper_dash.seasons import league_files, season_slice, stack
+    from sleeper_dash.transform import read_players, save_tables
+    from sleeper_dash.validate import BASE_TABLES, ValidationError, load_tables, validate_seasons
 
     config = load_config()
-    league, rosters = read_raw(config.season, "league.json"), read_raw(config.season, "rosters.json")
-    tables = load_tables(names=BASE_TABLES)
-    lineup_tables = build_lineup_tables(tables, league, read_players())
+    saved, files, players = load_tables(names=BASE_TABLES), league_files(config.seasons, config.sleeper_points_gaps), read_players()
+    by_season, built = {}, {}
+    for season in config.seasons:  # each season with its own lineup slots
+        season_tables = season_slice(saved, season)
+        built[season] = build_lineup_tables(season_tables, files[season][0], players)
+        by_season[season] = ({**season_tables, **built[season]}, *files[season])
     try:
-        validate({**tables, **lineup_tables}, league, rosters)
+        validate_seasons(by_season)
     except ValidationError as error:
         raise SystemExit(str(error))
-    for name, path in save_tables(lineup_tables).items():
-        print(f"Saved {len(lineup_tables[name])} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
+    stacked = stack(built)
+    for name, path in save_tables(stacked).items():
+        print(f"Saved {len(stacked[name])} rows to {path.relative_to(PROJECT_ROOT).as_posix()}")
+
+    tables, lineup_tables = season_slice(saved, config.season), built[config.season]  # reports: the current season
+    league, rosters = files[config.season]
 
     names = tables["teams"].set_index("roster_id")["team_name"]
     lineups, chosen = lineup_tables["lineups_optimal"], lineup_tables["lineups_optimal_players"]
