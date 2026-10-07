@@ -169,11 +169,23 @@
     {% if v.moves.pickups %}
     <div class="moves-block">
       <h3 class="h-head">Best pickups</h3>
-      <ol class="pickups" role="list">
-      {% for p in v.moves.pickups %}
-        <li class="pickup"><span class="pk-name">{{ p.player }}</span><span class="pk-pts num">{{ p.points }}</span><span class="pk-detail">{{ p.team }} · {{ p.how }} · {{ p.starts }}</span></li>
+      {# Position slicer: every position's top 5 is in the page; page.js shows one (without JavaScript, All) #}
+      <div class="pk-filter" role="group" aria-label="Position">
+      {% for f in v.moves.pickup_filters %}<button type="button" class="pk-tab" data-pos="{{ f.key }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ f.label }}</button>{% endfor %}
+      </div>
+      {% for f in v.moves.pickup_filters %}
+      <div class="pk-list" data-pos="{{ f.key }}"{% if not loop.first %} hidden{% endif %}>
+        {% if f.rows %}
+        <ol class="pickups" role="list">
+        {% for p in f.rows %}
+          <li class="pickup"><span class="pk-name">{{ p.player }}</span><span class="pk-pts num">{{ p.points }}</span><span class="pk-detail">{{ p.team }} · {{ p.how }} · {{ p.starts }}</span></li>
+        {% endfor %}
+        </ol>
+        {% else %}
+        <p class="moves-note">No {{ f.label }} pickups have scored yet.</p>
+        {% endif %}
+      </div>
       {% endfor %}
-      </ol>
     </div>
     {% endif %}
     {% if v.moves.faab %}
@@ -184,12 +196,25 @@
           <thead><tr><th scope="col">Team</th><th scope="col">Spent</th><th scope="col">Points</th><th scope="col">Per $</th></tr></thead>
           <tbody>
           {% for r in v.moves.faab %}
-            <tr><th scope="row">{{ r.team }}</th><td class="num">{{ r.spent }}</td><td class="num">{{ r.points }}</td><td class="num">{{ r.per_dollar }}</td></tr>
+            <tr class="faab-row"><th scope="row">{% if r.claims %}<button type="button" class="faab-toggle" aria-expanded="false" aria-controls="{{ r.id }}">{{ r.team }}</button>{% else %}<span class="faab-none">{{ r.team }}</span>{% endif %}</th><td class="num">{{ r.spent }}</td><td class="num">{{ r.points }}</td><td class="num">{{ r.per_dollar }}</td></tr>
+            {% if r.claims %}
+            <tr class="faab-claims" id="{{ r.id }}" hidden><td colspan="4">
+              <table class="claims">
+                <caption class="sr">{{ r.team }}'s waiver claims</caption>
+                <thead><tr><th scope="col">Claim</th><th scope="col">Bid</th><th scope="col">Points</th></tr></thead>
+                <tbody>
+                {% for c in r.claims %}
+                  <tr><th scope="row"><span class="cl-name">{{ c.player }}</span><span class="cl-detail">{{ c.when }}, {{ c.starts }}</span></th><td class="num">{{ c.bid }}</td><td class="num">{{ c.points }}</td></tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </td></tr>
+            {% endif %}
           {% endfor %}
           </tbody>
         </table>
       </div>
-      <p class="moves-note">Points from waiver claims, $0 claims included. — means under {{ v.moves.min_spend }} spent.</p>
+      <p class="moves-note">Points from waiver claims, $0 claims included. — means under {{ v.moves.min_spend }} spent. Tap a team to see its claims.</p>
     </div>
     {% endif %}
     {% if v.moves.trades %}
@@ -250,13 +275,14 @@
           <th scope="row"><span class="h-name">{{ m.manager }}</span><span class="h-team">{{ m.detail }}</span></th>
           <td class="num">{{ m.record }}</td><td class="num">{{ m.win_pct }}</td>
           <td class="num">{{ m.playoffs }}</td><td class="num">{{ m.titles }}</td>
+          <td class="num">{{ m.playoff_record }}</td><td class="num">{{ m.consolation_record }}</td>
         </tr>
       {% endfor %}
     {% endmacro %}
-    {% macro history_head() %}<thead><tr><th scope="col">Manager</th><th scope="col">Record</th><th scope="col">Win %</th><th scope="col">Playoffs</th><th scope="col">Titles</th></tr></thead>{% endmacro %}
+    {% macro history_head() %}<thead><tr><th scope="col">Manager</th><th scope="col">Record</th><th scope="col">Win %</th><th scope="col">Playoffs</th><th scope="col">Titles</th><th scope="col" class="wrap">Playoff record</th><th scope="col" class="wrap">Consolation record</th></tr></thead>{% endmacro %}
     <section class="history" aria-labelledby="history-title">
       <h2 class="section-title display" id="history-title">History</h2>
-      <p class="sub">Every finished season, {{ history.span }}. Records are regular-season records, median games included; playoff results count as appearances and titles.</p>
+      <p class="sub">Every finished season, {{ history.span }}. Record and Win % are regular-season records, median games included. Playoff record counts every winners-bracket game, the 3rd- and 5th-place games included; consolation record counts every consolation-bracket game.</p>
       <h3 class="h-head">Champions</h3>
       <ol class="champions" role="list">
       {% for c in history.champions %}

@@ -9,7 +9,7 @@ import pytest
 from sleeper_dash.config import load_config
 from sleeper_dash.dashboard import build
 from sleeper_dash.dashboard.build import build_view, render
-from sleeper_dash.dashboard.moves import PICKUPS_LEFT_OUT, TOP_PICKUPS, TRADES_SHOWN, moves_view
+from sleeper_dash.dashboard.moves import PICKUPS_LEFT_OUT, POSITION_FILTERS, TOP_PICKUPS, TRADES_SHOWN, moves_view
 from sleeper_dash.metrics import transactions as tx
 from sleeper_dash.transform import PROCESSED_DIR
 from sleeper_dash.validate import load_tables
@@ -54,15 +54,32 @@ def test_after_the_regular_season_trades_are_won_and_playoff_weeks_change_nothin
     assert last["subtitle"] == "Points each move has put in the starting lineup this regular season."
     assert playoff["subtitle"] == ("Points each move has put in the starting lineup in the regular season; "
                                    "playoff weeks don't count.")
-    assert {k: v for k, v in playoff.items() if k != "subtitle"} == {k: v for k, v in last.items() if k != "subtitle"}
+    def same(v):  # everything but the subtitle and the FAAB rows' page ids, which carry the week
+        return {k: [{**r, "id": None} for r in x] if k == "faab" else x for k, x in v.items() if k != "subtitle"}
+    assert same(playoff) == same(last)
 
 
 def test_faab_rows_show_points_per_dollar_from_the_minimum_spend_and_dashes_below_it(hand_built):
     rows = view(hand_built, 4)["faab"]
-    assert rows[0] == {"team": "Two", "spent": "$12", "points": "12.0", "per_dollar": "1.0"}
+    assert {k: rows[0][k] for k in ("team", "spent", "points", "per_dollar")} == {"team": "Two", "spent": "$12", "points": "12.0", "per_dollar": "1.0"}
     assert {r["team"]: r["per_dollar"] for r in rows[1:]} == {"One": "—", "Three": "—", "Four": "—"}
     assert next(r for r in rows if r["team"] == "Four")["spent"] == "$3"
     assert view(hand_built, 4)["min_spend"] == "$10"
+
+
+def test_each_faab_row_lists_the_teams_waiver_claims_including_ones_that_never_started(hand_built):
+    rows = {r["team"]: r for r in view(hand_built, 4)["faab"]}
+    assert rows["Two"]["claims"] == [{"player": "Player A", "when": "week 2", "starts": "1 start", "bid": "$12", "points": "12.0"}]
+    assert rows["Four"]["claims"] == [{"player": "Player D", "when": "week 3", "starts": "never started", "bid": "$3", "points": "0.0"}]
+    assert rows["Three"]["claims"] == [] and rows["One"]["claims"] == []   # Three's pickup was a free agent: not FAAB
+    assert rows["Two"]["id"] == "faab-4-2"
+
+
+def test_the_position_slicer_shows_each_positions_own_top_pickups(hand_built):
+    _, player_weeks, _, _ = league()
+    positions = player_weeks.assign(position=player_weeks["player_id"].map({"A": "RB", "C": "QB"}))
+    filters = {f["label"]: [p["player"] for p in f["rows"]] for f in view({**hand_built, "player_weeks": positions}, 3)["pickup_filters"]}
+    assert filters == {"All": ["Player C", "Player A"], "QB": ["Player C"], "RB": ["Player A"], "WR": [], "TE": [], "FLEX": ["Player A"]}
 
 
 def test_even_trades_and_sides_that_received_nothing_are_worded_plainly(hand_built):
@@ -115,6 +132,21 @@ def test_2025_matches_the_saved_tables_every_week(season_2025):
         expected = sorted((p for k, p in earned.items() if k in made and p > 0 and position.get(k[1]) not in PICKUPS_LEFT_OUT),
                           reverse=True)[:TOP_PICKUPS]
         assert [p["points"] for p in v["pickups"]] == [f"{p:.1f}" for p in expected], f"week {week}"
+        # The position slicer: each option's top 5 among the same pickups, by the player's position.
+        scored = pickups[pickups["week"] <= cutoff].assign(points=lambda d: [earned.get((a, b), 0.0) for a, b in zip(d["transaction_id"], d["player_id"])])
+        scored = scored[(scored["points"] > 0) & ~scored["player_id"].map(position).isin(PICKUPS_LEFT_OUT)]
+        for f, (key, _, keep) in zip(v["pickup_filters"], POSITION_FILTERS):
+            pool = scored if keep is None else scored[scored["player_id"].map(position).isin(keep)]
+            assert f["key"] == key and [p["points"] for p in f["rows"]] == [f"{p:.1f}" for p in sorted(pool["points"], reverse=True)[:TOP_PICKUPS]], f"week {week}, {key}"
+        assert v["pickup_filters"][0]["rows"] == v["pickups"]
+        # FAAB claims: every waiver claim made by then, and a team's claims add up to its Spent and Points.
+        claims = pickups[(pickups["week"] <= cutoff) & (pickups["type"] == "waiver")]
+        for r in v["faab"]:
+            rid = next(k for k, n in names.items() if n == r["team"])
+            assert len(r["claims"]) == (claims["roster_id"] == rid).sum(), f"week {week}, {r['team']}"
+            assert sum(int(c["bid"][1:]) for c in r["claims"]) == int(r["spent"][1:])
+            assert sum(float(c["points"]) for c in r["claims"]) == pytest.approx(float(r["points"]), abs=0.05 * len(r["claims"]) + 0.05)
+            assert [float(c["points"]) for c in r["claims"]] == sorted((float(c["points"]) for c in r["claims"]), reverse=True)
         # FAAB: one row per team, straight from metrics_season.
         rows = season[season["through_week"] == week].set_index("roster_id")
         by_team = {r["team"]: r for r in v["faab"]}
@@ -141,14 +173,16 @@ def test_2025s_page_draws_the_section_after_the_charts_with_every_week_in_its_te
     for week, node in nodes.items():
         section = node.one("section", "moves-section")
         assert section.one("h2").text() == "Roster moves"
-        lists = section.all("ol", "pickups")
+        lists = section.all("div", "pk-list")
         if week == 1:  # every pickup that had scored by week 1 was a kicker or defense: no Best pickups block
             assert lists == [] and "Best pickups" not in section.text()
         else:
-            assert 1 <= len(lists[0].all("li")) <= TOP_PICKUPS
-        assert len(section.one("table", "faab").one("tbody").all("tr")) == 12
+            assert [l.attrs["data-pos"] for l in lists] == [key for key, _, _ in POSITION_FILTERS]
+            assert "hidden" not in lists[0].attrs and all("hidden" in l.attrs for l in lists[1:])   # All shows first
+            assert 1 <= len(lists[0].one("ol", "pickups").all("li")) <= TOP_PICKUPS
+        assert len(section.all("tr", "faab-row")) == 12
     final = nodes[17].one("section", "moves-section")
-    assert len(final.one("ol", "pickups").all("li")) == TOP_PICKUPS
+    assert all(len(l.one("ol", "pickups").all("li")) == TOP_PICKUPS for l in final.all("div", "pk-list"))
     assert len(final.all("li", "trade")) == 21 and final.one("details", "earlier").one("summary").text() == "Earlier trades (18)"
     assert all(" won by " in li.one("p", "trade-result").text() or li.one("p", "trade-result").text() == "Even"
                for li in final.all("li", "trade"))

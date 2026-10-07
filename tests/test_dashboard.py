@@ -99,6 +99,8 @@ def with_history(tables, n=12):
     """make_tables plus a finished 2025 season: team i is manager i except roster 12, a former manager (owner 999).
 
     Seeds follow roster order; roster 3 wins the final. 2025 records: team i wins 28 − 2i of 28 games.
+    Playoff weeks 15–17: the bracket's games (3 beats 6, 2 and 1; 4 beats 5, loses to 1) plus two consolation games
+    (7 beats 8 in week 15, 5 beats 6 in week 16); everyone else has no game.
     """
     past = make_tables(weeks=14, n=n)
     for name in ("teams", "team_weeks", "metrics_season"):
@@ -111,6 +113,15 @@ def with_history(tables, n=12):
     past["metrics_season"].loc[final, "luck"] = (ids[final] - 6.5) / 2
     past["metrics_season"].loc[final, "expected_wins"] = past["metrics_season"].loc[final, "wins"] - past["metrics_season"].loc[final, "luck"]
     past["team_weeks"].loc[(past["team_weeks"]["week"] == 2) & (past["team_weeks"]["roster_id"] == 5), "points"] = 210.55
+    games = {15: [(4, 5), (3, 6), (7, 8)], 16: [(1, 4), (3, 2), (5, 6)], 17: [(3, 1)]}  # (winner, loser)
+    playoff_weeks = []
+    for week, pairs in games.items():
+        opponent = {w: (l, "W") for w, l in pairs} | {l: (w, "L") for w, l in pairs}
+        for i in range(1, n + 1):
+            other, result = opponent.get(i, (None, None))
+            playoff_weeks.append({"season": 2025, "week": week, "roster_id": i, "is_playoff": True, "points": 100.0,
+                                  "opponent_roster_id": other, "result": result})
+    past["team_weeks"] = pd.concat([past["team_weeks"], pd.DataFrame(playoff_weeks)], ignore_index=True)
     bracket = pd.DataFrame([
         {"season": 2025, "round": 1, "matchup_id": 1, "t1_roster_id": 4, "t2_roster_id": 5, "t1_from": None, "t2_from": None},
         {"season": 2025, "round": 1, "matchup_id": 2, "t1_roster_id": 3, "t2_roster_id": 6, "t1_from": None, "t2_from": None},
@@ -425,7 +436,14 @@ def test_history_shows_champions_records_luck_and_the_high_score():
     assert "Former managers (1)" in former and '<span class="h-name">gone</span>' in former
     assert "1 season; now Team 1" in current and "1 season</span>" in former
     row = re.search(r'<span class="h-name">user3</span>.*?</tr>', current, re.S).group(0)
-    assert [td for td in re.findall(r'<td class="num">([^<]+)</td>', row)] == ["22–6", "79%", "1", "1"]  # playoffs, titles
+    # record, win %, playoffs, titles, playoff record (beat 6, 2 and 1), consolation record
+    assert [td for td in re.findall(r'<td class="num">([^<]+)</td>', row)] == ["22–6", "79%", "1", "1", "3–0", "0–0"]
+    records = {name: re.findall(r'<td class="num">([^<]+)</td>', r)[4:]
+               for name, r in re.findall(r'<span class="h-name">([^<]+)</span>(.*?)</tr>', section, re.S)}
+    assert records["user1"] == ["1–1", "0–0"] and records["user4"] == ["1–1", "0–0"]   # a bye isn't a game
+    assert records["user5"] == ["0–1", "1–0"] and records["user6"] == ["0–1", "0–1"]   # 5 v 6 in week 16 is consolation
+    assert records["user7"] == ["0–0", "1–0"] and records["user8"] == ["0–0", "0–1"] and records["user9"] == ["0–0", "0–0"]
+    assert "Playoff record counts every winners-bracket game, the 3rd- and 5th-place games included" in section
     assert "Luckiest: <strong>gone</strong>, 4–24 with 1.2 expected wins (+2.8)." in section
     assert "Unluckiest: <strong>user1</strong>, 26–2 with 28.8 expected wins (−2.8)." in section
     assert "<strong>210.6</strong> by user5, week 2 of 2025." in section

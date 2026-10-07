@@ -24,6 +24,24 @@
     view.dispatchEvent(new Event("weekshown"));  // charts.js draws this week's charts
   });
 
+  // Roster moves: Best pickups' position slicer and the FAAB rows that open to a team's claims. Listened for on the
+  // document because the selected week's sections are swapped in and out.
+  document.addEventListener("click", function (event) {
+    var tab = event.target.closest(".pk-tab");
+    if (tab) {
+      var block = tab.closest(".moves-block");
+      block.querySelectorAll(".pk-tab").forEach(function (b) { b.setAttribute("aria-pressed", String(b === tab)); });
+      block.querySelectorAll(".pk-list").forEach(function (list) { list.hidden = list.dataset.pos !== tab.dataset.pos; });
+      return;
+    }
+    var toggle = event.target.closest(".faab-toggle");
+    if (toggle) {
+      var open = toggle.getAttribute("aria-expanded") !== "true";
+      toggle.setAttribute("aria-expanded", String(open));
+      document.getElementById(toggle.getAttribute("aria-controls")).hidden = !open;
+    }
+  });
+
   // Stale data: when the last update is older than the limit on the viewer's own clock, say which week the
   // rankings are from and when the next scheduled update is due. Python writes the update times in; this only
   // picks the first one still ahead. Checked in the browser because a page that stopped updating can't rebuild itself.
