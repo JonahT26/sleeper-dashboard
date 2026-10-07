@@ -215,12 +215,15 @@ def test_all_text_meets_wcag_aa(mode):
             continue
         if selector in LITERAL_BACKGROUNDS:
             back = colour(background or LITERAL_BACKGROUNDS[selector], mode)
+        elif background and background.startswith("var(--"):  # a rule that paints its own background (the selected position)
+            back = colour(background, mode)
         else:
             back = colour("var(--masthead)" if selector in MASTHEAD_TEXT else "var(--page)", mode)
         ratio = contrast(colour(value, mode), back)
         checked.append(selector)
         assert ratio >= (3 if selector in LARGE_TEXT else 4.5), f"{selector}: {ratio:.2f}:1 in {mode} mode"
-    assert {"body", ".updated", ".stale", ".key", ".move.up", ".move.down", ".team:first-child .rank"} <= set(checked)
+    assert {"body", ".updated", ".stale", ".key", ".move.up", ".move.down", ".team:first-child .rank",
+            '.pk-tab[aria-pressed="true"]'} <= set(checked)
 
 
 def test_the_status_bar_stays_on_screen_with_the_masthead_colour():

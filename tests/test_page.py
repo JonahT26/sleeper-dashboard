@@ -749,6 +749,16 @@ def test_history_matches_every_finished_season_in_the_saved_tables():
     pcts = [int(tr.all("td")[1].text().rstrip("%")) for tr in tables[0].one("tbody").all("tr")]
     assert pcts == sorted(pcts, reverse=True)
 
+    # Playoff and consolation records: every winners-bracket game once, and every other paired playoff-week game.
+    def games(column):
+        won_lost = [[int(n) for n in tr.all("td")[column].text().split(EN_DASH)] for tr in rows]
+        return sum(r[0] for r in won_lost), sum(r[1] for r in won_lost)
+    finished = bracket[bracket["season"].isin(seasons)].dropna(subset=["t1_roster_id", "t2_roster_id"])
+    tw = stacked["team_weeks"]
+    paired = tw[tw["season"].isin(seasons) & tw["is_playoff"].astype(bool) & tw["opponent_roster_id"].notna()]
+    assert games(4) == (len(finished), len(finished))                                     # one win and one loss a game
+    assert games(5) == (len(paired) // 2 - len(finished),) * 2
+
     # Last season's luck and the highest weekly score
     last = final[final["season"] == seasons[-1]]
     lines = [p.text() for p in section.all("p", "h-line")]

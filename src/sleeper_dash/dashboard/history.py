@@ -3,7 +3,9 @@ last season's luckiest and unluckiest teams, and the highest weekly score, from 
 
 Pure: tables in, plain values and formatted strings out. A season counts once Sleeper's bracket names its
 champion. Records are regular-season records including median games (the ladder's record); playoff results
-count only as appearances (seeded 1-6 in the winners bracket) and titles (winner of the final).
+count as appearances (seeded 1-6 in the winners bracket), titles (winner of the final), and two game records
+(owner, 2026-10-06): the playoff record is every winners-bracket game, 3rd- and 5th-place games included; the
+consolation record is every other playoff-week game.
 Managers are matched across seasons by Sleeper owner ID (the managers table), never by team name.
 """
 
@@ -41,6 +43,26 @@ def playoff_teams(bracket):
     return pairs
 
 
+def bracket_games(team_weeks, bracket):
+    """One row per team per paired playoff-week game: season, roster_id, kind ("playoff" or "consolation"), result.
+
+    A game is a playoff game when the winners bracket pairs the two teams in that round (the season's n-th playoff
+    week is round n); every other paired playoff-week game is a consolation game. Byes (no opponent) aren't games.
+    """
+    games = team_weeks[team_weeks["is_playoff"].astype(bool) & team_weeks["opponent_roster_id"].notna()].copy()
+    if games.empty:
+        return pd.DataFrame(columns=["season", "roster_id", "kind", "result"])
+    weeks = games.groupby("season")["week"].transform(lambda w: w.rank(method="dense"))
+    games["round"] = weeks.astype(int)
+    pairs = set()
+    for g in bracket.dropna(subset=["t1_roster_id", "t2_roster_id"]).itertuples():
+        a, b = int(g.t1_roster_id), int(g.t2_roster_id)
+        pairs |= {(int(g.season), int(g.round), a, b), (int(g.season), int(g.round), b, a)}
+    games["kind"] = ["playoff" if (int(s), r, int(t), int(o)) in pairs else "consolation"
+                     for s, r, t, o in zip(games["season"], games["round"], games["roster_id"], games["opponent_roster_id"])]
+    return games[["season", "roster_id", "kind", "result"]].reset_index(drop=True)
+
+
 def history_view(tables, current_season):
     """Everything the History section shows, or None when no season has finished yet (the section is hidden)."""
     needed = ["teams", "managers", "metrics_season", "team_weeks", "winners_bracket"]
@@ -71,6 +93,13 @@ def history_view(tables, current_season):
     totals["win_pct"] = (totals["wins"] + 0.5 * totals["ties"]) / games
     totals["playoffs"] = appearances.reindex(totals.index).fillna(0).astype(int)
     totals["titles"] = titles.reindex(totals.index).fillna(0).astype(int)
+    games = bracket_games(tables["team_weeks"][tables["team_weeks"]["season"].isin(seasons)], bracket[bracket["season"].isin(seasons)])
+    games["owner_id"] = [owner[(int(s), int(r))] for s, r in zip(games["season"], games["roster_id"])]
+    for kind in ("playoff", "consolation"):
+        of_kind = games[games["kind"] == kind]
+        for result, column in (("W", "wins"), ("L", "losses"), ("T", "ties")):
+            counts = of_kind[of_kind["result"] == result].groupby("owner_id").size()
+            totals[f"{kind}_{column}"] = counts.reindex(totals.index).fillna(0).astype(int)
     totals = totals.reset_index().sort_values(["win_pct", "titles", "wins", "owner_id"], ascending=[False, False, False, True])
 
     current_teams = teams[teams["season"] == current_season].set_index(teams[teams["season"] == current_season]["owner_id"].astype(str))
@@ -84,6 +113,8 @@ def history_view(tables, current_season):
             "detail": (f"{int(t.seasons)} season{'s' if t.seasons != 1 else ''}"
                        + (f"; now {current_teams.at[t.owner_id, 'team_name']}" if group == "current" else "")),
             "win_pct": f"{round(t.win_pct * 100)}%", "playoffs": int(t.playoffs), "titles": int(t.titles),
+            "playoff_record": _record(t.playoff_wins, t.playoff_losses, t.playoff_ties),
+            "consolation_record": _record(t.consolation_wins, t.consolation_losses, t.consolation_ties),
         })
 
     last = seasons[-1]

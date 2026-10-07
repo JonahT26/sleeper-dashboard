@@ -19,13 +19,14 @@ As of **Tuesday 2026-10-06** (NFL week 4 scored; weeks 1–4 are the completed w
 
 **Week 4 run (2026-10-06):** the 12:17 PM scheduled run hadn't started by mid-afternoon (see section 7), so Claude ran Weekly refresh by hand at the owner's request: run `37498607716` passed, actor JonahT26, bot commit `6b8e0de` "Weekly refresh: tables through week 4", summary "Latest completed week: 4 (new: the last run ended at week 3)". Its one warning (roster 6 optimal 10.88 above Sleeper's max points) is the old soft check; the new one on `ppts-check` matches all 12 teams to the cent on week 4.
 
-**Two branches remain** (pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
+**Three branches remain** (pushed; no workflow runs on branches, and **never** `gh workflow run weekly.yml --ref <branch>`: that would publish the branch and commit tables to it):
 
 | Branch | Head | Adds | Tests | State |
 |---|---|---|---|---|
 | `main` | see `git log` | Phase 4 + the six merged Phase 5 branches | 552 | Live; the workflow's bot commits refreshed tables here |
 | `link-preview` | `65ecc1a` | Stacked on `chat-post`: Open Graph and Twitter card tags, `site/preview.png` drawn each run (`dashboard/preview.py`), Pillow pinned, the Barlow fonts bundled, `dashboard.page_url` | 559 | Built; **wording and image shown to the owner 2026-10-06, approval pending** |
 | `ppts-check` | `0ac5ee2` | Stacked on `link-preview`: the `ppts` soft check rebuilt with Sleeper's own lineup method | 560 | **Owner-approved** (2026-10-06); merge after `link-preview`, or move onto `main` without it if the link preview waits |
+| `moves-history-extras` | see `git log` | Off `main`: Best pickups position slicer (All, QB, RB, WR, TE, FLEX); FAAB rows open to each team's waiver claims; History's All-time records gain Playoff record and Consolation record | 555 | Built, checked at 360 and 1280px dark and 1024px light; **new wording (History subtitle, two column headers, the FAAB note's "Tap a team to see its claims.", the empty-slicer line) awaits the owner's approval** |
 
 **Owner input still pending:**
 - **League-chat post** (built 2026-10-05 on `chat-post`; GroupMe bot; message and award choice approved): the owner added `GROUPME_BOT_ID` as a GitHub Actions secret on 2026-10-05 at 18:14 UTC (`gh secret list` shows its name and date only). A first bot ID was pasted into the Claude chat by mistake; Claude didn't use or store it; the owner deleted that bot and created a new one before adding the secret (confirmed 2026-10-05). **Merged 2026-10-06 in dry-run.** Next (owner 2a): the owner approves the week 4 dry-run message (`python -m sleeper_dash.chat preview` prints it; the next run's summary shows it), then `chat.mode` goes to "on" in a commit, and Thursday Oct 8's 12:17 PM run posts week 4, once.
@@ -243,6 +244,9 @@ Dev/
 | 2026-10-06 | First real chat post: Thursday Oct 8's 12:17 PM run, after the owner approves the dry-run message and `chat.mode` goes to "on" (2a, over a manual run right away) | Owner (2a) | section 1 |
 | 2026-10-06 | Strength of schedule shows games played only; the "Remaining" panel and its "How this works" sentence removed as too confusing (`sos_remaining` still computed and checked). New subtitle and the shortened "How this works" paragraph approved; `sos-played-only` merged into `main` and published by a manual Weekly refresh run the same day | Owner | UI_GUIDE.md, explainer.py |
 | 2026-10-06 | Best pickups leaves out kickers and defenses (too noisy; the owner wants other key pickups to show). Display only: the `pickups` table, FAAB and pickup points still count them. Positions from `player_weeks` (the players cache today). In week 1 the block is often empty. "How this works" clause approved; merged and published by a manual Weekly refresh run the same day | Owner | UI_GUIDE.md, moves.py |
+| 2026-10-06 | Best pickups gets a position slicer: All (still without K and DEF), QB, RB, WR, TE, FLEX (RB+WR+TE); each shows its own top 5 | Owner (request; "All" scope chosen from options) | UI_GUIDE.md, moves.py |
+| 2026-10-06 | FAAB drill-down: tap a team for every waiver claim ($0 bids and never-started claims included) so the rows add up to Spent and Points; checked for every week of every season 2020–2026 | Owner (request; "every claim" chosen) | UI_GUIDE.md, moves.py |
+| 2026-10-06 | History adds Playoff record (every winners-bracket game, 3rd- and 5th-place games included) and Consolation record (every other paired playoff-week game) as two columns; the table scrolls sideways on phones with names pinned | Owner (definition and layout chosen from options) | UI_GUIDE.md, history.py |
 
 ## 7. Open questions and assumptions to verify
 
