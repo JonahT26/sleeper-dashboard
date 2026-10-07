@@ -67,6 +67,23 @@ def with_known_gaps(rosters, gaps):
     return adjusted
 
 
+def with_champion_override(bracket, override):
+    """A copy of one season's winners bracket with the final decided by league ruling.
+
+    override: config.yaml champion_overrides for this season ({winner_roster_id, loser_roster_id}), or None.
+    Applied only when Sleeper's final has exactly these two teams with the result the other way round;
+    otherwise the bracket is left as Sleeper has it and validate.check_champion_overrides stops the run.
+    """
+    if not override:
+        return bracket
+    out = bracket.copy()
+    final = (out["place"] == 1) & (out["winner_roster_id"] == override["loser_roster_id"]) \
+        & (out["loser_roster_id"] == override["winner_roster_id"])
+    if final.sum() == 1:
+        out.loc[final, ["winner_roster_id", "loser_roster_id"]] = [override["winner_roster_id"], override["loser_roster_id"]]
+    return out
+
+
 def league_files(seasons, gaps=None):
     """{season: (league.json, rosters.json)} from data/raw/, for checks that compare with Sleeper.
 

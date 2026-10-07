@@ -449,3 +449,15 @@ def test_history_shows_champions_records_luck_and_the_high_score():
     assert "<strong>210.6</strong> by user5, week 2 of 2025." in section
     assert html.index('class="history"') < html.index('id="how-title"')
     assert "<template" not in section  # once for the whole page, not per week
+
+
+def test_a_ruling_on_the_final_moves_the_title_and_the_final_in_playoff_records():
+    """config.yaml champion_overrides (owner, 2026-10-07): roster 3 outscored 1 in the final, but the league gave it to 1."""
+    tables = with_history(make_tables())
+    tables["winners_bracket"] = seasons.with_champion_override(tables["winners_bracket"], {"winner_roster_id": 1, "loser_roster_id": 3})
+    section = history_section(render(build_view(tables, RUN, METRICS)))
+    assert re.search(r'<span class="c-season[^"]*">2025</span> <span class="c-name">user1</span>', section)
+    rows = {name: re.findall(r'<td class="num">([^<]+)</td>', r)
+            for name, r in re.findall(r'<span class="h-name">([^<]+)</span>(.*?)</tr>', section, re.S)}
+    assert rows["user1"][3:5] == ["1", "2–0"] and rows["user3"][3:5] == ["0", "2–1"]  # titles, playoff record
+    assert rows["user4"][4] == "1–1"  # every other game as scored

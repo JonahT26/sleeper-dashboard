@@ -534,20 +534,23 @@ def save_tables(tables, processed_dir=None):
 
 
 def main():
-    from sleeper_dash.seasons import build_managers, stack, with_known_gaps
-    from sleeper_dash.validate import check_managers, validate_seasons
+    from sleeper_dash.seasons import build_managers, stack, with_champion_override, with_known_gaps
+    from sleeper_dash.validate import check_champion_overrides, check_managers, validate_seasons
 
     config = load_config()
-    by_season, start_dates = {}, {}
+    by_season, start_dates, sleeper_brackets = {}, {}, {}
     for season in config.seasons:
         season_tables, league, rosters, start_dates[season] = build_tables(season, config.start_date(season))
+        sleeper_brackets[season] = season_tables["winners_bracket"]  # league rulings on the final (config.yaml)
+        season_tables["winners_bracket"] = with_champion_override(sleeper_brackets[season], config.champion_overrides.get(season))
         by_season[season] = (season_tables, league, with_known_gaps(rosters, config.sleeper_points_gaps.get(season, [])))
     teams = pd.concat([t["teams"] for t, _, _ in by_season.values()], ignore_index=True)
     managers = build_managers(teams)
 
     # Check every season before saving, so tables that fail never overwrite the last good ones.
     try:
-        results = validate_seasons(by_season, extra=[check_managers(managers, teams)])
+        results = validate_seasons(by_season, extra=[check_managers(managers, teams),
+                                                     check_champion_overrides(sleeper_brackets, config.champion_overrides)])
     except ValidationError as error:
         raise SystemExit(str(error))
     print(format_results(results))

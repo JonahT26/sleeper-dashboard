@@ -26,6 +26,10 @@ class Config:
     # scores and its stored season totals (weekly sum minus stored), from stat corrections Sleeper never
     # carried into the totals. The points check allows exactly these and nothing else.
     sleeper_points_gaps: dict = field(default_factory=dict)
+    # {season: {"winner_roster_id": int, "loser_roster_id": int}}: league rulings on a season's final that
+    # differ from Sleeper's bracket (seasons.with_champion_override); the run stops if Sleeper no longer shows
+    # the result being overridden.
+    champion_overrides: dict = field(default_factory=dict)
     # The weekly league-chat post (chat.py): mode (off, dry-run, on), award preferences, the page's address.
     # The GroupMe bot ID is a GitHub Actions secret, never in config (CLAUDE.md rule 7).
     chat: dict = field(default_factory=lambda: {"mode": "off"})
@@ -103,7 +107,24 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
 
     return Config(league_id=league_id, season=season, season_start_dates=start_dates, metrics=metrics,
                   dashboard={**dashboard, "stale_after_days": stale}, history_from=history_from,
-                  sleeper_points_gaps=_points_gaps(raw.get("sleeper_points_gaps") or {}, path), chat=chat)
+                  sleeper_points_gaps=_points_gaps(raw.get("sleeper_points_gaps") or {}, path),
+                  champion_overrides=_champion_overrides(raw.get("champion_overrides") or {}, path), chat=chat)
+
+
+def _champion_overrides(value, path):
+    """{season: {"winner_roster_id": int, "loser_roster_id": int}}: the final's winner by league ruling."""
+    example = "champion_overrides:\n  2022: {winner_roster_id: 9, loser_roster_id: 4}"
+    if not isinstance(value, dict):
+        raise ValueError(f"champion_overrides in {path} must list one final per season, e.g.\n{example}")
+    overrides = {}
+    for season, entry in value.items():
+        keys = {"winner_roster_id", "loser_roster_id"}
+        if (not _is_whole_number(season) or not isinstance(entry, dict) or set(entry) != keys
+                or not all(_is_whole_number(entry[k]) for k in keys) or entry["winner_roster_id"] == entry["loser_roster_id"]):
+            raise ValueError(f"champion_overrides in {path}: {season!r} needs a season year with two different roster IDs, "
+                             f"winner_roster_id and loser_roster_id, e.g.\n{example}")
+        overrides[season] = {k: entry[k] for k in ("winner_roster_id", "loser_roster_id")}
+    return overrides
 
 
 def _points_gaps(value, path):

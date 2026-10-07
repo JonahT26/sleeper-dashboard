@@ -42,6 +42,13 @@ sleeper_points_gaps:
     - {roster_id: 8, points_for: -1.00, points_against: 1.00}
     - {roster_id: 10, points_against: -1.00}
 
+# League rulings on a season's final that differ from Sleeper's winners bracket (owner, 2026-10-07). The final's
+# winner and loser are swapped in winners_bracket, so History's champions, titles and playoff records follow the
+# ruling; Sleeper's scores stay as they are. "Title overrides match Sleeper's bracket" stops the run if Sleeper's
+# final no longer shows the result being overridden (e.g. Sleeper fixed it), so the list stays true.
+champion_overrides:
+  2022: {winner_roster_id: 9, loser_roster_id: 4}  # ShamParker (Sparker79 then) over jsmetz97: league ruling
+
 # The page's freshness warning (docs/UI_GUIDE.md "Status bar"). When the last update is more than
 # this many days old on the viewer's clock, the page says which week the rankings are from and
 # when the next update is due (the times come from .github/workflows/weekly.yml).
