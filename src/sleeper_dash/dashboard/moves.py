@@ -9,6 +9,7 @@ come from start_credits up to that week, and moves made later aren't shown.
 import pandas as pd
 
 TOP_PICKUPS = 5      # owner, 2026-10-05 (2a)
+PICKUPS_LEFT_OUT = ("K", "DEF")  # too noisy for Best pickups; still counted in FAAB and pickup points (owner, 2026-10-06)
 TRADES_SHOWN = 3     # the newest; earlier ones fold away (owner, 2026-10-05, 4a)
 HOW = {"waiver": "waivers", "free_agent": "free agent"}
 MINUS = "−"
@@ -39,7 +40,8 @@ def _got(players, faab):
 def moves_view(tables, names, week, last_regular, params):
     """The section for one week, or None when there's nothing to show yet (no started pickup, no FAAB spent, no trade).
 
-    tables: one season's start_credits, pickups, trades, metrics_season. names: {roster_id: team name}.
+    tables: one season's start_credits, pickups, trades, metrics_season, and player_weeks (positions, so kickers and
+    defenses can be left out of Best pickups; without it nobody is left out). names: {roster_id: team name}.
     last_regular: the last regular-season week. params: config.yaml metrics (transactions.min_faab_spend).
     """
     if any(name not in tables for name in ("start_credits", "pickups", "trades")):
@@ -54,6 +56,9 @@ def moves_view(tables, names, week, last_regular, params):
     pickups = tables["pickups"]
     pickups = pickups[pickups["week"] <= cutoff].drop(columns=["starts", "start_points"]).merge(
         earned, on=["transaction_id", "player_id"], how="inner")
+    if "player_weeks" in tables:
+        position = tables["player_weeks"].dropna(subset=["position"]).drop_duplicates("player_id").set_index("player_id")["position"]
+        pickups = pickups[~pickups["player_id"].map(position).isin(PICKUPS_LEFT_OUT)]
     pickups = pickups[pickups["points"] > 0].sort_values(["points", "week", "player_name"], ascending=[False, True, True])
     best = [{"player": p.player_name, "team": names[p.roster_id], "how": _pickup_how(p), "starts": _starts(int(p.starts)),
              "points": _one_dp(p.points)} for p in pickups.head(TOP_PICKUPS).itertuples()]

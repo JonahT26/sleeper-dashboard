@@ -147,7 +147,8 @@ def sections(params, league):
             "free-agent pickup, or a trade. If a team drops a player and picks him up again, or trades for a player it "
             "once had, the latest move gets the credit. Playoff weeks don't count.",
             "Best pickups are the waiver claims and free-agent pickups whose players have scored the most in that team's "
-            "starting lineup. FAAB \"Per $\" is the points a team's waiver claims have scored, $0 claims included, divided "
+            "starting lineup; kickers and defenses aren't listed there, but they count everywhere else. FAAB \"Per $\" is "
+            "the points a team's waiver claims have scored, $0 claims included, divided "
             f"by the dollars it has bid; it shows once a team has spent ${number(moves['min_faab_spend'])}. FAAB traded "
             "between teams isn't spending.",
             "A trade compares what each side's new players have scored in that team's starting lineup since the trade. "

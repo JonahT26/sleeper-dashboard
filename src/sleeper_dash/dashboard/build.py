@@ -26,7 +26,7 @@ from sleeper_dash.dashboard import bracket, charts, explainer, history, moves, t
 
 SITE_DIR = PROJECT_ROOT / "site"
 TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards", "playoff_odds",
-          "managers", "winners_bracket", "start_credits", "pickups", "trades", "metrics_team_weeks"]
+          "managers", "winners_bracket", "start_credits", "pickups", "trades", "metrics_team_weeks", "player_weeks"]
 EASTERN = ZoneInfo("America/New_York")
 # The weekly workflow's schedule is the one source for "next update due" (UI_GUIDE.md "Status bar").
 WORKFLOW_PATH = PROJECT_ROOT / ".github" / "workflows" / "weekly.yml"
@@ -174,7 +174,7 @@ def build_view(tables, run, params, fresh=None):
     """Everything the template needs, as plain values and formatted strings. Pure: no file access.
 
     tables: teams, team_weeks, power_rankings, metrics_season, lineups_optimal, awards, playoff_odds, managers,
-    winners_bracket, start_credits, pickups, trades. run: the pipeline's run record.
+    winners_bracket, start_credits, pickups, trades, player_weeks (positions for Best pickups). run: the pipeline's run record.
     params: config.yaml metrics (power weights and windows for the ladder; every weight and threshold for "How this works").
     fresh: freshness() for the stale-data line; build_site always passes it. Without it the page has no stale-data line.
     The saved tables hold every season (Phase 5); the page shows the run's season only, except the History
