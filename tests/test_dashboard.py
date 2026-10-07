@@ -91,7 +91,8 @@ def make_tables(weeks=3, n=12, award_weeks=None, team_names=None):
                                                      "t2_from", "winner_roster_id", "loser_roster_id", "place"]),
             # No roster moves in the synthetic season (tests/test_moves.py covers the section).
             "start_credits": pd.DataFrame(columns=START_CREDITS_COLUMNS), "pickups": pd.DataFrame(columns=PICKUPS_COLUMNS),
-            "trades": pd.DataFrame(columns=TRADES_COLUMNS)}
+            "trades": pd.DataFrame(columns=TRADES_COLUMNS),
+            "player_weeks": pd.DataFrame(columns=["season", "week", "roster_id", "player_id", "position"])}
 
 
 def with_history(tables, n=12):
