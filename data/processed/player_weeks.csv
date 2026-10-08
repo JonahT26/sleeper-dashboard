@@ -52,7 +52,7 @@
 2020,1,4,1,RB,4029,True,False,21.3,RB,Dalvin Cook,
 2020,1,4,2,RB,6806,True,False,14.2,RB,J.K. Dobbins,DEN
 2020,1,4,3,WR,4037,True,False,10.9,WR,Chris Godwin,TB
-2020,1,4,4,WR,2078,True,False,3.7,WR,Odell Beckham,
+2020,1,4,4,WR,2078,True,False,3.7,WR,Odell Beckham,MIN
 2020,1,4,5,TE,515,True,False,2.1,TE,Rob Gronkowski,
 2020,1,4,6,FLEX,6290,True,False,10.4,WR,Scotty Miller,CHI
 2020,1,4,7,SUPER_FLEX,331,True,False,16.82,QB,Philip Rivers,
@@ -249,7 +249,7 @@
 2020,2,4,1,RB,4029,True,False,16.1,RB,Dalvin Cook,
 2020,2,4,2,RB,6806,True,False,6.6,RB,J.K. Dobbins,DEN
 2020,2,4,3,WR,6786,True,False,14.5,WR,CeeDee Lamb,DAL
-2020,2,4,4,WR,2078,True,False,15.4,WR,Odell Beckham,
+2020,2,4,4,WR,2078,True,False,15.4,WR,Odell Beckham,MIN
 2020,2,4,5,TE,515,True,False,0.0,TE,Rob Gronkowski,
 2020,2,4,6,FLEX,6290,True,False,2.2,WR,Scotty Miller,CHI
 2020,2,4,7,SUPER_FLEX,4892,True,False,16.26,QB,Baker Mayfield,TB
@@ -449,7 +449,7 @@
 2020,3,4,0,QB,3294,True,False,29.48,QB,Dak Prescott,DAL
 2020,3,4,1,RB,4029,True,False,24.9,RB,Dalvin Cook,
 2020,3,4,2,RB,7045,True,False,4.2,RB,Joshua Kelley,
-2020,3,4,3,WR,2078,True,False,7.9,WR,Odell Beckham,
+2020,3,4,3,WR,2078,True,False,7.9,WR,Odell Beckham,MIN
 2020,3,4,4,WR,4037,True,False,14.9,WR,Chris Godwin,TB
 2020,3,4,5,TE,4144,True,False,8.6,TE,Jonnu Smith,GB
 2020,3,4,6,FLEX,6786,True,False,9.1,WR,CeeDee Lamb,DAL
@@ -654,7 +654,7 @@
 2020,4,4,0,QB,3294,True,False,38.28,QB,Dak Prescott,DAL
 2020,4,4,1,RB,4029,True,False,27.6,RB,Dalvin Cook,
 2020,4,4,2,RB,7045,True,False,2.8,RB,Joshua Kelley,
-2020,4,4,3,WR,2078,True,False,35.9,WR,Odell Beckham,
+2020,4,4,3,WR,2078,True,False,35.9,WR,Odell Beckham,MIN
 2020,4,4,4,WR,6786,True,False,22.7,WR,CeeDee Lamb,DAL
 2020,4,4,5,TE,515,True,False,3.4,TE,Rob Gronkowski,
 2020,4,4,6,FLEX,5284,True,False,2.4,RB,Jeff Wilson,
@@ -860,7 +860,7 @@
 2020,5,4,0,QB,3294,True,False,13.94,QB,Dak Prescott,DAL
 2020,5,4,1,RB,4029,True,False,17.4,RB,Dalvin Cook,
 2020,5,4,2,RB,7045,True,False,4.3,RB,Joshua Kelley,
-2020,5,4,3,WR,2078,True,False,8.92,WR,Odell Beckham,
+2020,5,4,3,WR,2078,True,False,8.92,WR,Odell Beckham,MIN
 2020,5,4,4,WR,6786,True,False,16.4,WR,CeeDee Lamb,DAL
 2020,5,4,5,TE,4144,True,False,18.5,TE,Jonnu Smith,GB
 2020,5,4,6,FLEX,6290,True,False,0.0,WR,Scotty Miller,CHI
@@ -1136,7 +1136,7 @@
 2020,6,8,8,K,4227,True,False,7.0,K,Harrison Butker,KC
 2020,6,8,9,DEF,CHI,True,False,12.0,DEF,Chicago Bears,CHI
 2020,6,8,10,BN,2028,False,False,0.0,QB,Derek Carr,
-2020,6,8,11,BN,2078,False,False,3.5,WR,Odell Beckham,
+2020,6,8,11,BN,2078,False,False,3.5,WR,Odell Beckham,MIN
 2020,6,8,12,BN,2118,False,False,1.9,TE,Eric Ebron,PIT
 2020,6,8,13,BN,5170,False,False,10.1,RB,Phillip Lindsay,
 2020,6,8,14,BN,5872,False,False,15.0,WR,Deebo Samuel,SF
@@ -1333,7 +1333,7 @@
 2020,7,8,3,WR,947,True,False,13.7,WR,Julio Jones,
 2020,7,8,4,WR,3321,True,False,14.5,WR,Tyreek Hill,
 2020,7,8,5,TE,4217,True,False,8.0,TE,George Kittle,SF
-2020,7,8,6,FLEX,2078,True,False,0.0,WR,Odell Beckham,
+2020,7,8,6,FLEX,2078,True,False,0.0,WR,Odell Beckham,MIN
 2020,7,8,7,SUPER_FLEX,2152,True,False,19.16,QB,Teddy Bridgewater,
 2020,7,8,8,K,4227,True,False,13.0,K,Harrison Butker,KC
 2020,7,8,9,DEF,CHI,True,False,13.0,DEF,Chicago Bears,CHI
@@ -3294,7 +3294,7 @@
 2021,1,2,10,BN,1110,False,False,0.0,WR,T.Y. Hilton,
 2021,1,2,11,BN,1339,False,False,4.4,TE,Zach Ertz,PHI
 2021,1,2,12,BN,1817,False,False,11.6,WR,Sammy Watkins,
-2021,1,2,13,BN,2078,False,False,0.0,WR,Odell Beckham,
+2021,1,2,13,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2021,1,2,14,BN,4036,False,False,24.2,WR,Corey Davis,
 2021,1,2,15,BN,5347,False,False,11.2,RB,Nyheim Miller-Hines,
 2021,1,2,16,BN,7002,False,False,15.6,TE,Juwan Johnson,NO
@@ -3488,7 +3488,7 @@
 2021,2,2,8,K,6083,True,False,9.0,K,Matt Gay,LV
 2021,2,2,9,DEF,SF,True,False,9.0,DEF,San Francisco 49ers,SF
 2021,2,2,10,BN,1833,False,False,1.4,RB,Damien Williams,
-2021,2,2,11,BN,2078,False,False,0.0,WR,Odell Beckham,
+2021,2,2,11,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2021,2,2,12,BN,2168,False,False,2.9,RB,Devonta Freeman,
 2021,2,2,13,BN,4036,False,False,1.8,WR,Corey Davis,
 2021,2,2,14,BN,5347,False,False,2.7,RB,Nyheim Miller-Hines,
@@ -3686,7 +3686,7 @@
 2021,3,2,7,SUPER_FLEX,167,True,False,28.68,QB,Tom Brady,
 2021,3,2,8,K,6083,True,False,11.0,K,Matt Gay,LV
 2021,3,2,9,DEF,BAL,True,False,3.0,DEF,Baltimore Ravens,BAL
-2021,3,2,10,BN,2078,False,False,11.2,WR,Odell Beckham,
+2021,3,2,10,BN,2078,False,False,11.2,WR,Odell Beckham,MIN
 2021,3,2,11,BN,4036,False,False,6.6,WR,Corey Davis,
 2021,3,2,12,BN,5347,False,False,16.4,RB,Nyheim Miller-Hines,
 2021,3,2,13,BN,7002,False,False,0.0,TE,Juwan Johnson,NO
@@ -3881,7 +3881,7 @@
 2021,4,2,3,WR,4039,True,False,8.9,WR,Cooper Kupp,SEA
 2021,4,2,4,WR,5872,True,False,31.7,WR,Deebo Samuel,SF
 2021,4,2,5,TE,3271,True,False,5.6,TE,Tyler Higbee,LAR
-2021,4,2,6,FLEX,2078,True,False,4.1,WR,Odell Beckham,
+2021,4,2,6,FLEX,2078,True,False,4.1,WR,Odell Beckham,MIN
 2021,4,2,7,SUPER_FLEX,167,True,False,11.06,QB,Tom Brady,
 2021,4,2,8,K,6083,True,False,9.0,K,Matt Gay,LV
 2021,4,2,9,DEF,BAL,True,False,11.0,DEF,Baltimore Ravens,BAL
@@ -4086,7 +4086,7 @@
 2021,5,2,8,K,6083,True,False,8.0,K,Matt Gay,LV
 2021,5,2,9,DEF,NE,True,False,6.0,DEF,New England Patriots,NE
 2021,5,2,10,BN,1386,False,False,10.5,RB,Giovani Bernard,
-2021,5,2,11,BN,2078,False,False,3.0,WR,Odell Beckham,
+2021,5,2,11,BN,2078,False,False,3.0,WR,Odell Beckham,MIN
 2021,5,2,12,BN,5347,False,False,1.8,RB,Nyheim Miller-Hines,
 2021,5,2,13,BN,7567,False,False,2.9,RB,Kenny Gainwell,TB
 2021,5,2,14,BN,7574,False,False,0.0,RB,Larry Rountree,
@@ -4289,7 +4289,7 @@
 2021,6,2,8,K,6083,True,False,8.0,K,Matt Gay,LV
 2021,6,2,9,DEF,NE,True,False,5.0,DEF,New England Patriots,NE
 2021,6,2,10,BN,1386,False,False,1.4,RB,Giovani Bernard,
-2021,6,2,11,BN,2078,False,False,10.4,WR,Odell Beckham,
+2021,6,2,11,BN,2078,False,False,10.4,WR,Odell Beckham,MIN
 2021,6,2,12,BN,4036,False,False,0.0,WR,Corey Davis,
 2021,6,2,13,BN,5347,False,False,2.7,RB,Nyheim Miller-Hines,
 2021,6,2,14,BN,6130,False,False,6.8,RB,Devin Singletary,NYG
@@ -4494,7 +4494,7 @@
 2021,7,2,9,DEF,NE,True,False,13.0,DEF,New England Patriots,NE
 2021,7,2,10,BN,1110,False,False,0.0,WR,T.Y. Hilton,
 2021,7,2,11,BN,1144,False,False,0.0,WR,Cole Beasley,
-2021,7,2,12,BN,2078,False,False,3.3,WR,Odell Beckham,
+2021,7,2,12,BN,2078,False,False,3.3,WR,Odell Beckham,MIN
 2021,7,2,13,BN,3225,False,False,5.9,WR,Tyler Boyd,
 2021,7,2,14,BN,4663,False,False,0.0,RB,Austin Ekeler,WAS
 2021,7,2,15,BN,4985,False,False,0.9,RB,Rashaad Penny,
@@ -4531,7 +4531,7 @@
 2021,7,4,11,BN,4068,False,False,0.0,WR,Mike Williams,
 2021,7,4,12,BN,5906,False,False,0.0,TE,Dawson Knox,BUF
 2021,7,4,13,BN,6783,False,False,0.0,WR,Jerry Jeudy,CLE
-2021,7,4,14,BN,7537,False,False,0.0,RB,Jaret Patterson,
+2021,7,4,14,BN,7537,False,False,0.0,RB,Jaret Patterson,CLE
 2021,7,4,15,BN,7571,False,False,9.5,WR,Rashod Bateman,BAL
 2021,7,4,16,BN,7588,False,False,14.2,RB,Javonte Williams,DAL
 2021,7,4,17,BN,DAL,False,False,0.0,DEF,Dallas Cowboys,DAL
@@ -4704,7 +4704,7 @@
 2021,8,2,8,K,6083,True,False,8.0,K,Matt Gay,LV
 2021,8,2,9,DEF,NE,True,False,13.0,DEF,New England Patriots,NE
 2021,8,2,10,BN,1110,False,False,2.6,WR,T.Y. Hilton,
-2021,8,2,11,BN,2078,False,False,1.1,WR,Odell Beckham,
+2021,8,2,11,BN,2078,False,False,1.1,WR,Odell Beckham,MIN
 2021,8,2,12,BN,3225,False,False,17.24,WR,Tyler Boyd,
 2021,8,2,13,BN,4036,False,False,0.0,WR,Corey Davis,
 2021,8,2,14,BN,4985,False,False,0.7,RB,Rashaad Penny,
@@ -4942,7 +4942,7 @@
 2021,9,4,7,SUPER_FLEX,2152,True,False,21.86,QB,Teddy Bridgewater,
 2021,9,4,8,K,5230,True,False,9.0,K,Michael Badgley,
 2021,9,4,9,DEF,DAL,True,False,3.0,DEF,Dallas Cowboys,DAL
-2021,9,4,10,BN,2078,False,False,0.0,WR,Odell Beckham,
+2021,9,4,10,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2021,9,4,11,BN,2168,False,False,15.3,RB,Devonta Freeman,
 2021,9,4,12,BN,3297,False,False,1.7,WR,Tajae Sharpe,
 2021,9,4,13,BN,4111,False,False,2.9,RB,D'Onta Foreman,
@@ -4997,7 +4997,7 @@
 2021,9,7,11,BN,4037,False,False,0.0,WR,Chris Godwin,TB
 2021,9,7,12,BN,5122,False,False,4.0,RB,Boston Scott,
 2021,9,7,13,BN,6886,False,False,5.8,WR,Chase Claypool,
-2021,9,7,14,BN,7537,False,False,0.0,RB,Jaret Patterson,
+2021,9,7,14,BN,7537,False,False,0.0,RB,Jaret Patterson,CLE
 2021,9,7,15,BN,7594,False,False,4.1,RB,Chuba Hubbard,CAR
 2021,9,7,16,BN,96,False,False,0.0,QB,Aaron Rodgers,PIT
 2021,9,8,0,QB,421,True,False,15.06,QB,Matthew Stafford,LAR
@@ -5147,7 +5147,7 @@
 2021,10,4,8,K,5230,True,False,11.0,K,Michael Badgley,
 2021,10,4,9,DEF,DAL,True,False,24.0,DEF,Dallas Cowboys,DAL
 2021,10,4,10,BN,147,False,False,2.3,WR,DeSean Jackson,
-2021,10,4,11,BN,2078,False,False,2.8,WR,Odell Beckham,
+2021,10,4,11,BN,2078,False,False,2.8,WR,Odell Beckham,MIN
 2021,10,4,12,BN,4018,False,False,0.0,RB,Joe Mixon,
 2021,10,4,13,BN,4131,False,False,0.0,WR,Kenny Golladay,
 2021,10,4,14,BN,6770,False,False,0.0,QB,Joe Burrow,CIN
@@ -5200,7 +5200,7 @@
 2021,10,7,10,BN,2251,False,False,0.0,TE,Logan Thomas,
 2021,10,7,11,BN,5122,False,False,11.5,RB,Boston Scott,
 2021,10,7,12,BN,6886,False,False,0.0,WR,Chase Claypool,
-2021,10,7,13,BN,7537,False,False,0.7,RB,Jaret Patterson,
+2021,10,7,13,BN,7537,False,False,0.7,RB,Jaret Patterson,CLE
 2021,10,7,14,BN,7594,False,False,8.7,RB,Chuba Hubbard,CAR
 2021,10,7,15,BN,7607,False,False,16.2,RB,Michael Carter,TEN
 2021,10,8,0,QB,421,True,False,11.82,QB,Matthew Stafford,LAR
@@ -5349,7 +5349,7 @@
 2021,11,4,7,SUPER_FLEX,7527,True,False,11.38,QB,Mac Jones,SF
 2021,11,4,8,K,5230,True,False,11.0,K,Michael Badgley,
 2021,11,4,9,DEF,CAR,True,False,7.0,DEF,Carolina Panthers,CAR
-2021,11,4,10,BN,2078,False,False,0.0,WR,Odell Beckham,
+2021,11,4,10,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2021,11,4,11,BN,2168,False,False,17.0,RB,Devonta Freeman,
 2021,11,4,12,BN,2309,False,False,0.0,WR,Amari Cooper,
 2021,11,4,13,BN,6039,False,False,1.8,RB,Ty Johnson,BUF
@@ -5546,7 +5546,7 @@
 2021,12,4,1,RB,3164,True,False,13.9,RB,Ezekiel Elliott,
 2021,12,4,2,RB,4018,True,False,30.3,RB,Joe Mixon,
 2021,12,4,3,WR,4068,True,False,5.9,WR,Mike Williams,
-2021,12,4,4,WR,2078,True,False,16.6,WR,Odell Beckham,
+2021,12,4,4,WR,2078,True,False,16.6,WR,Odell Beckham,MIN
 2021,12,4,5,TE,6826,True,False,10.5,TE,Cole Kmet,CHI
 2021,12,4,6,FLEX,2168,True,False,6.5,RB,Devonta Freeman,
 2021,12,4,7,SUPER_FLEX,829,True,False,16.78,QB,Andy Dalton,PHI
@@ -5745,7 +5745,7 @@
 2021,13,4,1,RB,3164,True,False,5.7,RB,Ezekiel Elliott,
 2021,13,4,2,RB,4018,True,False,9.4,RB,Joe Mixon,
 2021,13,4,3,WR,4068,True,False,13.5,WR,Mike Williams,
-2021,13,4,4,WR,2078,True,False,9.8,WR,Odell Beckham,
+2021,13,4,4,WR,2078,True,False,9.8,WR,Odell Beckham,MIN
 2021,13,4,5,TE,7600,True,False,6.1,TE,Pat Freiermuth,PIT
 2021,13,4,6,FLEX,2168,True,False,18.2,RB,Devonta Freeman,
 2021,13,4,7,SUPER_FLEX,7527,True,False,0.46,QB,Mac Jones,SF
@@ -5804,7 +5804,7 @@
 2021,13,7,10,BN,1339,False,False,1.5,TE,Zach Ertz,PHI
 2021,13,7,11,BN,5122,False,False,0.0,RB,Boston Scott,
 2021,13,7,12,BN,5536,False,False,0.0,RB,Dontrell Hilliard,
-2021,13,7,13,BN,7537,False,False,0.2,RB,Jaret Patterson,
+2021,13,7,13,BN,7537,False,False,0.2,RB,Jaret Patterson,CLE
 2021,13,7,14,BN,7594,False,False,0.0,RB,Chuba Hubbard,CAR
 2021,13,7,15,BN,7607,False,False,0.0,RB,Michael Carter,TEN
 2021,13,7,16,BN,96,False,False,0.0,QB,Aaron Rodgers,PIT
@@ -5945,7 +5945,7 @@
 2021,14,4,1,RB,3164,True,False,8.5,RB,Ezekiel Elliott,
 2021,14,4,2,RB,4018,True,False,7.8,RB,Joe Mixon,
 2021,14,4,3,WR,4068,True,False,9.1,WR,Mike Williams,
-2021,14,4,4,WR,2078,True,False,16.7,WR,Odell Beckham,
+2021,14,4,4,WR,2078,True,False,16.7,WR,Odell Beckham,MIN
 2021,14,4,5,TE,7600,True,False,10.2,TE,Pat Freiermuth,PIT
 2021,14,4,6,FLEX,2309,True,False,13.6,WR,Amari Cooper,
 2021,14,4,7,SUPER_FLEX,7591,True,False,20.36,QB,Justin Fields,KC
@@ -6007,7 +6007,7 @@
 2021,14,7,12,BN,5119,False,False,0.0,K,Jason Sanders,NYJ
 2021,14,7,13,BN,5122,False,False,0.0,RB,Boston Scott,
 2021,14,7,14,BN,5536,False,False,1.3,RB,Dontrell Hilliard,
-2021,14,7,15,BN,7537,False,False,4.3,RB,Jaret Patterson,
+2021,14,7,15,BN,7537,False,False,4.3,RB,Jaret Patterson,CLE
 2021,14,7,16,BN,7607,False,False,0.0,RB,Michael Carter,TEN
 2021,14,7,17,BN,LAR,False,False,8.0,DEF,Los Angeles Rams,LAR
 2021,14,8,0,QB,421,True,False,23.48,QB,Matthew Stafford,LAR
@@ -6153,7 +6153,7 @@
 2021,15,4,7,SUPER_FLEX,7591,True,False,16.9,QB,Justin Fields,KC
 2021,15,4,8,K,1348,True,False,4.0,K,Dustin Hopkins,
 2021,15,4,9,DEF,DAL,True,False,17.0,DEF,Dallas Cowboys,DAL
-2021,15,4,10,BN,2078,False,False,1.2,WR,Odell Beckham,
+2021,15,4,10,BN,2078,False,False,1.2,WR,Odell Beckham,MIN
 2021,15,4,11,BN,2168,False,False,2.9,RB,Devonta Freeman,
 2021,15,4,12,BN,3200,False,False,2.5,WR,Sterling Shepard,NYJ
 2021,15,4,13,BN,5131,False,False,10.4,RB,Justin Jackson,
@@ -6347,7 +6347,7 @@
 2021,16,4,0,QB,6770,True,False,38.1,QB,Joe Burrow,CIN
 2021,16,4,1,RB,3164,True,False,16.7,RB,Ezekiel Elliott,
 2021,16,4,2,RB,4018,True,False,28.5,RB,Joe Mixon,
-2021,16,4,3,WR,2078,True,False,11.7,WR,Odell Beckham,
+2021,16,4,3,WR,2078,True,False,11.7,WR,Odell Beckham,MIN
 2021,16,4,4,WR,2309,True,False,18.0,WR,Amari Cooper,
 2021,16,4,5,TE,6826,True,False,6.9,TE,Cole Kmet,CHI
 2021,16,4,6,FLEX,5131,True,False,30.2,RB,Justin Jackson,
@@ -6556,7 +6556,7 @@
 2021,17,4,3,WR,4068,True,False,13.8,WR,Mike Williams,
 2021,17,4,4,WR,2309,True,False,9.3,WR,Amari Cooper,
 2021,17,4,5,TE,6826,True,False,4.0,TE,Cole Kmet,CHI
-2021,17,4,6,FLEX,2078,True,False,12.4,WR,Odell Beckham,
+2021,17,4,6,FLEX,2078,True,False,12.4,WR,Odell Beckham,MIN
 2021,17,4,7,SUPER_FLEX,7591,True,False,0.0,QB,Justin Fields,KC
 2021,17,4,8,K,5230,True,False,10.0,K,Michael Badgley,
 2021,17,4,9,DEF,DAL,True,False,1.0,DEF,Dallas Cowboys,DAL
@@ -6648,7 +6648,7 @@
 2021,17,9,12,BN,5110,False,False,6.5,WR,Russell Gage,
 2021,17,9,13,BN,5927,False,False,9.6,WR,Terry McLaurin,WAS
 2021,17,9,14,BN,5985,False,False,1.4,TE,Foster Moreau,HOU
-2021,17,9,15,BN,7537,False,False,18.3,RB,Jaret Patterson,
+2021,17,9,15,BN,7537,False,False,18.3,RB,Jaret Patterson,CLE
 2021,17,10,0,QB,167,True,False,27.4,QB,Tom Brady,
 2021,17,10,1,RB,6813,True,False,17.9,RB,Jonathan Taylor,IND
 2021,17,10,2,RB,5347,True,False,3.8,RB,Nyheim Miller-Hines,
@@ -7843,7 +7843,7 @@
 2022,7,2,6,FLEX,8151,True,False,28.7,RB,Kenneth Walker,KC
 2022,7,2,7,SUPER_FLEX,4335,True,False,15.08,QB,P.J. Walker,
 2022,7,2,8,DEF,NYJ,True,False,7.0,DEF,New York Jets,NYJ
-2022,7,2,9,BN,2078,False,False,0.0,WR,Odell Beckham,
+2022,7,2,9,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2022,7,2,10,BN,2505,False,False,0.0,TE,Darren Waller,CAR
 2022,7,2,11,BN,3161,False,False,0.0,QB,Carson Wentz,MIN
 2022,7,2,12,BN,4017,False,False,0.0,QB,Deshaun Watson,CLE
@@ -8253,7 +8253,7 @@
 2022,9,4,6,FLEX,5844,True,False,11.5,TE,T.J. Hockenson,MIN
 2022,9,4,7,SUPER_FLEX,1373,True,False,20.8,QB,Geno Smith,NYJ
 2022,9,4,8,DEF,PHI,True,False,8.0,DEF,Philadelphia Eagles,PHI
-2022,9,4,9,BN,2078,False,False,0.0,WR,Odell Beckham,
+2022,9,4,9,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2022,9,4,10,BN,3294,False,False,0.0,QB,Dak Prescott,DAL
 2022,9,4,11,BN,5038,False,False,0.0,WR,Michael Gallup,
 2022,9,4,12,BN,5967,False,False,0.0,RB,Tony Pollard,TEN
@@ -8448,7 +8448,7 @@
 2022,10,4,7,SUPER_FLEX,3294,True,False,19.2,QB,Dak Prescott,DAL
 2022,10,4,8,DEF,PHI,True,False,8.0,DEF,Philadelphia Eagles,PHI
 2022,10,4,9,BN,1737,False,False,0.0,QB,Case Keenum,CHI
-2022,10,4,10,BN,2078,False,False,0.0,WR,Odell Beckham,
+2022,10,4,10,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2022,10,4,11,BN,5038,False,False,5.5,WR,Michael Gallup,
 2022,10,4,12,BN,5248,False,False,0.0,RB,Gus Edwards,
 2022,10,4,13,BN,6803,False,False,9.4,WR,Brandon Aiyuk,SF
@@ -8635,7 +8635,7 @@
 2022,11,4,6,FLEX,5967,True,False,33.9,RB,Tony Pollard,TEN
 2022,11,4,7,SUPER_FLEX,3294,True,False,20.64,QB,Dak Prescott,DAL
 2022,11,4,8,DEF,PHI,True,False,8.0,DEF,Philadelphia Eagles,PHI
-2022,11,4,9,BN,2078,False,False,0.0,WR,Odell Beckham,
+2022,11,4,9,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2022,11,4,10,BN,5038,False,False,5.6,WR,Michael Gallup,
 2022,11,4,11,BN,5248,False,False,0.0,RB,Gus Edwards,
 2022,11,4,12,BN,5846,False,False,0.0,WR,DK Metcalf,PIT
@@ -8825,7 +8825,7 @@
 2022,12,4,6,FLEX,8129,True,False,3.1,RB,Dameon Pierce,PHI
 2022,12,4,7,SUPER_FLEX,3294,True,False,14.84,QB,Dak Prescott,DAL
 2022,12,4,8,DEF,PHI,True,False,6.0,DEF,Philadelphia Eagles,PHI
-2022,12,4,9,BN,2078,False,False,0.0,WR,Odell Beckham,
+2022,12,4,9,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2022,12,4,10,BN,4152,False,False,1.7,RB,Marlon Mack,
 2022,12,4,11,BN,5248,False,False,9.2,RB,Gus Edwards,
 2022,12,4,12,BN,6803,False,False,9.0,WR,Brandon Aiyuk,SF
@@ -9663,7 +9663,7 @@
 2022,16,10,6,FLEX,6130,True,False,19.5,RB,Devin Singletary,NYG
 2022,16,10,7,SUPER_FLEX,5927,True,False,15.7,WR,Terry McLaurin,WAS
 2022,16,10,8,DEF,BUF,True,False,11.0,DEF,Buffalo Bills,BUF
-2022,16,10,9,BN,2078,False,False,0.0,WR,Odell Beckham,
+2022,16,10,9,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2022,16,10,10,BN,4039,False,False,0.0,WR,Cooper Kupp,SEA
 2022,16,10,11,BN,4147,False,False,3.7,RB,Samaje Perine,CIN
 2022,16,10,12,BN,5906,False,False,11.3,TE,Dawson Knox,BUF
@@ -9844,7 +9844,7 @@
 2022,17,10,6,FLEX,6130,True,False,0.3,RB,Devin Singletary,NYG
 2022,17,10,7,SUPER_FLEX,5927,True,False,4.7,WR,Terry McLaurin,WAS
 2022,17,10,8,DEF,BUF,True,False,4.0,DEF,Buffalo Bills,BUF
-2022,17,10,9,BN,2078,False,False,0.0,WR,Odell Beckham,
+2022,17,10,9,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2022,17,10,10,BN,4039,False,False,0.0,WR,Cooper Kupp,SEA
 2022,17,10,11,BN,4147,False,False,0.0,RB,Samaje Perine,CIN
 2022,17,10,12,BN,5906,False,False,0.0,TE,Dawson Knox,BUF
@@ -10015,7 +10015,7 @@
 2023,1,9,6,REC_FLEX,4217,True,False,4.9,TE,George Kittle,SF
 2023,1,9,7,SUPER_FLEX,8183,True,False,16.8,QB,Brock Purdy,SF
 2023,1,9,8,DEF,SEA,True,False,1.0,DEF,Seattle Seahawks,SEA
-2023,1,9,9,BN,2078,False,False,4.7,WR,Odell Beckham,
+2023,1,9,9,BN,2078,False,False,4.7,WR,Odell Beckham,MIN
 2023,1,9,10,BN,4035,False,False,0.0,RB,Alvin Kamara,NO
 2023,1,9,11,BN,6813,False,False,0.0,RB,Jonathan Taylor,IND
 2023,1,9,12,BN,7569,False,False,11.0,WR,Nico Collins,HOU
@@ -10126,7 +10126,7 @@
 2023,2,4,7,SUPER_FLEX,9229,True,False,17.74,QB,Anthony Richardson,IND
 2023,2,4,8,DEF,NYJ,True,False,1.0,DEF,New York Jets,NYJ
 2023,2,4,9,BN,10235,False,False,5.2,RB,Roschon Johnson,CHI
-2023,2,4,10,BN,2078,False,False,4.4,WR,Odell Beckham,
+2023,2,4,10,BN,2078,False,False,4.4,WR,Odell Beckham,MIN
 2023,2,4,11,BN,2309,False,False,12.5,WR,Amari Cooper,
 2023,2,4,12,BN,4973,False,False,5.0,TE,Hayden Hurst,
 2023,2,4,13,BN,6826,False,False,7.8,TE,Cole Kmet,CHI
@@ -10656,7 +10656,7 @@
 2023,5,2,6,REC_FLEX,7564,True,False,44.7,WR,Ja'Marr Chase,CIN
 2023,5,2,7,SUPER_FLEX,1049,True,False,9.76,QB,Ryan Tannehill,
 2023,5,2,8,DEF,HOU,True,False,6.0,DEF,Houston Texans,HOU
-2023,5,2,9,BN,2078,False,False,2.3,WR,Odell Beckham,
+2023,5,2,9,BN,2078,False,False,2.3,WR,Odell Beckham,MIN
 2023,5,2,10,BN,2306,False,False,-0.4,QB,Jameis Winston,NYG
 2023,5,2,11,BN,5089,False,False,0.0,QB,Mike White,
 2023,5,2,12,BN,5846,False,False,0.0,WR,DK Metcalf,PIT
@@ -12036,7 +12036,7 @@
 2023,12,6,7,SUPER_FLEX,7591,True,False,10.58,QB,Justin Fields,KC
 2023,12,6,8,DEF,CLE,True,False,4.0,DEF,Cleveland Browns,CLE
 2023,12,6,9,BN,10866,False,False,13.92,QB,Aidan O'Connell,LV
-2023,12,6,10,BN,2078,False,False,4.9,WR,Odell Beckham,
+2023,12,6,10,BN,2078,False,False,4.9,WR,Odell Beckham,MIN
 2023,12,6,11,BN,6783,False,False,2.1,WR,Jerry Jeudy,CLE
 2023,12,6,12,BN,6845,False,False,8.0,RB,Zack Moss,
 2023,12,6,13,BN,7021,False,False,9.1,RB,Rico Dowdle,PIT
@@ -12222,7 +12222,7 @@
 2023,13,6,7,SUPER_FLEX,6845,True,False,6.7,RB,Zack Moss,
 2023,13,6,8,DEF,CLE,True,False,-1.0,DEF,Cleveland Browns,CLE
 2023,13,6,9,BN,10866,False,False,0.0,QB,Aidan O'Connell,LV
-2023,13,6,10,BN,2078,False,False,0.0,WR,Odell Beckham,
+2023,13,6,10,BN,2078,False,False,0.0,WR,Odell Beckham,MIN
 2023,13,6,11,BN,4983,False,False,0.0,WR,DJ Moore,BUF
 2023,13,6,12,BN,7591,False,False,0.0,QB,Justin Fields,KC
 2023,13,6,13,BN,8230,False,False,0.0,RB,Ty Chandler,NO
@@ -12413,7 +12413,7 @@
 2023,14,6,7,SUPER_FLEX,7591,True,False,24.72,QB,Justin Fields,KC
 2023,14,6,8,DEF,CLE,True,False,13.0,DEF,Cleveland Browns,CLE
 2023,14,6,9,BN,10866,False,False,5.04,QB,Aidan O'Connell,LV
-2023,14,6,10,BN,2078,False,False,17.7,WR,Odell Beckham,
+2023,14,6,10,BN,2078,False,False,17.7,WR,Odell Beckham,MIN
 2023,14,6,11,BN,6783,False,False,2.6,WR,Jerry Jeudy,CLE
 2023,14,6,12,BN,7021,False,False,11.7,RB,Rico Dowdle,PIT
 2023,14,6,13,BN,8230,False,False,5.7,RB,Ty Chandler,NO
@@ -12598,7 +12598,7 @@
 2023,15,6,3,WR,6819,True,False,9.8,WR,Michael Pittman,PIT
 2023,15,6,4,WR,4983,True,False,7.2,WR,DJ Moore,BUF
 2023,15,6,5,FLEX,8230,True,False,23.2,RB,Ty Chandler,NO
-2023,15,6,6,REC_FLEX,2078,True,False,1.9,WR,Odell Beckham,
+2023,15,6,6,REC_FLEX,2078,True,False,1.9,WR,Odell Beckham,MIN
 2023,15,6,7,SUPER_FLEX,7591,True,False,9.64,QB,Justin Fields,KC
 2023,15,6,8,DEF,CLE,True,False,13.0,DEF,Cleveland Browns,CLE
 2023,15,6,9,BN,10866,False,False,25.92,QB,Aidan O'Connell,LV
@@ -12786,7 +12786,7 @@
 2023,16,6,2,RB,8230,True,False,7.7,RB,Ty Chandler,NO
 2023,16,6,3,WR,9756,True,False,0.7,WR,Jordan Addison,MIN
 2023,16,6,4,WR,4983,True,False,3.3,WR,DJ Moore,BUF
-2023,16,6,5,FLEX,2078,True,False,2.3,WR,Odell Beckham,
+2023,16,6,5,FLEX,2078,True,False,2.3,WR,Odell Beckham,MIN
 2023,16,6,6,REC_FLEX,8110,True,False,8.5,TE,Jake Ferguson,DAL
 2023,16,6,7,SUPER_FLEX,7591,True,False,24.5,QB,Justin Fields,KC
 2023,16,6,8,DEF,CLE,True,False,8.0,DEF,Cleveland Browns,CLE
@@ -18707,7 +18707,7 @@
 2025,13,11,7,SUPER_FLEX,4046,True,False,29.44,QB,Patrick Mahomes,KC
 2025,13,11,8,DEF,GB,True,False,5.0,DEF,Green Bay Packers,GB
 2025,13,11,9,BN,1166,False,False,13.36,QB,Kirk Cousins,LV
-2025,13,11,10,BN,12476,False,False,8.4,RB,Devin Neal,MIN
+2025,13,11,10,BN,12476,False,False,8.4,RB,Devin Neal,
 2025,13,11,11,BN,4035,False,False,0.0,RB,Alvin Kamara,NO
 2025,13,11,12,BN,6130,False,False,17.7,RB,Devin Singletary,NYG
 2025,13,11,13,BN,8146,False,False,0.0,WR,Garrett Wilson,NYJ
@@ -18888,7 +18888,7 @@
 2025,14,11,2,RB,7543,True,False,20.7,RB,Travis Etienne,NO
 2025,14,11,3,WR,9997,True,False,16.6,WR,Zay Flowers,BAL
 2025,14,11,4,WR,7525,True,False,5.7,WR,DeVonta Smith,PHI
-2025,14,11,5,FLEX,12476,True,False,14.9,RB,Devin Neal,MIN
+2025,14,11,5,FLEX,12476,True,False,14.9,RB,Devin Neal,
 2025,14,11,6,REC_FLEX,8167,True,False,22.9,WR,Christian Watson,GB
 2025,14,11,7,SUPER_FLEX,4046,True,False,5.8,QB,Patrick Mahomes,KC
 2025,14,11,8,DEF,WAS,True,False,3.0,DEF,Washington Commanders,WAS
@@ -19078,7 +19078,7 @@
 2025,15,11,6,REC_FLEX,8167,True,False,4.4,WR,Christian Watson,GB
 2025,15,11,7,SUPER_FLEX,4046,True,False,13.06,QB,Patrick Mahomes,KC
 2025,15,11,8,DEF,CAR,True,False,7.0,DEF,Carolina Panthers,CAR
-2025,15,11,9,BN,12476,False,False,9.7,RB,Devin Neal,MIN
+2025,15,11,9,BN,12476,False,False,9.7,RB,Devin Neal,
 2025,15,11,10,BN,4035,False,False,0.0,RB,Alvin Kamara,NO
 2025,15,11,11,BN,4983,False,False,20.9,WR,DJ Moore,BUF
 2025,15,11,12,BN,8134,False,False,9.0,WR,Khalil Shakir,BUF
@@ -19261,7 +19261,7 @@
 2025,16,11,6,REC_FLEX,8167,True,False,2.7,WR,Christian Watson,GB
 2025,16,11,7,SUPER_FLEX,96,True,False,15.54,QB,Aaron Rodgers,PIT
 2025,16,11,8,DEF,ATL,True,False,5.0,DEF,Atlanta Falcons,ATL
-2025,16,11,9,BN,12476,False,False,0.0,RB,Devin Neal,MIN
+2025,16,11,9,BN,12476,False,False,0.0,RB,Devin Neal,
 2025,16,11,10,BN,4035,False,False,0.0,RB,Alvin Kamara,NO
 2025,16,11,11,BN,4046,False,False,0.0,QB,Patrick Mahomes,KC
 2025,16,11,12,BN,6130,False,False,5.1,RB,Devin Singletary,NYG
@@ -19447,7 +19447,7 @@
 2025,17,11,6,REC_FLEX,8167,True,False,19.8,WR,Christian Watson,GB
 2025,17,11,7,SUPER_FLEX,96,True,False,7.32,QB,Aaron Rodgers,PIT
 2025,17,11,8,DEF,ATL,True,False,18.0,DEF,Atlanta Falcons,ATL
-2025,17,11,9,BN,12476,False,False,0.0,RB,Devin Neal,MIN
+2025,17,11,9,BN,12476,False,False,0.0,RB,Devin Neal,
 2025,17,11,10,BN,4035,False,False,0.0,RB,Alvin Kamara,NO
 2025,17,11,11,BN,4046,False,False,0.0,QB,Patrick Mahomes,KC
 2025,17,11,12,BN,6130,False,False,15.0,RB,Devin Singletary,NYG
@@ -20222,8 +20222,9 @@
 2026,4,9,11,BN,11586,False,False,2.6,RB,Blake Corum,LAR
 2026,4,9,12,BN,11643,False,False,0.7,RB,Jaylen Wright,MIA
 2026,4,9,13,BN,13414,False,False,1.3,RB,Kaelon Black,SF
-2026,4,9,14,BN,4983,False,False,2.2,WR,DJ Moore,BUF
-2026,4,9,15,BN,96,False,False,21.96,QB,Aaron Rodgers,PIT
+2026,4,9,14,BN,3321,False,False,0.0,WR,Tyreek Hill,
+2026,4,9,15,BN,4983,False,False,2.2,WR,DJ Moore,BUF
+2026,4,9,16,BN,96,False,False,21.96,QB,Aaron Rodgers,PIT
 2026,4,10,0,QB,421,True,False,9.68,QB,Matthew Stafford,LAR
 2026,4,10,1,RB,6813,True,False,22.2,RB,Jonathan Taylor,IND
 2026,4,10,2,RB,8150,True,False,31.7,RB,Kyren Williams,LAR
