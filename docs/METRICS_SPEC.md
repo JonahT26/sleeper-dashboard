@@ -180,16 +180,13 @@ The players chosen by the optimal lineup are stored as well (one row per slot pe
 
 **Inputs.** `player_weeks`: `season`, `week`, `roster_id`, `player_id`, `is_starter`, `is_empty_slot`, `points`, `position`. `team_weeks.points`. League settings: `roster_positions`. Sleeper's `ppts` + `ppts_decimal` from `rosters.json`, for the soft check only.
 
-**Parameters.**
-| Key | Default | Meaning |
-|---|---|---|
-| `metrics.efficiency.ppts_warn_gap` | 5.0 | Soft check: warn when a team's regular-season optimal points exceed Sleeper's `ppts` by more than this many points (owner decision). Falling below `ppts` always warns |
+**Parameters.** None. (`metrics.efficiency.ppts_warn_gap`, the soft check's allowed gap, was removed on 2026-10-06 when the check began matching Sleeper to the cent; owner.)
 
 **Edge cases.**
 
 | Case | Rule |
 |---|---|
-| Hindsight | **Pure hindsight** (owner decision). Any player in the pool can fill any eligible slot, regardless of game-time locks. This matches Sleeper's max points |
+| Hindsight | **Pure hindsight** (owner decision). Any player in the pool can fill any eligible slot, regardless of game-time locks. Sleeper's max points (`ppts`) is also hindsight but **not** optimal: Sleeper fills the slots in roster order, each with the highest-scoring eligible player left, so our optimal points are equal or higher (found 2026-10-06; sanity check 5) |
 | Player pool | Sleeper's matchup `players` list for the week: starters, bench, **and injured reserve** (Phase 1 decision) |
 | Players added mid-week | Included if they are in that week's matchup `players` list. A player who scored from the bench and was then dropped before the week ended is not in the list, so is not in the pool |
 | Negative scores | Slots are always filled when an eligible player is available, even if all options scored below zero. The optimal lineup never leaves a slot empty to gain points (owner decision) |
@@ -197,8 +194,8 @@ The players chosen by the optimal lineup are stored as well (one row per slot pe
 | No eligible player rostered (e.g. no kicker) | The optimal lineup leaves the slot empty too, so there is no efficiency penalty: it is a roster decision, not a lineup decision |
 | Optimal points of 0 or less | Efficiency is null (cannot occur in practice; listed so the code never divides by zero) |
 | Equal-scoring alternatives | Optimal points are the same either way. For the stored player list, ties go to the player the manager actually started, so no award blames a manager for a pointless swap |
-| Playoff weeks | **Included: every week, every team** (owner decision, consistent with all-play). Season totals include playoff weeks. The soft check against `ppts` uses regular-season weeks only, because `ppts` is assumed to be regular season only (verify at week 15) |
-| Position eligibility | From the players cache, which describes players **today** (owner accepted), plus the position of a single-position slot the player actually started in that week (owner, 2026-10-05). A player whose position changed is judged on his current position except in weeks he started at his old one. In weeks 1–3, none of the 230 players used had more than one eligible position |
+| Playoff weeks | **Included: every week, every team** (owner decision, consistent with all-play). Season totals include playoff weeks. The soft check against `ppts` uses regular-season weeks only, because `ppts` counts the regular season only (confirmed 2026-10-06 on the finished 2020–2025 seasons) |
+| Position eligibility | From the players cache, which describes players **today** (owner accepted), plus the position of a single-position slot the player actually started in that week (owner, 2026-10-05). A player whose position changed is judged on his current position except in weeks he started at his old one. In weeks 1–3, none of the 230 players used had more than one eligible position. Past seasons: three known cases where Sleeper's position then differs from today's (Taysom Hill 2020 and 2024, N'Keal Harry 2020) overstate 7 team-weeks of 2020 by 24.66 points in all; documented, not corrected (owner, 2026-10-06; CODEBASE.md "Known quirks") |
 | Median game | Not relevant |
 | Small early-season samples | No shrinkage. The metric is descriptive |
 
@@ -209,7 +206,7 @@ The players chosen by the optimal lineup are stored as well (one row per slot pe
 2. A team whose actual starters form an optimal lineup has *E* = 100% and *B* = 0.
 3. Every optimal lineup obeys the eligibility table, uses each player at most once, and fills every slot that has an eligible player available.
 4. Optimal points equal the sum of the stored optimal players' points (±0.01).
-5. **Soft check:** each team's regular-season Σ*O* ≥ Sleeper's `ppts`. A team below `ppts`, or above it by more than `metrics.efficiency.ppts_warn_gap`, gets a printed warning, not a failure. Phase 1 found gaps of 0 to 4.00 points with IR players included.
+5. **Soft check (owner, 2026-10-06):** Sleeper's `ppts` rebuilt by Sleeper's own lineup method: for each regular-season team-week, fill the starting slots in roster order, each with the highest-scoring eligible player not yet used (first listed on a tie; same pool and positions as the optimal lineup), and sum over the season. Each team's total must equal `ppts` to the cent; any gap of 0.01 or more is a printed warning, not a failure, and means a score or position differs from Sleeper's (a stat correction Sleeper didn't carry into its totals, or a changed position). Σ*O* − `ppts` is printed alongside: it is ≥ 0 by construction and never a warning. Through 2026 week 3, all 12 teams match exactly; Σ*O* is 0–4.00 above `ppts`. This replaces the Phase 1 check (Σ*O* ≥ `ppts`, warn above 5.0), whose 0.02–4.00 gaps were this difference in method.
 
 ---
 

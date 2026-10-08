@@ -130,9 +130,9 @@ def run():
     current = seasons.season_slice(saved, config.season)
     weeks = sorted(int(w) for w in current["team_weeks"]["week"].unique())
     write_run_record(league, config.season, weeks, all_seasons=config.seasons)
-    # Soft check on the current season only: past seasons' gaps are known and come from today's player positions (risk 10).
+    # Soft check on the current season only: past seasons' few gaps are known (CODEBASE.md "Known quirks", risk 10).
     sleeper_check = lineup.compare_to_sleeper_max(
-        current["lineups_optimal"], current["team_weeks"], rosters, config.metrics["efficiency"]["ppts_warn_gap"]
+        current["lineups_optimal"], current["player_weeks"], current["team_weeks"], rosters, league["roster_positions"], players
     )
     return {
         "season": config.season,
@@ -145,7 +145,7 @@ def run():
         "data_checks": [(r.name, r.passed, r.detail) for r in data_results],
         "metric_checks": [(r.name, r.passed, r.detail) for r in metric_results],
         "saved_checks": (sum(r.passed for r in saved_results), len(saved_results)),
-        "warnings": [f"roster {r.roster_id}: optimal points {r.warning}" for r in sleeper_check.dropna(subset=["warning"]).itertuples()],
+        "warnings": [f"roster {r.roster_id}: {r.warning}" for r in sleeper_check.dropna(subset=["warning"]).itertuples()],
         "seconds": time.perf_counter() - started,
     }
 

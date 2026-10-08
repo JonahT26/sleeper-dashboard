@@ -69,8 +69,6 @@ chat:
 # Metric parameters. Definitions and the reasoning behind each value are in
 # docs/METRICS_SPEC.md; change a value there first, with the owner's approval.
 metrics:
-  efficiency:
-    ppts_warn_gap: 5.0    # warn if a team's optimal points exceed Sleeper's max points by more than this (season)
   consistency:
     min_weeks: 3          # volatility, floor, and ceiling are hidden until a team has this many weeks
     floor_pct: 0.10       # floor = this percentile of a team's weekly points

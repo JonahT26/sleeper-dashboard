@@ -115,7 +115,7 @@ def steps(monkeypatch, tmp_path):
     teams = pd.DataFrame({"season": [2026], "roster_id": [1], "owner_id": ["900"], "display_name": ["user1"]})
     no_rows = pd.DataFrame({"season": pd.Series(dtype="int64")})
     config = SimpleNamespace(season=2026, seasons=[2026], season_start_date="2026-09-09", start_date=lambda season: "2026-09-09",
-                             sleeper_points_gaps={}, champion_overrides={}, metrics={"efficiency": {"ppts_warn_gap": 5.0}})
+                             sleeper_points_gaps={}, champion_overrides={}, metrics={})
     outcome = {"data": True, "metric": True}
 
     def record(name, result=None):
@@ -132,7 +132,7 @@ def steps(monkeypatch, tmp_path):
 
     monkeypatch.setattr(pipeline, "load_config", lambda: config)
     monkeypatch.setattr(pipeline.extract, "extract", record("extract", {"calls": 23}))
-    monkeypatch.setattr(pipeline.transform, "build_tables", record("transform", ({"team_weeks": team_weeks, "teams": teams}, {}, [], None)))
+    monkeypatch.setattr(pipeline.transform, "build_tables", record("transform", ({"team_weeks": team_weeks, "teams": teams}, {"roster_positions": []}, [], None)))
     monkeypatch.setattr(pipeline.validate, "check_managers", lambda *a: CheckResult("managers check", True, "ok"))
     monkeypatch.setattr(pipeline.transform, "read_players", lambda: {})
     monkeypatch.setattr(pipeline.lineup, "build_lineup_tables", record("lineups", {"lineups_optimal": no_rows}))
@@ -141,7 +141,7 @@ def steps(monkeypatch, tmp_path):
     monkeypatch.setattr(pipeline.validate, "run_metric_checks", checks("metric"))
     monkeypatch.setattr(pipeline.validate, "run_checks", lambda *a: [CheckResult("saved", True, "ok")])
     monkeypatch.setattr(pipeline.transform, "save_tables", record("save"))
-    monkeypatch.setattr(pipeline.validate, "load_tables", record("reload", {"team_weeks": team_weeks, "lineups_optimal": no_rows,
+    monkeypatch.setattr(pipeline.validate, "load_tables", record("reload", {"team_weeks": team_weeks, "player_weeks": no_rows, "lineups_optimal": no_rows,
                                                                             "teams": teams, "managers": pd.DataFrame()}))
     monkeypatch.setattr(pipeline.lineup, "compare_to_sleeper_max", lambda *a: pd.DataFrame({"roster_id": [], "warning": []}))
     return calls, outcome
