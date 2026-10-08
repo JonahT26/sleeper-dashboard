@@ -204,7 +204,7 @@ Added 2026-10-05 (Phase 5; `chat.py`, RUNBOOK.md section 7). Wording and the awa
 
 ### History
 
-Design approved by the owner 2026-10-05 (pieces, rows, names, record scale). Wording approved by the owner as drafted, 2026-10-05, season count under the name included. Built by `dashboard/history.py` from every saved season; a season counts once Sleeper's bracket names its champion.
+Design approved by the owner 2026-10-05 (pieces, rows, names, record scale). Wording approved by the owner as drafted, 2026-10-05, season count under the name included. Built by `dashboard/history.py` from every saved season; a season counts once Sleeper's bracket names its champion. A league ruling on a final (`config.yaml` `champion_overrides`) replaces Sleeper's winner for the champions list, Titles, and the Playoff record; no note on the page (owner, 2026-10-07). Only 2022: ShamParker, where Sleeper lists jsmetz97.
 
 - One section for the whole page, after Rank history and before "How this works", the same whatever week is selected, at most 760px wide. Hidden until a season has finished.
 - Subtitle: "Every finished season, 2020–2025. Record and Win % are regular-season records, median games included. Playoff record counts every winners-bracket game, the 3rd- and 5th-place games included; consolation record counts every consolation-bracket game." (approved 2026-10-06)

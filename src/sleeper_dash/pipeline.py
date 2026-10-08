@@ -96,14 +96,18 @@ def run():
     extracted = extract.extract(config)
 
     # Each season is built and checked against its own league settings and Sleeper standings.
-    by_season = {}
+    by_season, sleeper_brackets = {}, {}
     for season in config.seasons:
         tables, league, rosters, _ = transform.build_tables(season, config.start_date(season))
+        if "winners_bracket" in tables:  # league rulings on the final (config.yaml champion_overrides)
+            sleeper_brackets[season] = tables["winners_bracket"]
+            tables["winners_bracket"] = seasons.with_champion_override(tables["winners_bracket"], config.champion_overrides.get(season))
         by_season[season] = (tables, league, seasons.with_known_gaps(rosters, config.sleeper_points_gaps.get(season, [])))
     teams = pd.concat([t["teams"] for t, _, _ in by_season.values()], ignore_index=True)
     managers = seasons.build_managers(teams)
     data_results = validate.validate_seasons(by_season, validate.run_data_checks, "Data checks",
-                                             extra=[validate.check_managers(managers, teams)])
+                                             extra=[validate.check_managers(managers, teams),
+                                                    validate.check_champion_overrides(sleeper_brackets, config.champion_overrides)])
 
     players = transform.read_players()
     for tables, league, _ in by_season.values():

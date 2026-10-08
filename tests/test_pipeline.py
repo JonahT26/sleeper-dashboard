@@ -115,7 +115,7 @@ def steps(monkeypatch, tmp_path):
     teams = pd.DataFrame({"season": [2026], "roster_id": [1], "owner_id": ["900"], "display_name": ["user1"]})
     no_rows = pd.DataFrame({"season": pd.Series(dtype="int64")})
     config = SimpleNamespace(season=2026, seasons=[2026], season_start_date="2026-09-09", start_date=lambda season: "2026-09-09",
-                             sleeper_points_gaps={}, metrics={"efficiency": {"ppts_warn_gap": 5.0}})
+                             sleeper_points_gaps={}, champion_overrides={}, metrics={"efficiency": {"ppts_warn_gap": 5.0}})
     outcome = {"data": True, "metric": True}
 
     def record(name, result=None):
@@ -151,7 +151,8 @@ def test_steps_run_in_order(steps):
     calls, _ = steps
     summary = pipeline.run()
     assert calls == ["extract", "transform", "data checks", "lineups", "metrics", "metric checks", "save", "reload"]
-    assert summary["data_checks"] == [("data check", True, "detail"), ("managers check", True, "ok")]
+    assert summary["data_checks"] == [("data check", True, "detail"), ("managers check", True, "ok"),
+                                     ("Title overrides match Sleeper's bracket", True, "no overrides")]
     assert summary["metric_checks"] == [("metric check", True, "detail")]
 
 

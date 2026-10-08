@@ -674,6 +674,34 @@ def check_managers(managers, teams):
                    f"{len(actual)} managers over {seasons} season(s); {every} played every season")
 
 
+def check_champion_overrides(sleeper_brackets, overrides):
+    """Each config.yaml champion override still corrects Sleeper (owner, 2026-10-07).
+
+    sleeper_brackets: {season: winners_bracket as Sleeper has it, before any override}. Each overridden season
+    must be built, and its final must still show the overridden result (Sleeper's winner is the override's loser
+    and the other way round). If Sleeper fixes or changes the final, the run stops so the list stays true.
+    """
+    problems = []
+    for season, override in sorted(overrides.items()):
+        bracket = sleeper_brackets.get(season)
+        if bracket is None:
+            problems.append(f"{season}: not a season this run builds")
+            continue
+        final = bracket[bracket["place"] == 1]
+        if len(final) != 1 or final["winner_roster_id"].isna().all():
+            problems.append(f"{season}: Sleeper's bracket has no decided final")
+            continue
+        game = final.iloc[0]
+        expected = (override["loser_roster_id"], override["winner_roster_id"])
+        if (game["winner_roster_id"], game["loser_roster_id"]) != expected:
+            problems.append(f"{season}: Sleeper's final is roster {game['winner_roster_id']} over {game['loser_roster_id']}, "
+                            f"but the override expects {expected[0]} over {expected[1]} (Sleeper may have fixed it)")
+    detail = (f"{len(overrides)} override(s): " + "; ".join(
+        f"{s} final to roster {o['winner_roster_id']} over {o['loser_roster_id']}" for s, o in sorted(overrides.items()))
+        if overrides else "no overrides")
+    return _result("Title overrides match Sleeper's bracket", problems, detail)
+
+
 def check_unique_keys(tables, label=None):
     """No table has two rows with the same key."""
     problems = []

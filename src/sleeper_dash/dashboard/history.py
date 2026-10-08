@@ -5,7 +5,8 @@ Pure: tables in, plain values and formatted strings out. A season counts once Sl
 champion. Records are regular-season records including median games (the ladder's record); playoff results
 count as appearances (seeded 1-6 in the winners bracket), titles (winner of the final), and two game records
 (owner, 2026-10-06): the playoff record is every winners-bracket game, 3rd- and 5th-place games included; the
-consolation record is every other playoff-week game.
+consolation record is every other playoff-week game. The bracket carries any league ruling on a final
+(config.yaml champion_overrides, owner 2026-10-07), so titles and playoff records follow it.
 Managers are matched across seasons by Sleeper owner ID (the managers table), never by team name.
 """
 
@@ -48,18 +49,24 @@ def bracket_games(team_weeks, bracket):
 
     A game is a playoff game when the winners bracket pairs the two teams in that round (the season's n-th playoff
     week is round n); every other paired playoff-week game is a consolation game. Byes (no opponent) aren't games.
+    A playoff game's result is the bracket's winner when it names one, so a league ruling on the final
+    (config.yaml champion_overrides) counts; otherwise, and for consolation games, it's the scored result.
     """
     games = team_weeks[team_weeks["is_playoff"].astype(bool) & team_weeks["opponent_roster_id"].notna()].copy()
     if games.empty:
         return pd.DataFrame(columns=["season", "roster_id", "kind", "result"])
     weeks = games.groupby("season")["week"].transform(lambda w: w.rank(method="dense"))
     games["round"] = weeks.astype(int)
-    pairs = set()
+    winner_of = {}  # (season, round, team, opponent): the bracket's winner, or None before the game is decided
     for g in bracket.dropna(subset=["t1_roster_id", "t2_roster_id"]).itertuples():
         a, b = int(g.t1_roster_id), int(g.t2_roster_id)
-        pairs |= {(int(g.season), int(g.round), a, b), (int(g.season), int(g.round), b, a)}
-    games["kind"] = ["playoff" if (int(s), r, int(t), int(o)) in pairs else "consolation"
-                     for s, r, t, o in zip(games["season"], games["round"], games["roster_id"], games["opponent_roster_id"])]
+        winner = int(g.winner_roster_id) if pd.notna(getattr(g, "winner_roster_id", None)) else None
+        winner_of |= {(int(g.season), int(g.round), a, b): winner, (int(g.season), int(g.round), b, a): winner}
+    keys = [(int(s), r, int(t), int(o))
+            for s, r, t, o in zip(games["season"], games["round"], games["roster_id"], games["opponent_roster_id"])]
+    games["kind"] = ["playoff" if key in winner_of else "consolation" for key in keys]
+    games["result"] = [("W" if key[2] == winner_of[key] else "L") if winner_of.get(key) is not None else result
+                       for key, result in zip(keys, games["result"])]
     return games[["season", "roster_id", "kind", "result"]].reset_index(drop=True)
 
 

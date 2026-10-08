@@ -252,3 +252,51 @@ def test_known_gaps_in_config_are_read_and_checked(tmp_path):
         load(write(tmp_path, BASE + "sleeper_points_gaps:\n  2025:\n    - {points_for: 2.00}\n"))
     with pytest.raises(ValueError, match="sleeper_points_gaps"):
         load(write(tmp_path, BASE + "sleeper_points_gaps:\n  2025:\n    - {roster_id: 3, pf: 2.00}\n"))
+
+
+# --- league rulings on a final (config.yaml champion_overrides, owner 2026-10-07) ----------------
+
+def final_bracket(winner=4, loser=9):
+    """A two-round bracket whose final (place 1) Sleeper scored for `winner` over `loser`."""
+    return pd.DataFrame([
+        {"season": 2022, "round": 2, "matchup_id": 3, "winner_roster_id": 4, "loser_roster_id": 2, "place": None},
+        {"season": 2022, "round": 3, "matchup_id": 6, "winner_roster_id": winner, "loser_roster_id": loser, "place": 1},
+        {"season": 2022, "round": 3, "matchup_id": 7, "winner_roster_id": 5, "loser_roster_id": 2, "place": 3},
+    ]).astype({"winner_roster_id": "Int64", "loser_roster_id": "Int64", "place": "Int64"})
+
+
+RULING = {"winner_roster_id": 9, "loser_roster_id": 4}
+
+
+def test_a_ruling_swaps_only_the_finals_winner():
+    sleeper = final_bracket()
+    ruled = seasons.with_champion_override(sleeper, RULING)
+    assert ruled.loc[1, ["winner_roster_id", "loser_roster_id"]].tolist() == [9, 4]
+    assert ruled.drop(index=1).equals(sleeper.drop(index=1))  # every other game as Sleeper has it
+    assert sleeper.loc[1, "winner_roster_id"] == 4  # Sleeper's copy untouched
+    assert seasons.with_champion_override(sleeper, None) is sleeper  # no ruling for the season
+
+
+def test_a_ruling_is_checked_against_sleepers_final():
+    assert v.check_champion_overrides({2022: final_bracket()}, {2022: RULING}).passed
+    assert v.check_champion_overrides({}, {}).detail == "no overrides"
+    fixed = v.check_champion_overrides({2022: final_bracket(winner=9, loser=4)}, {2022: RULING})  # Sleeper fixed it
+    assert not fixed.passed and "Sleeper may have fixed it" in fixed.detail
+    # A fixed final is left alone by the override too, so the run never reverses Sleeper's own fix silently.
+    assert seasons.with_champion_override(final_bracket(winner=9, loser=4), RULING).equals(final_bracket(winner=9, loser=4))
+    assert "not a season this run builds" in v.check_champion_overrides({}, {2022: RULING}).detail
+    undecided = final_bracket().assign(winner_roster_id=pd.NA, loser_roster_id=pd.NA)
+    assert "no decided final" in v.check_champion_overrides({2022: undecided}, {2022: RULING}).detail
+
+
+def test_champion_overrides_in_config_are_read_and_checked(tmp_path):
+    from sleeper_dash.config import load_config as load
+
+    text = BASE + "champion_overrides:\n  2025: {winner_roster_id: 9, loser_roster_id: 4}\n"
+    assert load(write(tmp_path, text)).champion_overrides == {2025: RULING}
+    assert load(write(tmp_path, BASE)).champion_overrides == {}
+    for bad in ("{winner_roster_id: 9}", "{winner_roster_id: 9, loser_roster_id: 9}", "{winner: 9, loser_roster_id: 4}"):
+        with pytest.raises(ValueError, match="champion_overrides"):
+            load(write(tmp_path, BASE + f"champion_overrides:\n  2025: {bad}\n"))
+    # The project: Sleeper lists jsmetz97 (roster 4) as 2022's champion; ShamParker (roster 9) won (owner, 2026-10-07).
+    assert load_config().champion_overrides == {2022: RULING}
