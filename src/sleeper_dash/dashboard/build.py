@@ -22,7 +22,7 @@ import yaml
 from jinja2 import Environment, PackageLoader
 
 from sleeper_dash.config import PROJECT_ROOT
-from sleeper_dash.dashboard import bracket, charts, explainer, history, moves, theme
+from sleeper_dash.dashboard import bracket, charts, explainer, history, moves, preview, theme
 
 SITE_DIR = PROJECT_ROOT / "site"
 TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards", "playoff_odds",
@@ -170,13 +170,15 @@ def freshness(run, stale_after_days, schedule):
 
 # --- View model -----------------------------------------------------------------------------
 
-def build_view(tables, run, params, fresh=None):
+def build_view(tables, run, params, fresh=None, page_url=None):
     """Everything the template needs, as plain values and formatted strings. Pure: no file access.
 
     tables: teams, team_weeks, power_rankings, metrics_season, lineups_optimal, awards, playoff_odds, managers,
     winners_bracket, start_credits, pickups, trades, player_weeks (positions for Best pickups). run: the pipeline's run record.
     params: config.yaml metrics (power weights and windows for the ladder; every weight and threshold for "How this works").
     fresh: freshness() for the stale-data line; build_site always passes it. Without it the page has no stale-data line.
+    page_url: the published page's address (config.yaml dashboard.page_url), for the link-preview tags; without it
+    the page has none.
     The saved tables hold every season (Phase 5); the page shows the run's season only, except the History
     section, which summarises every finished season.
     """
@@ -257,9 +259,20 @@ def build_view(tables, run, params, fresh=None):
     stale = fresh and {"after_days": fresh["stale_after_days"], "next_updates_json": theme.to_script_json(fresh["next_updates"]),
                        "final": bool(run["league"].get("season_complete"))}  # season over: "Final rankings", no next update
     return {"league_name": run["league_name"], "season": run["season"], "updated": updated_text(run["finished_at"]), "updated_at": run["finished_at"],
-            "stale": stale, "latest": views[-1], "earlier": views[:-1], "weeks": weeks, "history": past,
+            "stale": stale, "social": page_url and social_tags(views[-1], run, page_url), "latest": views[-1], "earlier": views[:-1], "weeks": weeks, "history": past,
             "plotly_cdn": theme.PLOTLY_CDN, "chart_theme": chart_theme,
             "how_it_works": explainer.sections(params, run["league"])}  # owner-approved copy, numbers from config.yaml
+
+
+def social_tags(latest, run, page_url):
+    """What a link preview shows (Open Graph and Twitter card tags): the latest week's title, a one-line description
+    naming the #1 team, and the preview image, whose ?v= changes every week so chat apps fetch the new one."""
+    top = latest["ladder"][0]
+    return {"title": latest["title"], "url": page_url,
+            "description": f"{top['team']} is #1 after week {latest['week']}. Power rankings, luck, and weekly awards "
+                           f"for {run['league_name']}.",
+            "image": f"{page_url.rstrip('/')}/{preview.FILENAME}?v={run['season']}-{latest['week']}",
+            "alt": f"{latest['title']}: the top five teams and their power scores."}
 
 
 def _component_detail(component, raw, standings, recent):
@@ -339,11 +352,12 @@ def build_site(out_dir=None, processed_dir=None, run_path=None, workflow_path=No
 
     config, run = load_config(), read_run_record(run_path)
     fresh = freshness(run, config.dashboard["stale_after_days"], workflow_schedule(workflow_path))
-    view = build_view(load_tables(processed_dir, names=TABLES), run, config.metrics, fresh)
+    view = build_view(load_tables(processed_dir, names=TABLES), run, config.metrics, fresh, config.dashboard["page_url"])
     out_dir = Path(out_dir or SITE_DIR)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "index.html"
     path.write_text(render(view), encoding="utf-8")
+    view["preview"] = preview.render(view, out_dir / preview.FILENAME)  # the link-preview image, this week's
     return path, view
 
 
@@ -360,6 +374,8 @@ def main():
     print(f"  Sections: power rankings; weekly awards in {sum(bool(v['awards']) for v in every)} of {len(weeks)} weeks; "
           f"charts in the latest week: {', '.join(c['key'] for c in view['latest']['charts']) or 'none'}")
     print(f"  Updated:  {view['updated']}")
+    print(f"  Preview:  {preview.FILENAME}, week {view['preview']['week']}, {view['preview']['bytes'] / 1024:.0f} KB "
+          "(the image chat apps show for the link)")
     upcoming = json.loads(view["stale"]["next_updates_json"])
     print(f"  Stale:    the page warns if this is more than {view['stale']['after_days']} days old; "
           f"next scheduled update {upcoming[0]['text'] if upcoming else 'none listed'}")

@@ -193,6 +193,14 @@ Added 2026-10-05 (Phase 5; metrics in `METRICS_SPEC.md` section 9). Layout, cont
 - **Layout:** stacked on phones (checked at 360 and 390px; the FAAB table fits without scrolling); three columns side by side once the section is at least 900px wide (1024 and 1280px desktop).
 - **Hidden** until there's something to show: a pickup that has scored, a team that has bid, or a trade.
 
+### Link preview
+
+Added 2026-10-05 (Phase 5). **The wording is a draft awaiting the owner's approval.** What a group chat shows when someone pastes the page's link: Open Graph tags (GroupMe, iMessage, Discord, Facebook) and Twitter card tags (`summary_large_image`) in the page's head, built from `config.yaml` `dashboard.page_url`.
+
+- **Title:** the latest week's title, "Week 9 power rankings".
+- **Description:** "‹#1 team› is #1 after week 9. Power rankings, luck, and weekly awards for ‹league›."
+- **Image:** `preview.png`, 1200×630, drawn on every run by `dashboard/preview.py`: the masthead's turf green (`--masthead`), the league name in muted Barlow Condensed 600, the week's title in chalk Barlow Condensed 700 at 68px, then the top five as ladder rows (rank numeral in Barlow Condensed 700, 64px, the #1 in the dark-mode `--pylon`, which is 4.9:1 on the green; team name in Barlow 600; "username · record" in muted Barlow 400; power score at the right), rules in the dark-mode `--bar`, and a muted footer "Power score: league average 50 · Updated ‹time›". Contrast on the green: chalk 11.9:1, muted 5.4:1. About 25 KB (a palette PNG of the token colours and their anti-aliasing shades). The image's address carries `?v=‹season›-‹week›`, so chat apps fetch the new one each week instead of showing a cached one. Alt text: "Week 9 power rankings: the top five teams and their power scores."
+
 ### League-chat post
 
 Added 2026-10-05 (Phase 5; `chat.py`, RUNBOOK.md section 7). Wording and the award choice approved by the owner, 2026-10-05; changes need approval again. Plain text (GroupMe shows no formatting), at most 1,000 characters, one line each:

@@ -105,6 +105,11 @@ def load_config(path: Path = CONFIG_PATH) -> Config:
     if chat.get("mode") not in ("off", "dry-run", "on"):  # YAML reads a bare off/on as false/true: quote them
         raise ValueError(f'chat.mode in {path} must be "off", "dry-run", or "on", in quotes (got {chat.get("mode")!r})')
 
+    page_url = dashboard.get("page_url") if isinstance(dashboard, dict) else None
+    if page_url is not None and not (isinstance(page_url, str) and page_url.startswith("https://") and page_url.endswith("/")):
+        raise ValueError(f"dashboard.page_url in {path} must be the page's https:// address ending in /, "
+                         "e.g. https://jonaht26.github.io/sleeper-dashboard/")
+
     return Config(league_id=league_id, season=season, season_start_dates=start_dates, metrics=metrics,
                   dashboard={**dashboard, "stale_after_days": stale}, history_from=history_from,
                   sleeper_points_gaps=_points_gaps(raw.get("sleeper_points_gaps") or {}, path),

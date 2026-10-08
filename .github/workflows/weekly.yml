@@ -55,9 +55,12 @@ jobs:
         id: dashboard
         run: python -m sleeper_dash.dashboard
 
+      # Also checks the built site/: the link-preview tags and image name this run's latest week.
       - name: Page tests (this run's tables)
         id: page_tests
-        run: pytest -q tests/test_page.py
+        env:
+          CHECK_BUILT_SITE: "1"
+        run: pytest -q tests/test_page.py tests/test_site.py
 
       - name: Commit refreshed tables
         id: commit

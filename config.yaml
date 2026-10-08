@@ -54,6 +54,8 @@ champion_overrides:
 # when the next update is due (the times come from .github/workflows/weekly.yml).
 dashboard:
   stale_after_days: 8
+  # The published page's address: the link in the chat post and in the page's link-preview tags.
+  page_url: https://jonaht26.github.io/sleeper-dashboard/
 
 # The weekly league-chat post (src/sleeper_dash/chat.py; docs/RUNBOOK.md section 7), owner 2026-10-05.
 # After each successful update the workflow posts the top 3, the biggest riser and faller, two awards, and the
@@ -63,7 +65,6 @@ dashboard:
 chat:
   mode: "dry-run"
   awards: [top_score, heartbreaker, blowout, bench_blunder]   # the first two given that week are posted
-  page_url: https://jonaht26.github.io/sleeper-dashboard/
 
 # Metric parameters. Definitions and the reasoning behind each value are in
 # docs/METRICS_SPEC.md; change a value there first, with the owner's approval.

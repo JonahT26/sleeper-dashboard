@@ -5,6 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ league_name }} power rankings</title>
 <meta name="description" content="Weekly power rankings, records, and awards for {{ league_name }}.">
+{% if social %}
+{# Link previews in group chats (Open Graph, read by GroupMe, iMessage, Discord, Facebook; Twitter cards for X).
+   The image is drawn each run (dashboard/preview.py); ?v= changes every week so apps don't reuse an old one. #}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ league_name }}">
+<meta property="og:title" content="{{ social.title }}">
+<meta property="og:description" content="{{ social.description }}">
+<meta property="og:url" content="{{ social.url }}">
+<meta property="og:image" content="{{ social.image }}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ social.alt }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ social.title }}">
+<meta name="twitter:description" content="{{ social.description }}">
+<meta name="twitter:image" content="{{ social.image }}">
+<meta name="twitter:image:alt" content="{{ social.alt }}">
+{% endif %}
 <script>document.documentElement.classList.add("js", "preload");</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

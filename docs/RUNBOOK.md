@@ -48,7 +48,7 @@ gh run list --workflow weekly.yml --limit 5
 | **Pipeline**, and the log says **"has no completed week yet"** | The settings were switched to a new season before its week 1 was scored (season rollover done too early). The last page, last season's final rankings, stays live | Ask Claude to put the previous season back in `config.yaml`, or simply wait: the switch is planned for the Tuesday after week 1 (Claude's scheduled check, Sep 14, 2027) |
 | **Pipeline**, any other message (e.g. "missing", a config setting) | A settings problem, most likely around the start of a new season | Ask Claude |
 | **Dashboard** | The page couldn't be built | Ask Claude |
-| **Page tests (this run's tables)** | The built page didn't match the data, so it wasn't published. A bug | Ask Claude |
+| **Page tests (this run's tables)** | The built page didn't match the data, or its link-preview image is missing or isn't this week's, so it wasn't published. A bug | Ask Claude |
 | **Commit refreshed tables** | Saving the new tables to GitHub clashed with another change made at the same moment | Re-run |
 | **deploy** (second job) | GitHub Pages had a hiccup while publishing | Re-run |
 | **post** (third job) | The league-chat post failed; the page is already published and fine | Section 7, "When the post fails" |
