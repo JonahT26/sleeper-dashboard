@@ -1,6 +1,7 @@
 """docs/UI_GUIDE.md "Quality floor": the parts a test can check without a browser.
 
-- Motion: with reduced motion requested, nothing on the page moves (UI_GUIDE.md "Motion").
+- Motion: with reduced motion requested, nothing on the page moves, and the page never depends on motion to show
+  anything (UI_GUIDE.md "Motion").
 - Keyboard focus: every interactive element shows a visible focus ring that stands out from its background.
 - Colour: the CSS tokens are the guide's, the contrast ratios the guide states are true, and all text meets
   WCAG AA in light and dark mode (4.5:1; 3:1 for large text, which is where pylon may appear).
@@ -23,6 +24,7 @@ from test_page import parse
 TEMPLATES = files("sleeper_dash.dashboard").joinpath("templates")
 CSS = TEMPLATES.joinpath("styles.css").read_text(encoding="utf-8")
 SCRIPTS = TEMPLATES.joinpath("page.js").read_text(encoding="utf-8") + TEMPLATES.joinpath("charts.js").read_text(encoding="utf-8")
+MOTION = TEMPLATES.joinpath("motion.js").read_text(encoding="utf-8")  # the one script that moves anything
 GUIDE = (PROJECT_ROOT / "docs" / "UI_GUIDE.md").read_text(encoding="utf-8")
 REDUCED, DARK = "(prefers-reduced-motion: reduce)", "(prefers-color-scheme: dark)"
 
@@ -100,12 +102,37 @@ def test_reduced_motion_shows_the_ladder_bars_full_length_from_the_start():
 
 
 def test_nothing_else_moves_on_its_own():
-    assert "@keyframes" not in CSS and "scroll-behavior" not in CSS
+    """Outside motion.js: no CSS animation or smooth scrolling (Lenis's overscroll-behavior rule isn't scrolling)."""
+    assert "@keyframes" not in CSS and not re.search(r"(?<![\w-])scroll-behavior", CSS)
     assert not re.search(r"Plotly\.animate|scrollIntoView|behavior\s*:|\.animate\(", SCRIPTS)
     assert "transition" not in theme.base_layout()
     for figure in re.findall(r'<script type="application/json" id="fig-[^"]+">(.*?)</script>', page(), re.S):
         figure = json.loads(figure)
         assert "transition" not in figure["layout"] and "frames" not in figure  # Plotly animates only with these
+
+
+def test_motion_runs_only_when_reduced_motion_is_not_requested():
+    head = page().split("</head>")[0]
+    assert 'if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {' in head
+    assert head.count('classList.add("motion", "motion-wait")') == 1
+    assert 'if (!root.classList.contains("motion")) return;' in MOTION
+    # Everything that moves (GSAP tweens, Flip, the split title, Lenis) is set up inside the reduced-motion check,
+    # so turning reduced motion on while the page is open undoes it all.
+    check = MOTION.index('gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", function () {')
+    assert all(MOTION.index(call) > check for call in ("new Lenis(", "gsap.timeline(", "gsap.to(", "gsap.set(",
+                                                       "Flip.from(", "SplitText.create(", "ScrollTrigger.batch("))
+
+
+def test_the_page_never_waits_on_motion_to_show_anything():
+    """What motion brings in waits hidden only with the motion-wait class, which always comes off within 3 seconds."""
+    waiting = [(m, selectors, d) for m, selectors, d in RULES if any("motion-wait" in s for s in selectors)]
+    assert waiting and all(m is None and d == {"opacity": "0"} and all(s.startswith(".motion-wait ") for s in selectors)
+                           for m, selectors, d in waiting)
+    assert 'setTimeout(function () { document.documentElement.classList.remove("motion-wait"); }, 3000);' in page()
+    assert re.search(r'\} finally \{\s*root\.classList\.remove\("motion-wait"\);', MOTION)  # and at once when motion.js is done
+    assert "else root.classList.remove(\"motion\");" in MOTION  # a missing script: no motion, nothing hidden
+    # Opacity, not visibility, so nothing waiting to be revealed drops out of the Tab order (or find in page)
+    assert "autoAlpha" not in MOTION and not re.search(r"visibility\s*:", MOTION)
 
 
 # --- Layout ------------------------------------------------------------------------------------
