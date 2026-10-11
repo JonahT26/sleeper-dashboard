@@ -264,7 +264,15 @@ Specific charts:
 
 ## Motion
 
-One deliberate moment: on first load, the ladder's power-score bars grow out from the average line once. Everything else is static unless the viewer acts (expanding a row, switching weeks). Respect `prefers-reduced-motion` by disabling the grow-in.
+Motion pass (owner, 2026-10-11; `templates/motion.js`), built with GSAP (ScrollTrigger, Flip, SplitText) and Lenis, following react-bits' SplitText, CountUp and AnimatedContent patterns rebuilt without React. The scripts are pinned and bundled with the page in `js/` (`dashboard/vendor/`), so nothing new loads from outside; they count toward the 1 MB budget.
+
+- **First load:** the masthead title rises in word by word; the ladder rows follow one after another, each bar growing out from the average line while its score counts up from 50.
+- **Scrolling:** each section after the ladder rises 24px and fades in once as it comes into view; weekly award values count up from 0 as theirs arrives. Mouse-wheel and trackpad scrolling is smoothed (Lenis); touch scrolling stays the phone's own.
+- **Switching weeks:** ladder rows slide from their old places to their new ones, each bar stretches from its old length, and each score counts from its old value; the title and the other sections fade in.
+- **Expanding a row** opens with the breakdown's height transition, as before.
+- **Numbers always end exactly as Python wrote them:** a count-up puts the written text back when it finishes, and anything still moving finishes at once when the week changes.
+- **Never at the cost of content:** sections waiting to be revealed are transparent, not hidden, so their controls stay in the Tab order (tabbing to one scrolls it into view) and find-in-page and printing see everything. Until motion starts, what it brings in waits at most 3 seconds; if a script fails, everything shows at once.
+- **Respect `prefers-reduced-motion`:** with it, none of the above runs (no smooth scrolling, no grow-in, no expand transition), and turning it on while the page is open undoes it all.
 
 ## Quality floor
 
@@ -280,4 +288,4 @@ One deliberate moment: on first load, the ladder's power-score bars grow out fro
 - A big-number "hero stat" card above the rankings.
 - Rainbow team colors and 12-item legends.
 - All-caps labels, decorative numbering, and meta strings joined with dots.
-- Gradients, glassmorphism, and decorative animation.
+- Gradients and glassmorphism. Motion beyond the list in "Motion" (owner, 2026-10-11): no looping, parallax, cursor effects, or motion that delays reading a number.

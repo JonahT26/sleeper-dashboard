@@ -39,3 +39,11 @@ def test_the_published_tags_and_image_are_this_weeks():
     assert image.exists(), "the page points to a preview image the build didn't write"
     assert preview.read_week(image) == (season, week)
     assert image.stat().st_size < 100_000
+
+
+def test_the_bundled_motion_scripts_are_published_with_the_page():
+    from sleeper_dash.dashboard import build
+    for name in build.MOTION_SCRIPTS:
+        published = SITE_DIR / build.SCRIPTS_DIR / name
+        assert published.exists(), f"the page loads {build.SCRIPTS_DIR}/{name}, which the build didn't write"
+        assert published.read_bytes() == (build.VENDOR_DIR / name).read_bytes()

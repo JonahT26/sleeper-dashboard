@@ -13,6 +13,7 @@ a week is left out entirely (owner decision, no placeholder).
 import gzip
 import json
 import re
+import shutil
 from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -25,6 +26,13 @@ from sleeper_dash.config import PROJECT_ROOT
 from sleeper_dash.dashboard import bracket, charts, explainer, history, moves, preview, theme
 
 SITE_DIR = PROJECT_ROOT / "site"
+# Motion scripts bundled with the page, in load order (UI_GUIDE.md "Motion"; dashboard/vendor/README.md): copied into
+# site/js/ on every build, so the page loads nothing new from outside. Each file's version must match (tests check).
+VENDOR_DIR = Path(__file__).parent / "vendor"
+SCRIPTS_DIR = "js"
+GSAP_VERSION, LENIS_VERSION = "3.15.0", "1.3.26"
+MOTION_SCRIPTS = {"gsap.min.js": GSAP_VERSION, "ScrollTrigger.min.js": GSAP_VERSION, "Flip.min.js": GSAP_VERSION,
+                  "SplitText.min.js": GSAP_VERSION, "lenis.min.js": LENIS_VERSION}
 TABLES = ["teams", "team_weeks", "power_rankings", "metrics_season", "lineups_optimal", "awards", "playoff_odds",
           "managers", "winners_bracket", "start_credits", "pickups", "trades", "metrics_team_weeks", "player_weeks"]
 EASTERN = ZoneInfo("America/New_York")
@@ -260,7 +268,7 @@ def build_view(tables, run, params, fresh=None, page_url=None):
                        "final": bool(run["league"].get("season_complete"))}  # season over: "Final rankings", no next update
     return {"league_name": run["league_name"], "season": run["season"], "updated": updated_text(run["finished_at"]), "updated_at": run["finished_at"],
             "stale": stale, "social": page_url and social_tags(views[-1], run, page_url), "latest": views[-1], "earlier": views[:-1], "weeks": weeks, "history": past,
-            "plotly_cdn": theme.PLOTLY_CDN, "chart_theme": chart_theme,
+            "plotly_cdn": theme.PLOTLY_CDN, "motion_scripts": motion_sources(), "chart_theme": chart_theme,
             "how_it_works": explainer.sections(params, run["league"])}  # owner-approved copy, numbers from config.yaml
 
 
@@ -328,6 +336,16 @@ def _award_tiles(week_awards, teams):
 
 # --- Rendering and files --------------------------------------------------------------------
 
+def motion_sources():
+    """Each bundled motion script's address in the page; ?v= changes with the version so browsers don't reuse an old copy."""
+    return [f"{SCRIPTS_DIR}/{name}?v={version}" for name, version in MOTION_SCRIPTS.items()]
+
+
+def motion_bytes():
+    """The bundled motion scripts' size, compressed: part of what a visitor downloads (the 1 MB budget)."""
+    return sum(len(gzip.compress((VENDOR_DIR / name).read_bytes())) for name in MOTION_SCRIPTS)
+
+
 def render(view):
     env = Environment(loader=PackageLoader("sleeper_dash.dashboard", "templates"), autoescape=True,
                       trim_blocks=True, lstrip_blocks=True)
@@ -357,6 +375,9 @@ def build_site(out_dir=None, processed_dir=None, run_path=None, workflow_path=No
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "index.html"
     path.write_text(render(view), encoding="utf-8")
+    (out_dir / SCRIPTS_DIR).mkdir(exist_ok=True)
+    for name in MOTION_SCRIPTS:
+        shutil.copyfile(VENDOR_DIR / name, out_dir / SCRIPTS_DIR / name)
     view["preview"] = preview.render(view, out_dir / preview.FILENAME)  # the link-preview image, this week's
     return path, view
 
@@ -380,4 +401,5 @@ def main():
     print(f"  Stale:    the page warns if this is more than {view['stale']['after_days']} days old; "
           f"next scheduled update {upcoming[0]['text'] if upcoming else 'none listed'}")
     compressed = len(gzip.compress(path.read_bytes()))  # the budget counts what a visitor downloads (owner, 2026-10-02)
-    print(f"  Size:     {compressed / 1024:.0f} KB compressed, of the 1 MB budget ({size / 1024:.0f} KB before compression)")
+    print(f"  Size:     {(compressed + motion_bytes()) / 1024:.0f} KB compressed, of the 1 MB budget: the page "
+          f"{compressed / 1024:.0f} KB ({size / 1024:.0f} KB before compression), motion scripts {motion_bytes() / 1024:.0f} KB")

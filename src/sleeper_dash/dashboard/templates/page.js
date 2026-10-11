@@ -12,6 +12,7 @@
   select.addEventListener("change", function () {
     var week = select.value;
     if (week === shown) return;
+    view.dispatchEvent(new Event("weekleave"));  // motion.js notes where the ladder rows are, so they can move to their new places
     var current = document.createDocumentFragment();
     while (view.firstChild) current.appendChild(view.firstChild);
     parked[shown] = current;

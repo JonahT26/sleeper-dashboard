@@ -358,12 +358,16 @@ def test_the_only_outside_requests_are_google_fonts_and_the_plotly_cdn(season):
     doc = season.doc
     for node in doc.walk():
         for attr, value in node.attrs.items():
-            if attr in FETCHING_ATTRS and not value.startswith("#"):
+            if attr in FETCHING_ATTRS and not value.startswith("#") and value not in build.motion_sources():
                 url = urlsplit(value)
                 assert url.scheme == "https" and url.netloc in ALLOWED_HOSTS, f'<{node.tag} {attr}="{value}">'
     assert not [n.tag for n in doc.walk() if n.tag in FETCHING_TAGS]
     assert not [n for n in doc.walk() if "http-equiv" in n.attrs]
-    assert [n.attrs["src"] for n in doc.all("script") if "src" in n.attrs] == [theme.PLOTLY_CDN]
+    # the motion scripts from the page's own js/ folder, then Plotly from its CDN; none holds up the page
+    scripts = [n for n in doc.all("script") if "src" in n.attrs]
+    assert [n.attrs["src"] for n in scripts] == [*build.motion_sources(), theme.PLOTLY_CDN]
+    assert all("defer" in n.attrs for n in scripts)
+    assert all(src.startswith(f"{build.SCRIPTS_DIR}/") for src in build.motion_sources())
     sheets = [n.attrs["href"] for n in doc.all("link") if n.attrs.get("rel") == "stylesheet"]
     assert len(sheets) == 1 and sheets[0].startswith("https://fonts.googleapis.com/css2?")
 
@@ -374,7 +378,7 @@ def test_inline_styles_and_scripts_fetch_nothing(season):
     for text in css:
         assert "url(" not in text and "@import" not in text and "image-set(" not in text
     code = [n.text() for n in doc.all("script") if "src" not in n.attrs and n.attrs.get("type") != "application/json"]
-    assert len(code) == 3  # the preload flag, the week selector, the chart drawing
+    assert len(code) == 4  # the preload and motion flags, the week selector, the motion, the chart drawing
     for text in code:
         assert not NETWORK_JS.search(text), NETWORK_JS.search(text).group(0)
 
@@ -410,14 +414,27 @@ def compressed(html):
 
 
 def test_this_seasons_page_is_under_the_budget(season):
-    assert compressed(season.html) < BUDGET
+    """The budget counts the bundled motion scripts too: a visitor downloads them with the page."""
+    assert compressed(season.html) + build.motion_bytes() < BUDGET
 
 
 def test_a_full_season_of_this_leagues_data_is_under_the_budget():
     tables, params = this_season()
     page = built(full_season(tables), params)
     assert len(week_nodes(page.doc)) == 17
-    assert compressed(page.html) < BUDGET
+    assert compressed(page.html) + build.motion_bytes() < BUDGET
+
+
+def test_the_bundled_motion_scripts_are_the_pinned_versions():
+    """dashboard/vendor/README.md: GSAP's files name their version in the header, Lenis in its first line of code."""
+    for name, version in build.MOTION_SCRIPTS.items():
+        head = (build.VENDOR_DIR / name).read_text(encoding="utf-8")[:400]
+        if name == "lenis.min.js":
+            assert f"var e=`{version}`" in head and "MIT License" in head
+        else:
+            label = "GSAP" if name == "gsap.min.js" else name.removesuffix(".min.js")
+            assert f" * {label} {version}\n" in head and "gsap.com/standard-license" in head, name
+    assert "sourceMappingURL" not in (build.VENDOR_DIR / "lenis.min.js").read_text(encoding="utf-8")  # no map is bundled
 
 
 def test_plotly_and_the_fonts_are_not_inlined(season):

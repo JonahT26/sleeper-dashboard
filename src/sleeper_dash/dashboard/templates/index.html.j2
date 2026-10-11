@@ -24,10 +24,22 @@
 <meta name="twitter:image" content="{{ social.image }}">
 <meta name="twitter:image:alt" content="{{ social.alt }}">
 {% endif %}
-<script>document.documentElement.classList.add("js", "preload");</script>
+<script>
+document.documentElement.classList.add("js", "preload");
+// Motion (motion.js) runs only for viewers who haven't asked for reduced motion. Until it has set where each
+// moving element starts, those elements wait hidden; never for more than 3 seconds, whatever happens.
+if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+  document.documentElement.classList.add("motion", "motion-wait");
+  setTimeout(function () { document.documentElement.classList.remove("motion-wait"); }, 3000);
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+{# Motion scripts first: deferred scripts run in this order, and motion.js starts when the last of these has run, not after Plotly #}
+{% for src in motion_scripts %}
+<script src="{{ src }}" defer{% if loop.last %} id="motion-scripts"{% endif %}></script>
+{% endfor %}
 <script src="{{ plotly_cdn }}" defer></script>
 <style>
 {% include "styles.css" %}
@@ -355,6 +367,9 @@
 <script type="application/json" id="chart-theme">{{ chart_theme|safe }}</script>
 <script>
 {% include "page.js" %}
+</script>
+<script>
+{% include "motion.js" %}
 </script>
 <script>
 {% include "charts.js" %}

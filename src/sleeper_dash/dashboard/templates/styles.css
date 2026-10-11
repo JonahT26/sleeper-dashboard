@@ -273,6 +273,15 @@ details[open]::details-content { block-size: auto; }
   .chart-section.wide { grid-column: 1 / -1; }
   .moves-section { grid-column: 1 / -1; }
 }
+/* Motion (motion.js; UI_GUIDE.md "Motion"): only with the "motion" class, which the page sets when reduced motion isn't requested */
+.motion-wait .mast .title, .motion-wait .ladder .team, .motion-wait main section:not(.ladder-section) { opacity: 0; }
+@media print { .motion main section { opacity: 1 !important; transform: none !important; } }  /* sections not yet scrolled to */
+.motion .div .fill { transition: none; }  /* GSAP grows the bars instead, in step with their rows */
+/* Lenis (smooth scrolling): its recommended rules */
+html.lenis, html.lenis body { height: auto; }
+.lenis:not(.lenis-autoToggle).lenis-stopped { overflow: clip; }
+.lenis [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
   .div .fill, details::details-content { transition: none; }
   .preload .l3 .fill { transform: none; }
