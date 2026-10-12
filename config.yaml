@@ -63,7 +63,7 @@ dashboard:
 # run's summary, send nothing), or "on". Keep the quotes: YAML reads a bare off/on as false/true.
 # The GroupMe bot ID is a GitHub Actions secret (GROUPME_BOT_ID), never written here (CLAUDE.md rule 7).
 chat:
-  mode: "dry-run"
+  mode: "on"
   awards: [top_score, heartbreaker, blowout, bench_blunder]   # the first two given that week are posted
 
 # Metric parameters. Definitions and the reasoning behind each value are in
