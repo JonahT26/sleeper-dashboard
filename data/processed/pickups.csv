@@ -80,7 +80,7 @@
 2020,614831300720828416,3,False,free_agent,7,5026,Tre'Quan Smith,,0,0.0
 2020,614832011651158016,3,False,waiver,4,LAR,Los Angeles Rams,3,5,47.0
 2020,615016723749474304,3,False,waiver,2,331,Philip Rivers,11,1,12.68
-2020,615017382628511744,3,False,free_agent,4,6819,Michael Pittman,,0,0.0
+2020,615017382628511744,3,False,free_agent,4,6819,Michael Pittman Jr.,,0,0.0
 2020,615250891028672512,3,False,free_agent,3,538,Emmanuel Sanders,,0,0.0
 2020,615252548659511296,3,False,free_agent,2,536,Antonio Brown,,0,0.0
 2020,615253772700053504,3,False,waiver,2,5967,Tony Pollard,1,0,0.0
@@ -189,7 +189,7 @@
 2020,622467143375609856,6,False,free_agent,2,4149,Jamaal Williams,,0,0.0
 2020,622479198023413760,6,False,free_agent,3,3664,J.D. McKissic,,0,0.0
 2020,622480271345790976,6,False,free_agent,5,DET,Detroit Lions,,1,8.0
-2020,622566173204107264,6,False,free_agent,4,5917,Mecole Hardman,,1,0.0
+2020,622566173204107264,6,False,free_agent,4,5917,Mecole Hardman Jr.,,1,0.0
 2020,622580834242768896,6,False,free_agent,5,1793,Trey Burton,,1,19.9
 2020,622582261153361920,6,False,free_agent,7,2251,Logan Thomas,,0,0.0
 2020,622583424569397248,6,False,waiver,7,6694,D'Ernest Johnson,0,0,0.0
@@ -351,7 +351,7 @@
 2020,632272332412506112,10,False,free_agent,3,1433,Brandon McManus,,1,8.0
 2020,632288504524677120,10,False,waiver,7,4602,Robert Tonyan,0,1,4.8
 2020,632321442201014272,10,False,free_agent,2,7045,Joshua Kelley,,0,0.0
-2020,632334222106902528,10,False,free_agent,6,6011,Gardner Minshew,,0,0.0
+2020,632334222106902528,10,False,free_agent,6,6011,Gardner Minshew II,,0,0.0
 2020,632334288569839616,10,False,free_agent,6,1387,Rex Burkhead,,0,0.0
 2020,632340136016842752,10,False,free_agent,2,956,Mark Ingram,,0,0.0
 2020,632439952122146816,10,False,free_agent,9,4994,Kalen Ballage,,0,0.0
@@ -359,7 +359,7 @@
 2020,632445121698291712,10,False,free_agent,8,4233,Zane Gonzalez,,4,29.0
 2020,632445772171919360,10,False,waiver,8,538,Emmanuel Sanders,0,1,1.0
 2020,632497943223558144,10,False,free_agent,4,3934,Troymaine Pope,,0,0.0
-2020,632575675106152448,10,False,free_agent,4,6819,Michael Pittman,,0,0.0
+2020,632575675106152448,10,False,free_agent,4,6819,Michael Pittman Jr.,,0,0.0
 2020,632613527273701376,10,False,free_agent,2,WAS,Washington Commanders,,1,0.0
 2020,632617163592642560,10,False,free_agent,10,2251,Logan Thomas,,1,8.6
 2020,632622174749945856,10,False,free_agent,5,5955,Hunter Renfrow,,0,0.0
@@ -668,7 +668,7 @@
 2021,753979609325957120,6,False,free_agent,9,6989,Marquez Callaway,,0,0.0
 2021,753988458980204544,6,False,free_agent,6,7547,Amon-Ra St. Brown,,0,0.0
 2021,754043801479266304,6,False,free_agent,4,391,Ryan Succop,,1,4.0
-2021,754053260549160960,6,False,free_agent,10,5917,Mecole Hardman,,0,0.0
+2021,754053260549160960,6,False,free_agent,10,5917,Mecole Hardman Jr.,,0,0.0
 2021,754064499417407488,6,False,waiver,11,3163,Jared Goff,1,1,9.18
 2021,754067399849971712,6,False,free_agent,5,5024,James Washington,,0,0.0
 2021,754359785557757952,6,False,free_agent,9,4351,Tim Patrick,,0,0.0
@@ -715,7 +715,7 @@
 2021,757053216298192896,7,False,free_agent,8,3423,Robbie Chosen,,0,0.0
 2021,757312472494469120,7,False,free_agent,2,2168,Devonta Freeman,,1,11.4
 2021,757354643096449024,7,False,waiver,10,7042,Tyler Bass,8,7,46.0
-2021,757424760606068736,7,False,waiver,11,5917,Mecole Hardman,2,1,2.8
+2021,757424760606068736,7,False,waiver,11,5917,Mecole Hardman Jr.,2,1,2.8
 2021,757631280207753216,7,False,free_agent,9,1837,Jimmy Garoppolo,,1,7.24
 2021,757634075149402112,7,False,waiver,2,4017,Deshaun Watson,0,0,0.0
 2021,757634181223305216,7,False,free_agent,9,7611,Rhamondre Stevenson,,0,0.0
@@ -810,7 +810,7 @@
 2021,762446727868436480,9,False,free_agent,9,827,Tyrod Taylor,,0,0.0
 2021,762453173146349568,9,False,free_agent,9,3328,Rashard Higgins,,0,0.0
 2021,762469610560872448,9,False,free_agent,6,2549,Trevor Siemian,,1,15.96
-2021,763064011188219904,9,False,free_agent,5,5917,Mecole Hardman,,1,3.5
+2021,763064011188219904,9,False,free_agent,5,5917,Mecole Hardman Jr.,,1,3.5
 2021,763065764289880064,9,False,free_agent,5,1817,Sammy Watkins,,0,0.0
 2021,763124649541419008,9,False,free_agent,11,3257,Jacoby Brissett,,2,17.1
 2021,763126122090246144,9,False,free_agent,5,5110,Russell Gage,,1,0.0
@@ -869,7 +869,7 @@
 2021,766686462900043776,11,False,free_agent,1,4082,Curtis Samuel,,0,0.0
 2021,766693173270577152,11,False,free_agent,9,3214,Hunter Henry,,0,0.0
 2021,766693699517292544,11,False,free_agent,9,7608,Khalil Herbert,,0,0.0
-2021,766695270074396672,11,False,free_agent,11,5917,Mecole Hardman,,0,0.0
+2021,766695270074396672,11,False,free_agent,11,5917,Mecole Hardman Jr.,,0,0.0
 2021,766706301257498624,11,False,waiver,10,IND,Indianapolis Colts,1,1,19.0
 2021,766712465911353344,11,False,free_agent,4,7527,Mac Jones,,1,11.38
 2021,766804885860720640,11,False,free_agent,8,4892,Baker Mayfield,,0,0.0
@@ -947,7 +947,7 @@
 2021,772856931084832768,13,False,free_agent,3,6039,Ty Johnson,,1,2.5
 2021,773161076786339840,13,False,free_agent,4,5209,Mike Boone,,0,0.0
 2021,773215320222580736,13,False,free_agent,10,5870,Daniel Jones,,0,0.0
-2021,773230665159352320,13,False,free_agent,12,6011,Gardner Minshew,,1,18.78
+2021,773230665159352320,13,False,free_agent,12,6011,Gardner Minshew II,,1,18.78
 2021,773633382675509248,13,False,free_agent,2,947,Julio Jones,,0,0.0
 2021,773947231593160704,13,False,waiver,11,DEN,Denver Broncos,0,1,11.0
 2021,773948333701099520,13,False,waiver,11,391,Ryan Succop,0,1,9.0
@@ -1001,7 +1001,7 @@
 2022,872491469620039680,1,True,free_agent,2,1817,Sammy Watkins,,0,0.0
 2022,872669453366775808,1,True,free_agent,6,830,A.J. Green,,1,2.3
 2022,872859256540622848,1,True,free_agent,10,5284,Jeff Wilson,,0,0.0
-2022,872881909783543808,1,True,free_agent,8,8154,Brian Robinson,,2,21.6
+2022,872881909783543808,1,True,free_agent,8,8154,Brian Robinson Jr.,,2,21.6
 2022,872882416061194240,1,True,free_agent,8,5110,Russell Gage,,0,0.0
 2022,872988290922496000,1,True,free_agent,12,5122,Boston Scott,,0,0.0
 2022,873088649762385920,1,True,free_agent,4,8167,Christian Watson,,1,2.4
@@ -1056,7 +1056,7 @@
 2022,878127544501944320,2,False,waiver,4,PHI,Philadelphia Eagles,5,11,115.0
 2022,878127611287703552,2,False,waiver,4,1144,Cole Beasley,0,0,0.0
 2022,878214883253104640,3,False,free_agent,4,4574,Cooper Rush,,0,0.0
-2022,878286231082147840,3,False,free_agent,1,8138,James Cook,,0,0.0
+2022,878286231082147840,3,False,free_agent,1,8138,James Cook III,,0,0.0
 2022,878331311096496128,3,False,waiver,12,BAL,Baltimore Ravens,1,0,0.0
 2022,878387038163185664,3,False,free_agent,5,5970,Greg Dortch,,0,0.0
 2022,878575526078611456,3,False,free_agent,6,NYG,New York Giants,,2,18.0
@@ -1135,7 +1135,7 @@
 2022,885772560460283904,5,False,waiver,4,7090,Darnell Mooney,0,1,10.3
 2022,885875177878249472,6,False,free_agent,2,CLE,Cleveland Browns,,1,1.0
 2022,885882858974162944,6,False,free_agent,5,IND,Indianapolis Colts,,1,7.0
-2022,885905053695815680,6,False,free_agent,9,8138,James Cook,,0,0.0
+2022,885905053695815680,6,False,free_agent,9,8138,James Cook III,,0,0.0
 2022,885907028948766720,6,False,free_agent,9,8228,Jaylen Warren,,0,0.0
 2022,885926462925193216,6,False,free_agent,7,6931,DeeJay Dallas,,0,0.0
 2022,885926468314685440,6,False,waiver,5,6126,Irv Smith,1,0,0.0
@@ -1175,7 +1175,7 @@
 2022,888465823050776576,7,False,free_agent,7,TEN,Tennessee Titans,,2,29.0
 2022,888501086691078144,7,False,free_agent,2,4943,Sam Darnold,,0,0.0
 2022,888503080612872192,7,False,waiver,7,4381,Taysom Hill,7,1,9.62
-2022,888553119418802176,7,False,free_agent,1,2078,Odell Beckham,,0,0.0
+2022,888553119418802176,7,False,free_agent,1,2078,Odell Beckham Jr.,,0,0.0
 2022,888571003373223936,7,False,free_agent,2,NYJ,New York Jets,,1,7.0
 2022,888595985759113216,7,False,free_agent,11,4993,Mike Gesicki,,1,4.2
 2022,888596554276065280,7,False,free_agent,11,ARI,Arizona Cardinals,,6,43.0
@@ -1185,7 +1185,7 @@
 2022,889026895608578048,7,False,free_agent,12,7594,Chuba Hubbard,,0,0.0
 2022,889027305249820672,7,False,waiver,2,4335,P.J. Walker,3,2,31.76
 2022,889206296849825792,7,False,free_agent,9,8150,Kyren Williams,,0,0.0
-2022,889208499631099904,7,False,free_agent,9,8138,James Cook,,0,0.0
+2022,889208499631099904,7,False,free_agent,9,8138,James Cook III,,0,0.0
 2022,889276414590009344,7,False,free_agent,9,1352,Robert Woods,,0,0.0
 2022,889287182194483200,7,False,free_agent,5,5995,Justice Hill,,0,0.0
 2022,889528548136882176,7,False,free_agent,2,8111,Cade Otton,,1,8.4
@@ -1196,7 +1196,7 @@
 2022,889881213584715776,7,False,free_agent,9,8188,Tyquan Thornton,,0,0.0
 2022,889954826837463040,7,False,free_agent,8,8136,Rachaad White,,3,37.5
 2022,890352366648586240,7,False,waiver,10,5880,Parris Campbell,8,0,0.0
-2022,890495977297993728,7,False,waiver,9,8138,James Cook,0,0,0.0
+2022,890495977297993728,7,False,waiver,9,8138,James Cook III,0,0,0.0
 2022,890498069677088768,7,False,waiver,9,8150,Kyren Williams,0,0,0.0
 2022,890499038183813120,7,False,waiver,9,7596,Elijah Moore,0,0,0.0
 2022,890611640750723072,7,False,waiver,6,7583,Sam Ehlinger,55,1,7.54
@@ -1237,10 +1237,10 @@
 2022,893623334154186752,9,False,free_agent,10,4080,Zay Jones,,1,6.5
 2022,893904802814398464,9,False,free_agent,9,6938,Cam Akers,,0,0.0
 2022,893962362124656640,9,False,free_agent,10,2750,DeAndre Carter,,2,22.2
-2022,893993570728566784,9,False,free_agent,7,8138,James Cook,,1,2.0
+2022,893993570728566784,9,False,free_agent,7,8138,James Cook III,,1,2.0
 2022,894293538307731456,9,False,free_agent,12,7090,Darnell Mooney,,2,18.6
-2022,895401801548087296,9,False,waiver,10,5917,Mecole Hardman,6,0,0.0
-2022,895437857353785344,9,False,free_agent,4,2078,Odell Beckham,,0,0.0
+2022,895401801548087296,9,False,waiver,10,5917,Mecole Hardman Jr.,6,0,0.0
+2022,895437857353785344,9,False,free_agent,4,2078,Odell Beckham Jr.,,0,0.0
 2022,895699993812434944,9,False,waiver,3,6826,Cole Kmet,1,1,21.4
 2022,895700418624245760,9,False,waiver,3,TEN,Tennessee Titans,2,1,13.0
 2022,895736408092979200,9,False,waiver,7,NYG,New York Giants,6,2,10.0
@@ -1339,7 +1339,7 @@
 2022,905883858082574336,13,False,waiver,2,GB,Green Bay Packers,5,0,0.0
 2022,905885611234439168,13,False,waiver,2,LAC,Los Angeles Chargers,3,1,4.0
 2022,906092848573833216,13,False,waiver,4,8183,Brock Purdy,13,0,0.0
-2022,906093350753751040,13,False,waiver,4,5154,Trent Sherfield,0,0,0.0
+2022,906093350753751040,13,False,waiver,4,5154,Trent Sherfield Sr.,0,0,0.0
 2022,906162565141381120,14,False,free_agent,12,4892,Baker Mayfield,,0,0.0
 2022,906264610942889984,14,False,free_agent,5,JAX,Jacksonville Jaguars,,0,0.0
 2022,906267651494522880,14,False,free_agent,4,7585,Davis Mills,,0,0.0
@@ -1361,7 +1361,7 @@
 2022,908387450463010816,14,False,waiver,3,CAR,Carolina Panthers,10,0,0.0
 2022,908436718032887808,14,False,waiver,6,533,Colt McCoy,24,0,0.0
 2022,908523543761993728,14,False,waiver,9,8119,Jahan Dotson,2,0,0.0
-2022,908553218588766208,14,False,waiver,3,8116,Pierre Strong,36,0,0.0
+2022,908553218588766208,14,False,waiver,3,8116,Pierre Strong Jr.,36,0,0.0
 2022,908572598147911680,14,False,waiver,5,NO,New Orleans Saints,0,0,0.0
 2022,908584267175628800,14,False,waiver,2,DEN,Denver Broncos,2,0,0.0
 2022,908636749805420544,14,False,waiver,4,7596,Elijah Moore,0,0,0.0
@@ -1370,7 +1370,7 @@
 2023,1001254315907928064,1,True,free_agent,4,2711,Taylor Heinicke,,0,0.0
 2023,1001255573083443200,1,True,free_agent,5,7083,Tyler Huntley,,0,0.0
 2023,1001684776169828352,1,True,free_agent,9,7569,Nico Collins,,3,47.7
-2023,1001693583767826432,1,True,free_agent,8,9494,Marvin Mims,,0,0.0
+2023,1001693583767826432,1,True,free_agent,8,9494,Marvin Mims Jr.,,0,0.0
 2023,1001872395721830400,1,True,free_agent,2,8148,Jameson Williams,,0,0.0
 2023,1001926782284525568,1,True,free_agent,8,9220,Evan Hull,,0,0.0
 2023,1001926805978148864,1,True,free_agent,8,7551,Deon Jackson,,0,0.0
@@ -1400,7 +1400,7 @@
 2023,1005193283401764864,1,False,free_agent,2,6820,Clyde Edwards-Helaire,,0,0.0
 2023,1005204439700951040,1,False,free_agent,8,6826,Cole Kmet,,0,0.0
 2023,1005250113326899200,1,False,free_agent,9,1535,Cordarrelle Patterson,,0,0.0
-2023,1005253486155489280,1,False,free_agent,1,9494,Marvin Mims,,0,0.0
+2023,1005253486155489280,1,False,free_agent,1,9494,Marvin Mims Jr.,,0,0.0
 2023,1005368078378549248,1,False,free_agent,4,10236,Dalton Kincaid,,2,11.6
 2023,1005636471094599680,1,False,free_agent,8,4943,Sam Darnold,,0,0.0
 2023,1005880148839444480,1,False,waiver,10,10859,Sam LaPorta,13,9,126.4
@@ -1433,7 +1433,7 @@
 2023,1007996145138626560,2,False,waiver,1,DEN,Denver Broncos,0,1,1.0
 2023,1008021166537138176,2,False,free_agent,5,IND,Indianapolis Colts,,1,10.0
 2023,1008035255850196992,2,False,free_agent,9,HOU,Houston Texans,,1,0.0
-2023,1008851226051559424,2,False,free_agent,4,2078,Odell Beckham,,0,0.0
+2023,1008851226051559424,2,False,free_agent,4,2078,Odell Beckham Jr.,,0,0.0
 2023,1009165266397396992,2,False,free_agent,9,1992,Allen Robinson,,0,0.0
 2023,1009207370112794624,2,False,free_agent,2,4943,Sam Darnold,,0,0.0
 2023,1009330299840544768,2,False,waiver,10,3214,Hunter Henry,8,1,3.7
@@ -1443,13 +1443,13 @@
 2023,1009880051472584704,2,False,waiver,8,KC,Kansas City Chiefs,0,2,18.0
 2023,1009958215771078656,2,False,waiver,5,4098,Kareem Hunt,11,0,0.0
 2023,1009979448810188800,2,False,waiver,1,9502,Tank Dell,0,3,26.1
-2023,1009981706830467072,2,False,waiver,2,8116,Pierre Strong,0,0,0.0
+2023,1009981706830467072,2,False,waiver,2,8116,Pierre Strong Jr.,0,0,0.0
 2023,1010065689396236288,2,False,waiver,4,6984,Tony Jones,4,0,0.0
 2023,1010065980430692352,2,False,waiver,4,4381,Taysom Hill,2,0,0.0
 2023,1010082167935860736,2,False,waiver,12,BAL,Baltimore Ravens,5,6,50.0
 2023,1010159000056315904,3,False,free_agent,7,4455,Matt Breida,,0,0.0
 2023,1010178027222810624,3,False,free_agent,5,JAX,Jacksonville Jaguars,,2,17.0
-2023,1010182225620451328,3,False,free_agent,2,6011,Gardner Minshew,,1,13.08
+2023,1010182225620451328,3,False,free_agent,2,6011,Gardner Minshew II,,1,13.08
 2023,1010185610394419200,3,False,free_agent,2,PIT,Pittsburgh Steelers,,2,11.0
 2023,1010229106614550528,3,False,free_agent,1,SEA,Seattle Seahawks,,2,35.0
 2023,1010262194354733056,3,False,free_agent,4,7562,Tutu Atwell,,2,20.1
@@ -1485,7 +1485,7 @@
 2023,1012650725203173376,3,False,waiver,4,TB,Tampa Bay Buccaneers,0,1,15.0
 2023,1012672913096400896,4,False,free_agent,4,IND,Indianapolis Colts,,1,4.0
 2023,1012725089919442944,4,False,waiver,7,4455,Matt Breida,0,1,2.9
-2023,1012786833593294848,4,False,free_agent,9,9494,Marvin Mims,,0,0.0
+2023,1012786833593294848,4,False,free_agent,9,9494,Marvin Mims Jr.,,0,0.0
 2023,1012788521108586496,4,False,free_agent,5,3271,Tyler Higbee,,0,0.0
 2023,1012945894074826752,4,False,free_agent,9,9500,Josh Downs,,0,0.0
 2023,1013184687738535936,4,False,free_agent,11,MIN,Minnesota Vikings,,1,19.0
@@ -1530,7 +1530,7 @@
 2023,1016080030549495808,5,False,free_agent,2,6886,Chase Claypool,,0,0.0
 2023,1016706482391306240,5,False,free_agent,1,NE,New England Patriots,,1,1.0
 2023,1016772690230874112,5,False,free_agent,8,KC,Kansas City Chiefs,,1,15.0
-2023,1016774721494552576,5,False,free_agent,2,2078,Odell Beckham,,0,0.0
+2023,1016774721494552576,5,False,free_agent,2,2078,Odell Beckham Jr.,,0,0.0
 2023,1017431835338452992,5,False,waiver,8,7601,Rondale Moore,0,0,0.0
 2023,1017459397578129408,5,False,waiver,5,2251,Logan Thomas,3,6,46.1
 2023,1017590269723680768,5,False,waiver,2,8408,Jordan Mason,1,0,0.0
@@ -1541,7 +1541,7 @@
 2023,1017661100441120768,5,False,waiver,1,7066,K.J. Osborn,15,0,0.0
 2023,1017661318205210624,5,False,waiver,1,ATL,Atlanta Falcons,0,1,5.0
 2023,1017665589680111616,5,False,waiver,9,10225,Jonathan Mingo,0,0,0.0
-2023,1017670410348920832,5,False,waiver,12,6011,Gardner Minshew,60,8,114.14
+2023,1017670410348920832,5,False,waiver,12,6011,Gardner Minshew II,60,8,114.14
 2023,1017694279864569856,5,False,waiver,4,11199,Emari Demercado,31,0,0.0
 2023,1017696203804418048,5,False,waiver,4,NO,New Orleans Saints,3,1,5.0
 2023,1017793939899760640,6,False,free_agent,5,4111,D'Onta Foreman,,0,0.0
@@ -1610,7 +1610,7 @@
 2023,1022843128107065344,8,False,free_agent,7,KC,Kansas City Chiefs,,1,12.0
 2023,1022940115007528960,8,False,free_agent,8,4033,David Njoku,,0,0.0
 2023,1022972277823987712,8,False,free_agent,1,HOU,Houston Texans,,1,7.0
-2023,1022979358094352384,8,False,free_agent,4,8116,Pierre Strong,,0,0.0
+2023,1022979358094352384,8,False,free_agent,4,8116,Pierre Strong Jr.,,0,0.0
 2023,1022979715226755072,8,False,free_agent,5,MIA,Miami Dolphins,,1,6.0
 2023,1023014188660121600,8,False,free_agent,4,JAX,Jacksonville Jaguars,,1,12.0
 2023,1023069604916060160,8,False,free_agent,8,4335,P.J. Walker,,0,0.0
@@ -1717,7 +1717,7 @@
 2023,1030850805458362368,11,False,free_agent,11,MIN,Minnesota Vikings,,2,17.0
 2023,1030906896368099328,11,False,free_agent,7,6421,Jalen Guyton,,0,0.0
 2023,1030942138428645376,11,False,free_agent,5,8121,Romeo Doubs,,0,0.0
-2023,1031297852967837696,11,False,free_agent,4,10219,Chris Rodriguez,,0,0.0
+2023,1031297852967837696,11,False,free_agent,4,10219,Chris Rodriguez Jr.,,0,0.0
 2023,1031329026721439744,11,False,waiver,3,6111,Jake Browning,41,1,23.7
 2023,1031356846461771776,11,False,free_agent,1,NE,New England Patriots,,1,13.0
 2023,1031357766473965568,11,False,free_agent,1,7601,Rondale Moore,,0,0.0
@@ -1729,7 +1729,7 @@
 2023,1032636960789192704,11,False,waiver,8,10222,Jayden Reed,2,1,3.6
 2023,1032784221565206528,11,False,waiver,7,7562,Tutu Atwell,0,0,0.0
 2023,1032798279446261760,11,False,waiver,9,8131,Isaiah Likely,20,0,0.0
-2023,1032835297324703744,11,False,waiver,6,2078,Odell Beckham,9,0,0.0
+2023,1032835297324703744,11,False,waiver,6,2078,Odell Beckham Jr.,9,0,0.0
 2023,1032858738274832384,11,False,waiver,2,10235,Roschon Johnson,0,0,0.0
 2023,1032936342407327744,11,False,waiver,12,DEN,Denver Broncos,1,1,18.0
 2023,1032953822328606720,11,False,waiver,4,5257,Tim Boyle,0,0,0.0
@@ -1842,7 +1842,7 @@
 2024,1136495217147789312,1,True,free_agent,9,11618,Jalen McMillan,,0,0.0
 2024,1136691030599782400,1,True,free_agent,2,10226,Andrei Iosivas,,0,0.0
 2024,1136767294073335808,1,True,free_agent,3,11584,Bucky Irving,,6,89.8
-2024,1136828634158723072,1,True,free_agent,8,11655,Tyrone Tracy,,0,0.0
+2024,1136828634158723072,1,True,free_agent,8,11655,Tyrone Tracy Jr.,,0,0.0
 2024,1137149289290928128,1,False,free_agent,12,4149,Jamaal Williams,,0,0.0
 2024,1137161797007441920,1,False,free_agent,4,7090,Darnell Mooney,,0,0.0
 2024,1137992288958930944,1,False,free_agent,8,5970,Greg Dortch,,0,0.0
@@ -1868,7 +1868,7 @@
 2024,1139635462752239616,2,False,free_agent,8,2306,Jameis Winston,,0,0.0
 2024,1139636320961310720,2,False,free_agent,8,5284,Jeff Wilson,,0,0.0
 2024,1139650567363674112,2,False,waiver,7,7594,Chuba Hubbard,3,9,127.6
-2024,1139673300927365120,2,False,free_agent,8,11559,Michael Penix,,0,0.0
+2024,1139673300927365120,2,False,free_agent,8,11559,Michael Penix Jr.,,0,0.0
 2024,1139682742565715968,2,False,free_agent,9,11626,Xavier Legette,,0,0.0
 2024,1139914892107956224,2,False,free_agent,1,11575,Ray Davis,,0,0.0
 2024,1140042874390691840,2,False,free_agent,5,6960,Tyler Johnson,,0,0.0
@@ -1925,7 +1925,7 @@
 2024,1144679277678403584,4,False,free_agent,4,10226,Andrei Iosivas,,0,0.0
 2024,1144746819516239872,4,False,free_agent,8,6826,Cole Kmet,,1,6.4
 2024,1144816959570186240,4,False,free_agent,4,11626,Xavier Legette,,0,0.0
-2024,1145021819955580928,4,False,free_agent,2,11655,Tyrone Tracy,,0,0.0
+2024,1145021819955580928,4,False,free_agent,2,11655,Tyrone Tracy Jr.,,0,0.0
 2024,1145040839010291712,4,False,free_agent,9,8208,Tyler Badie,,0,0.0
 2024,1145049323848208384,4,False,free_agent,1,10232,Michael Wilson,,1,3.3
 2024,1145072204778971136,4,False,free_agent,2,6820,Clyde Edwards-Helaire,,0,0.0
@@ -1955,9 +1955,9 @@
 2024,1147238444280684544,5,False,free_agent,9,8117,Jalen Tolbert,,0,0.0
 2024,1147269699600752640,5,False,free_agent,1,5096,Ray-Ray McCloud,,0,0.0
 2024,1147269981906841600,5,False,waiver,1,3257,Jacoby Brissett,0,0,0.0
-2024,1147270127969210368,5,False,free_agent,1,11655,Tyrone Tracy,,2,33.2
+2024,1147270127969210368,5,False,free_agent,1,11655,Tyrone Tracy Jr.,,2,33.2
 2024,1147270214225072128,5,False,free_agent,1,11589,Trey Benson,,0,0.0
-2024,1147549359261917184,5,False,waiver,2,6011,Gardner Minshew,0,0,0.0
+2024,1147549359261917184,5,False,waiver,2,6011,Gardner Minshew II,0,0,0.0
 2024,1147624956985974784,5,False,free_agent,4,8111,Cade Otton,,8,104.7
 2024,1147635076805533696,5,False,free_agent,10,IND,Indianapolis Colts,,3,18.0
 2024,1147660166603575296,5,False,free_agent,5,4219,Jeremy McNichols,,0,0.0
@@ -2067,7 +2067,7 @@
 2024,1154714248417759232,8,False,free_agent,4,11627,Troy Franklin,,0,0.0
 2024,1154782336051953664,8,False,free_agent,5,HOU,Houston Texans,,0,0.0
 2024,1154782659940302848,8,False,free_agent,5,WAS,Washington Commanders,,3,18.0
-2024,1154793249597407232,8,False,free_agent,9,6011,Gardner Minshew,,0,0.0
+2024,1154793249597407232,8,False,free_agent,9,6011,Gardner Minshew II,,0,0.0
 2024,1154824266580344833,8,False,free_agent,9,SF,San Francisco 49ers,,1,8.0
 2024,1154839273976217600,8,False,free_agent,9,11600,Ja'Tavion Sanders,,0,0.0
 2024,1154864106248196096,8,False,free_agent,9,7571,Rashod Bateman,,0,0.0
@@ -2089,9 +2089,9 @@
 2024,1156309409308610560,8,False,free_agent,1,4972,Mason Rudolph,,0,0.0
 2024,1156980693893836800,8,False,waiver,9,TEN,Tennessee Titans,0,0,0.0
 2024,1156987861904887808,8,False,waiver,5,8161,Malik Willis,5,0,0.0
-2024,1157013625169735680,8,False,waiver,3,6011,Gardner Minshew,1,1,2.96
+2024,1157013625169735680,8,False,waiver,3,6011,Gardner Minshew II,1,1,2.96
 2024,1157048169247805440,8,False,waiver,9,6149,Darius Slayton,0,0,0.0
-2024,1157048362806697984,8,False,waiver,9,8147,John Metchie,0,0,0.0
+2024,1157048362806697984,8,False,waiver,9,8147,John Metchie III,0,0,0.0
 2024,1157057637918576640,8,False,waiver,7,11651,Isaac Guerendo,2,0,0.0
 2024,1157083763529297920,8,False,waiver,8,5001,Dalton Schultz,5,0,0.0
 2024,1157139614088552448,8,False,waiver,1,19,Joe Flacco,57,1,3.06
@@ -2122,7 +2122,7 @@
 2024,1160333462683897856,10,False,free_agent,11,7527,Mac Jones,,1,5.24
 2024,1160728189283450880,10,False,free_agent,9,KC,Kansas City Chiefs,,0,0.0
 2024,1161034869045051392,10,False,free_agent,8,SF,San Francisco 49ers,,0,0.0
-2024,1161471348993163264,10,False,free_agent,8,6011,Gardner Minshew,,1,17.98
+2024,1161471348993163264,10,False,free_agent,8,6011,Gardner Minshew II,,1,17.98
 2024,1162059950458503168,10,False,waiver,7,HOU,Houston Texans,15,3,42.0
 2024,1162060089323499520,10,False,waiver,7,5248,Gus Edwards,17,0,0.0
 2024,1162060227676819456,10,False,waiver,7,5854,Drew Lock,2,0,0.0
@@ -2199,7 +2199,7 @@
 2024,1169701729152233472,13,False,waiver,2,6963,Patrick Taylor,0,0,0.0
 2024,1169731984990670848,13,False,waiver,11,7527,Mac Jones,9,1,5.1
 2024,1169747564040790016,13,False,waiver,9,6130,Devin Singletary,0,0,0.0
-2024,1169799870845325312,13,False,waiver,7,11559,Michael Penix,0,0,0.0
+2024,1169799870845325312,13,False,waiver,7,11559,Michael Penix Jr.,0,0,0.0
 2024,1169879336506347520,13,False,waiver,8,9484,Tucker Kraft,0,1,13.1
 2024,1169880795000049664,13,False,waiver,8,9227,Israel Abanikanda,0,0,0.0
 2024,1169906555765030912,13,False,waiver,4,8167,Christian Watson,2,0,0.0
@@ -2215,7 +2215,7 @@
 2024,1170248841807908864,14,False,free_agent,4,9487,Parker Washington,,0,0.0
 2024,1170261232759361536,14,False,waiver,4,11647,Kimani Vidal,3,0,0.0
 2024,1170368269245599744,14,False,free_agent,7,ATL,Atlanta Falcons,,0,0.0
-2024,1170401562879971328,14,False,free_agent,6,10219,Chris Rodriguez,,0,0.0
+2024,1170401562879971328,14,False,free_agent,6,10219,Chris Rodriguez Jr.,,0,0.0
 2024,1170425531209207808,14,False,free_agent,11,5987,Alexander Mattison,,0,0.0
 2024,1170516751264632832,14,False,free_agent,9,6012,Travis Homer,,0,0.0
 2024,1170584560707575808,14,False,free_agent,8,8159,Desmond Ridder,,0,0.0
@@ -2238,7 +2238,7 @@
 2025,1266235746914664448,1,True,free_agent,10,2309,Amari Cooper,,0,0.0
 2025,1266236387141615616,1,True,free_agent,2,8129,Dameon Pierce,,0,0.0
 2025,1266256491258593280,1,True,free_agent,1,3214,Hunter Henry,,0,0.0
-2025,1266258161082306560,1,True,free_agent,2,12541,Dont'e Thornton,,0,0.0
+2025,1266258161082306560,1,True,free_agent,2,12541,Dont'e Thornton Jr.,,0,0.0
 2025,1266428973789741056,1,True,free_agent,1,11646,Jalen Coker,,1,5.1
 2025,1266611931033120768,1,True,free_agent,8,8110,Jake Ferguson,,0,0.0
 2025,1266885993403789312,1,True,free_agent,8,LAR,Los Angeles Rams,,2,19.0
@@ -2246,7 +2246,7 @@
 2025,1268416371071393792,1,True,free_agent,4,1689,Adam Thielen,,0,0.0
 2025,1268504411747926016,1,True,free_agent,4,12738,Phil Mafah,,0,0.0
 2025,1268504520942428160,1,True,free_agent,4,1689,Adam Thielen,,0,0.0
-2025,1268654559178276864,1,True,free_agent,9,10219,Chris Rodriguez,,0,0.0
+2025,1268654559178276864,1,True,free_agent,9,10219,Chris Rodriguez Jr.,,0,0.0
 2025,1268995373821595648,1,False,free_agent,9,SF,San Francisco 49ers,,2,15.0
 2025,1269349365546229760,1,False,free_agent,10,12499,Elic Ayomanor,,5,23.5
 2025,1269467041224462337,1,False,free_agent,4,10444,Cedric Tillman,,0,0.0
@@ -2256,7 +2256,7 @@
 2025,1271174704543068160,1,False,waiver,6,7002,Juwan Johnson,8,3,30.7
 2025,1271229189751599104,1,False,waiver,12,5848,Marquise Brown,35,2,11.7
 2025,1271255937000161280,1,False,waiver,6,12471,DJ Giddens,6,0,0.0
-2025,1271310150577168384,1,False,waiver,7,12506,Harold Fannin,4,0,0.0
+2025,1271310150577168384,1,False,waiver,7,12506,Harold Fannin Jr.,4,0,0.0
 2025,1271338941127090177,1,False,waiver,10,9754,Quentin Johnston,29,8,64.5
 2025,1271476994453819392,2,False,free_agent,4,9480,Brenton Strange,,1,4.7
 2025,1271744570916364288,2,False,free_agent,4,4144,Jonnu Smith,,0,0.0
@@ -2275,7 +2275,7 @@
 2025,1273769599095025664,2,False,waiver,8,SEA,Seattle Seahawks,6,3,26.0
 2025,1273789364102496256,2,False,waiver,3,8110,Jake Ferguson,5,11,146.4
 2025,1274016197368631296,3,False,free_agent,1,IND,Indianapolis Colts,,1,16.0
-2025,1274051152538775552,3,False,free_agent,4,12495,Ollie Gordon,,0,0.0
+2025,1274051152538775552,3,False,free_agent,4,12495,Ollie Gordon II,,0,0.0
 2025,1274063082817064960,3,False,free_agent,9,KC,Kansas City Chiefs,,1,15.0
 2025,1274070148264775680,3,False,free_agent,8,827,Tyrod Taylor,,0,0.0
 2025,1274071584797102080,3,False,free_agent,8,11610,Malik Washington,,0,0.0
@@ -2302,14 +2302,14 @@
 2025,1276373260971298816,3,False,waiver,1,HOU,Houston Texans,7,1,15.0
 2025,1276532619240046592,4,False,free_agent,9,3214,Hunter Henry,,0,0.0
 2025,1276567232545038336,4,False,free_agent,11,SF,San Francisco 49ers,,2,8.0
-2025,1276598785308372992,4,False,free_agent,2,10219,Chris Rodriguez,,1,5.9
+2025,1276598785308372992,4,False,free_agent,2,10219,Chris Rodriguez Jr.,,1,5.9
 2025,1276599223462158336,4,False,waiver,9,NE,New England Patriots,0,1,13.0
 2025,1276608915194253312,4,False,free_agent,3,5012,Mark Andrews,,0,0.0
 2025,1276609030894161920,4,False,free_agent,3,6130,Devin Singletary,,0,0.0
 2025,1276628337808134144,4,False,free_agent,4,12474,Woody Marks,,0,0.0
 2025,1276628752440258560,4,False,free_agent,4,9480,Brenton Strange,,2,13.7
 2025,1276694048161140736,4,False,free_agent,9,8917,KaVontae Turpin,,0,0.0
-2025,1277177028419813376,4,False,waiver,9,12506,Harold Fannin,0,0,0.0
+2025,1277177028419813376,4,False,waiver,9,12506,Harold Fannin Jr.,0,0,0.0
 2025,1277690834656989184,4,False,free_agent,3,7021,Rico Dowdle,,1,3.5
 2025,1277693677094854656,4,False,free_agent,7,8121,Romeo Doubs,,4,34.1
 2025,1278019823099453440,4,False,free_agent,4,1166,Kirk Cousins,,0,0.0
@@ -2339,9 +2339,9 @@
 2025,1279463536128438272,5,False,waiver,9,12471,DJ Giddens,0,0,0.0
 2025,1279500474281623552,5,False,free_agent,4,1166,Kirk Cousins,,0,0.0
 2025,1279563190153261056,5,False,free_agent,9,7021,Rico Dowdle,,2,62.8
-2025,1279613044896321536,5,False,free_agent,4,10219,Chris Rodriguez,,0,0.0
+2025,1279613044896321536,5,False,free_agent,4,10219,Chris Rodriguez Jr.,,0,0.0
 2025,1279814538148986880,5,False,free_agent,9,HOU,Houston Texans,,1,11.0
-2025,1279877605507469312,5,False,free_agent,8,12506,Harold Fannin,,2,33.8
+2025,1279877605507469312,5,False,free_agent,8,12506,Harold Fannin Jr.,,2,33.8
 2025,1279881892870500352,5,False,free_agent,10,11571,Isaiah Davis,,1,4.8
 2025,1279891318520156160,5,False,free_agent,2,4381,Taysom Hill,,1,0.66
 2025,1281039246127284224,5,False,waiver,3,8123,Hassan Haskins,20,1,2.8
@@ -2353,7 +2353,7 @@
 2025,1281432235639054336,5,False,waiver,12,4033,David Njoku,5,1,5.8
 2025,1281440921925197824,5,False,waiver,6,19,Joe Flacco,59,4,74.5
 2025,1281507273700560896,5,False,waiver,4,11603,AJ Barner,13,2,1.9
-2025,1281507377069191168,5,False,waiver,4,12495,Ollie Gordon,2,0,0.0
+2025,1281507377069191168,5,False,waiver,4,12495,Ollie Gordon II,2,0,0.0
 2025,1281507404843851776,5,False,waiver,4,12534,Kyle Monangai,2,0,0.0
 2025,1281507459894083584,5,False,waiver,4,12543,Tahj Brooks,0,0,0.0
 2025,1281582500073725952,6,False,free_agent,5,4454,Kendrick Bourne,,2,19.1
@@ -2388,7 +2388,7 @@
 2025,1285401530521915392,7,False,free_agent,12,11650,Luke McCaffrey,,1,0.0
 2025,1285647489721974784,7,False,free_agent,3,11435,Emanuel Wilson,,0,0.0
 2025,1285656228323655680,7,False,free_agent,9,12641,Jaylin Lane,,0,0.0
-2025,1285656804671361024,7,False,free_agent,9,12495,Ollie Gordon,,0,0.0
+2025,1285656804671361024,7,False,free_agent,9,12495,Ollie Gordon II,,0,0.0
 2025,1285825086728708096,7,False,free_agent,8,9506,Sean Tucker,,0,0.0
 2025,1286192962098704385,7,False,waiver,9,12540,Chimere Dike,0,0,0.0
 2025,1286245032369610752,7,False,waiver,9,11575,Ray Davis,0,0,0.0
@@ -2446,7 +2446,7 @@
 2025,1290445218977452032,9,False,free_agent,9,3257,Jacoby Brissett,,1,24.84
 2025,1290511541472337920,9,False,free_agent,4,7607,Michael Carter,,1,0.0
 2025,1290753401805639680,9,False,free_agent,9,12521,Elijah Arroyo,,0,0.0
-2025,1290754896886255616,9,False,free_agent,9,9229,Anthony Richardson,,0,0.0
+2025,1290754896886255616,9,False,free_agent,9,9229,Anthony Richardson Sr.,,0,0.0
 2025,1290788486500085761,9,False,free_agent,7,BUF,Buffalo Bills,,1,3.0
 2025,1291434128792616960,9,False,waiver,7,12517,Colston Loveland,16,0,0.0
 2025,1291439658558853120,9,False,waiver,3,5844,T.J. Hockenson,5,0,0.0
@@ -2457,7 +2457,7 @@
 2025,1291658716118007808,9,False,waiver,1,BAL,Baltimore Ravens,0,2,25.0
 2025,1291709389811503105,10,False,free_agent,4,11199,Emari Demercado,,1,11.9
 2025,1291709439744684032,10,False,free_agent,4,11586,Blake Corum,,0,0.0
-2025,1291711045961789440,10,False,free_agent,4,10219,Chris Rodriguez,,1,9.0
+2025,1291711045961789440,10,False,free_agent,4,10219,Chris Rodriguez Jr.,,1,9.0
 2025,1291801247006859264,10,False,free_agent,9,8205,Isiah Pacheco,,0,0.0
 2025,1291890203115413504,10,False,free_agent,4,6039,Ty Johnson,,0,0.0
 2025,1291891228429803520,10,False,free_agent,2,11586,Blake Corum,,0,0.0
@@ -2474,7 +2474,7 @@
 2025,1294156668375937024,10,False,waiver,9,9480,Brenton Strange,0,0,0.0
 2025,1294246772171874304,11,False,free_agent,4,9506,Sean Tucker,,1,5.1
 2025,1294248102714183680,11,False,free_agent,4,12499,Elic Ayomanor,,0,0.0
-2025,1294248785924337664,11,False,free_agent,4,12519,Luther Burden,,0,0.0
+2025,1294248785924337664,11,False,free_agent,4,12519,Luther Burden III,,0,0.0
 2025,1294307851149275136,11,False,free_agent,9,5001,Dalton Schultz,,0,0.0
 2025,1294308521285791744,11,False,free_agent,7,KC,Kansas City Chiefs,,1,2.0
 2025,1294326485087195136,11,False,free_agent,6,2306,Jameis Winston,,0,0.0
@@ -2510,9 +2510,9 @@
 2025,1297777619697176576,12,False,free_agent,8,9479,Darnell Washington,,0,0.0
 2025,1298059943403884544,12,False,free_agent,7,LV,Las Vegas Raiders,,1,5.0
 2025,1298351919135211520,12,False,free_agent,5,NO,New Orleans Saints,,2,18.0
-2025,1298379279163224064,12,False,free_agent,1,12519,Luther Burden,,0,0.0
+2025,1298379279163224064,12,False,free_agent,1,12519,Luther Burden III,,0,0.0
 2025,1298402179312287744,12,False,free_agent,10,11626,Xavier Legette,,2,4.3
-2025,1298992974184579072,12,False,waiver,5,8147,John Metchie,6,0,0.0
+2025,1298992974184579072,12,False,waiver,5,8147,John Metchie III,6,0,0.0
 2025,1299050561110290432,12,False,waiver,7,SF,San Francisco 49ers,2,1,15.0
 2025,1299085039992045568,12,False,waiver,2,11586,Blake Corum,0,0,0.0
 2025,1299094639063625728,12,False,waiver,8,4983,DJ Moore,4,0,0.0
@@ -2524,7 +2524,7 @@
 2025,1299474810572673024,13,False,free_agent,4,12540,Chimere Dike,,1,-0.6
 2025,1299544837439094784,13,False,free_agent,4,12775,Max Brosmer,,0,0.0
 2025,1299578643420291072,13,False,free_agent,7,9225,Tank Bigsby,,0,0.0
-2025,1299824406339538944,13,False,free_agent,9,9229,Anthony Richardson,,0,0.0
+2025,1299824406339538944,13,False,free_agent,9,9229,Anthony Richardson Sr.,,0,0.0
 2025,1300131584006946816,13,False,waiver,9,8408,Jordan Mason,0,0,0.0
 2025,1300230160062095360,13,False,free_agent,1,TB,Tampa Bay Buccaneers,,0,0.0
 2025,1300665628167778304,13,False,free_agent,8,11603,AJ Barner,,0,0.0
@@ -2552,7 +2552,7 @@
 2025,1302690603611480064,14,False,free_agent,7,SF,San Francisco 49ers,,0,0.0
 2025,1302757867891195904,14,False,free_agent,9,9511,Keaton Mitchell,,0,0.0
 2025,1302819206403723264,14,False,free_agent,9,12498,Mason Taylor,,1,10.1
-2025,1302875136352854016,14,False,free_agent,1,12519,Luther Burden,,0,0.0
+2025,1302875136352854016,14,False,free_agent,1,12519,Luther Burden III,,0,0.0
 2025,1304085475459362816,14,False,waiver,5,6783,Jerry Jeudy,0,0,0.0
 2025,1304085675498287104,14,False,waiver,1,11643,Jaylen Wright,0,0,0.0
 2026,1398150817663430656,1,True,free_agent,11,9508,Tyjae Spears,,0,0.0
@@ -2579,7 +2579,7 @@
 2026,1404196407719563264,1,False,free_agent,3,4574,Cooper Rush,,0,0.0
 2026,1404201667162820608,1,False,free_agent,6,13311,Chris Bell,,0,0.0
 2026,1404416485572546560,1,False,free_agent,4,12483,Jack Bech,,0,0.0
-2026,1404456779055722496,1,False,waiver,6,13305,Mike Washington,3,0,0.0
+2026,1404456779055722496,1,False,waiver,6,13305,Mike Washington Jr.,3,0,0.0
 2026,1404848528261484544,1,False,free_agent,1,12711,Tyler Loop,,6,58.0
 2026,1405560116161302528,1,False,waiver,6,12492,Pat Bryant,6,0,0.0
 2026,1405560235841622016,1,False,waiver,6,4454,Kendrick Bourne,3,0,0.0
@@ -2638,7 +2638,7 @@
 2026,1410643697082675200,3,False,waiver,7,3634,Kalif Raymond,6,1,1.6
 2026,1410643748076941312,3,False,waiver,7,13311,Chris Bell,1,0,0.0
 2026,1410644050029121536,3,False,waiver,7,CLE,Cleveland Browns,0,3,27.0
-2026,1410702268709273600,3,False,waiver,3,12495,Ollie Gordon,40,2,31.8
+2026,1410702268709273600,3,False,waiver,3,12495,Ollie Gordon II,40,2,31.8
 2026,1410717459148767232,3,False,waiver,8,9757,Kendre Miller,0,1,8.0
 2026,1410847711342645248,3,False,waiver,12,1479,Keenan Allen,5,1,12.2
 2026,1410847786361962496,3,False,waiver,6,12718,Konata Mumpfield,5,0,0.0
@@ -2649,12 +2649,12 @@
 2026,1410874300298203136,3,False,waiver,12,PIT,Pittsburgh Steelers,5,2,14.0
 2026,1410877579979657216,3,False,waiver,4,LV,Las Vegas Raiders,4,1,2.0
 2026,1410928755576156160,4,False,free_agent,4,11435,Emanuel Wilson,,1,5.2
-2026,1411135700811681792,4,False,free_agent,4,13317,Ted Hurst,,0,0.0
+2026,1411135700811681792,4,False,free_agent,4,13317,Ted Hurst III,,0,0.0
 2026,1411139526528638976,4,False,free_agent,4,1737,Case Keenum,,0,0.0
 2026,1411141696363757568,4,False,free_agent,4,4177,Mack Hollins,,0,0.0
-2026,1411202879246577664,4,False,waiver,6,4037,Chris Godwin,8,0,0.0
+2026,1411202879246577664,4,False,waiver,6,4037,Chris Godwin Jr.,8,0,0.0
 2026,1411208437378867200,4,False,waiver,4,11834,Devaughn Vele,8,3,24.7
-2026,1411525272414539776,4,False,free_agent,11,10219,Chris Rodriguez,,1,1.6
+2026,1411525272414539776,4,False,free_agent,11,10219,Chris Rodriguez Jr.,,1,1.6
 2026,1411559460035444736,4,False,free_agent,10,3271,Tyler Higbee,,0,0.0
 2026,1411766700596121600,4,False,free_agent,1,13294,Makai Lemon,,0,0.0
 2026,1411815884049137664,4,False,waiver,10,11630,Roman Wilson,12,0,0.0
@@ -2711,3 +2711,16 @@
 2026,1417192837799284736,6,False,free_agent,9,13413,Cyrus Allen,,0,0.0
 2026,1417275491286515712,6,False,free_agent,4,8122,Zonovan Knight,,0,0.0
 2026,1417275699823230976,6,False,waiver,4,8136,Rachaad White,1,0,0.0
+2026,1417639471989497856,6,False,waiver,2,13276,Omar Cooper Jr.,51,0,0.0
+2026,1418201568225894400,6,False,waiver,5,11565,J.J. McCarthy,30,0,0.0
+2026,1418307643369406464,6,False,waiver,8,11655,Tyrone Tracy Jr.,1,0,0.0
+2026,1418307775833907200,6,False,waiver,8,9501,DeMario Douglas,1,0,0.0
+2026,1418307891563118592,6,False,waiver,8,3271,Tyler Higbee,1,0,0.0
+2026,1418307912891133952,6,False,waiver,8,5012,Mark Andrews,0,0,0.0
+2026,1418346828935548928,6,False,waiver,9,1264,Justin Tucker,0,0,0.0
+2026,1418349448374882304,6,False,waiver,9,8210,Chig Okonkwo,0,0,0.0
+2026,1418423336865734656,6,False,waiver,2,NYJ,New York Jets,1,0,0.0
+2026,1418435459603845120,6,False,waiver,7,5844,T.J. Hockenson,1,0,0.0
+2026,1418464541544648704,6,False,waiver,4,12469,Dylan Sampson,1,0,0.0
+2026,1418464921804349440,6,False,waiver,4,13293,Ja'Kobi Lane,2,0,0.0
+2026,1418470262935990272,6,False,waiver,6,13301,Antonio Williams,4,0,0.0
