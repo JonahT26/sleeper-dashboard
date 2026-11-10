@@ -12263,3 +12263,123 @@
 2026,8,12,7,SUPER_FLEX,6804,Jordan Love,QB,21.52,False,True
 2026,8,12,8,K,2747,Jason Myers,K,1.0,False,True
 2026,8,12,9,DEF,PIT,Pittsburgh Steelers,DEF,21.0,False,True
+2026,9,1,0,QB,12545,Tyler Shough,QB,19.7,False,True
+2026,9,1,1,RB,8151,Kenneth Walker III,RB,34.3,False,True
+2026,9,1,2,RB,13337,Emmett Johnson,RB,9.4,False,False
+2026,9,1,3,WR,8112,Drake London,WR,9.3,False,True
+2026,9,1,4,WR,8144,Chris Olave,WR,13.3,False,True
+2026,9,1,5,FLEX,13296,Caleb Douglas,WR,10.0,False,False
+2026,9,1,6,REC_FLEX,11620,Rome Odunze,WR,14.0,False,False
+2026,9,1,7,SUPER_FLEX,11564,Drake Maye,QB,18.26,False,True
+2026,9,1,8,K,11539,Jake Bates,K,15.0,False,True
+2026,9,1,9,DEF,JAX,Jacksonville Jaguars,DEF,12.0,False,True
+2026,9,2,0,QB,4984,Josh Allen,QB,12.86,False,True
+2026,9,2,1,RB,3198,Derrick Henry,RB,5.58,False,True
+2026,9,2,2,RB,7588,Javonte Williams,RB,20.4,False,True
+2026,9,2,3,WR,13276,Omar Cooper Jr.,WR,9.8,False,True
+2026,9,2,4,WR,10232,Michael Wilson,WR,9.0,False,False
+2026,9,2,5,FLEX,8155,Breece Hall,RB,10.2,False,False
+2026,9,2,6,REC_FLEX,11604,Brock Bowers,TE,22.3,False,True
+2026,9,2,7,SUPER_FLEX,9758,C.J. Stroud,QB,35.36,False,True
+2026,9,2,8,K,6083,Matt Gay,K,7.0,False,True
+2026,9,2,9,DEF,NO,New Orleans Saints,DEF,7.0,False,True
+2026,9,3,0,QB,11566,Jayden Daniels,QB,14.56,False,True
+2026,9,3,1,RB,7611,Rhamondre Stevenson,RB,13.3,False,True
+2026,9,3,2,RB,13286,Jadarian Price,RB,9.8,False,False
+2026,9,3,3,WR,12526,Tetairoa McMillan,WR,13.6,False,True
+2026,9,3,4,WR,7564,Ja'Marr Chase,WR,26.5,False,True
+2026,9,3,5,FLEX,12490,Bhayshul Tuten,RB,8.9,False,True
+2026,9,3,6,REC_FLEX,1466,Travis Kelce,TE,17.3,False,True
+2026,9,3,7,SUPER_FLEX,5854,Drew Lock,QB,12.6,False,True
+2026,9,3,8,K,3451,Ka'imi Fairbairn,K,17.0,False,True
+2026,9,3,9,DEF,HOU,Houston Texans,DEF,14.0,False,True
+2026,9,4,0,QB,4046,Patrick Mahomes,QB,16.48,False,True
+2026,9,4,1,RB,9221,Jahmyr Gibbs,RB,13.4,False,True
+2026,9,4,2,RB,13345,Jonah Coleman,RB,16.8,False,True
+2026,9,4,3,WR,6801,Tee Higgins,WR,17.7,False,True
+2026,9,4,4,WR,8148,Jameson Williams,WR,4.5,False,True
+2026,9,4,5,FLEX,4217,George Kittle,TE,9.8,False,True
+2026,9,4,6,REC_FLEX,8130,Trey McBride,TE,12.4,False,True
+2026,9,4,7,SUPER_FLEX,11557,Joe Milton,QB,13.16,False,False
+2026,9,4,8,K,11792,Will Reichard,K,9.0,False,True
+2026,9,4,9,DEF,SEA,Seattle Seahawks,DEF,11.0,False,True
+2026,9,5,0,QB,6770,Joe Burrow,QB,29.54,False,True
+2026,9,5,1,RB,12512,Quinshon Judkins,RB,5.0,False,True
+2026,9,5,2,RB,4035,Alvin Kamara,RB,6.4,False,True
+2026,9,5,3,WR,12501,Matthew Golden,WR,27.4,False,True
+2026,9,5,4,WR,7547,Amon-Ra St. Brown,WR,12.6,False,True
+2026,9,5,5,FLEX,5022,Dallas Goedert,TE,10.0,False,True
+2026,9,5,6,REC_FLEX,12517,Colston Loveland,TE,9.4,False,True
+2026,9,5,7,SUPER_FLEX,13346,Denzel Boston,WR,12.8,False,False
+2026,9,5,8,K,7042,Tyler Bass,K,13.0,False,True
+2026,9,5,9,DEF,CIN,Cincinnati Bengals,DEF,3.0,False,True
+2026,9,6,0,QB,7523,Trevor Lawrence,QB,13.58,False,True
+2026,9,6,1,RB,8408,Jordan Mason,RB,5.2,False,False
+2026,9,6,2,RB,4034,Christian McCaffrey,RB,21.7,False,True
+2026,9,6,3,WR,8167,Christian Watson,WR,26.6,False,True
+2026,9,6,4,WR,2449,Stefon Diggs,WR,6.6,False,True
+2026,9,6,5,FLEX,12491,Corey Kiner,RB,11.5,False,False
+2026,9,6,6,REC_FLEX,11632,Malik Nabers,WR,6.8,False,True
+2026,9,6,7,SUPER_FLEX,3163,Jared Goff,QB,5.3,False,True
+2026,9,6,8,K,7839,Evan McPherson,K,13.0,False,True
+2026,9,6,9,DEF,DEN,Denver Broncos,DEF,7.0,False,True
+2026,9,7,0,QB,3294,Dak Prescott,QB,19.5,False,True
+2026,9,7,1,RB,5850,Josh Jacobs,RB,0.5,False,True
+2026,9,7,2,RB,11576,Braelon Allen,RB,4.4,False,True
+2026,9,7,3,WR,6786,CeeDee Lamb,WR,28.5,False,True
+2026,9,7,4,WR,11646,Jalen Coker,WR,4.6,False,True
+2026,9,7,5,FLEX,5844,T.J. Hockenson,TE,7.3,False,True
+2026,9,7,6,REC_FLEX,9493,Puka Nacua,WR,28.0,False,True
+2026,9,7,7,SUPER_FLEX,1373,Geno Smith,QB,7.4,False,True
+2026,9,7,8,K,11261,Andre Szmyt,K,13.0,False,True
+2026,9,7,9,DEF,DET,Detroit Lions,DEF,10.0,False,True
+2026,9,8,0,QB,8183,Brock Purdy,QB,25.28,False,True
+2026,9,8,1,RB,8138,James Cook III,RB,16.7,False,True
+2026,9,8,2,RB,4866,Saquon Barkley,RB,8.2,False,True
+2026,9,8,3,WR,13298,KC Concepcion Jr.,WR,16.8,False,False
+2026,9,8,4,WR,13294,Makai Lemon,WR,9.1,False,False
+2026,9,8,5,FLEX,7002,Juwan Johnson,TE,11.4,False,False
+2026,9,8,6,REC_FLEX,8131,Isaiah Likely,TE,16.3,False,True
+2026,9,8,7,SUPER_FLEX,7567,Kenny Gainwell,RB,9.1,False,False
+2026,9,8,8,K,12185,Spencer Shrader,K,16.0,False,True
+2026,9,8,9,DEF,SF,San Francisco 49ers,DEF,18.0,False,True
+2026,9,9,0,QB,11559,Michael Penix Jr.,QB,13.48,False,False
+2026,9,9,1,RB,13424,Seth McGowan,RB,10.7,False,False
+2026,9,9,2,RB,11586,Blake Corum,RB,11.8,False,True
+2026,9,9,3,WR,9488,Jaxon Smith-Njigba,WR,8.6,False,True
+2026,9,9,4,WR,5045,Courtland Sutton,WR,13.0,False,False
+2026,9,9,5,FLEX,8210,Chig Okonkwo,TE,11.7,False,False
+2026,9,9,6,REC_FLEX,9487,Parker Washington,WR,13.1,False,True
+2026,9,9,7,SUPER_FLEX,11563,Bo Nix,QB,15.68,False,True
+2026,9,9,8,K,11533,Brandon Aubrey,K,10.0,False,True
+2026,9,9,9,DEF,LAR,Los Angeles Rams,DEF,13.0,False,True
+2026,9,10,0,QB,421,Matthew Stafford,QB,11.22,False,True
+2026,9,10,1,RB,6813,Jonathan Taylor,RB,6.9,False,True
+2026,9,10,2,RB,8150,Kyren Williams,RB,7.6,False,True
+2026,9,10,3,WR,12519,Luther Burden III,WR,17.2,False,True
+2026,9,10,4,WR,7569,Nico Collins,WR,13.5,False,True
+2026,9,10,5,FLEX,13414,Kaelon Black,RB,7.0,False,False
+2026,9,10,6,REC_FLEX,7553,Kyle Pitts Sr.,TE,5.3,False,True
+2026,9,10,7,SUPER_FLEX,1166,Kirk Cousins,QB,12.64,False,True
+2026,9,10,8,K,6650,Chase McLaughlin,K,10.0,False,True
+2026,9,10,9,DEF,MIN,Minnesota Vikings,DEF,6.0,False,True
+2026,9,11,0,QB,6797,Justin Herbert,QB,10.42,False,True
+2026,9,11,1,RB,9753,Zach Charbonnet,RB,9.1,False,True
+2026,9,11,2,RB,7594,Chuba Hubbard,RB,11.6,False,True
+2026,9,11,3,WR,10213,Tre Tucker,WR,7.5,False,True
+2026,9,11,4,WR,7526,Jaylen Waddle,WR,2.7,False,True
+2026,9,11,5,FLEX,9756,Jordan Addison,WR,3.8,False,True
+2026,9,11,6,REC_FLEX,11628,Marvin Harrison Jr.,WR,3.0,False,True
+2026,9,11,7,SUPER_FLEX,10219,Chris Rodriguez Jr.,RB,10.2,False,False
+2026,9,11,8,K,10955,Chad Ryland,K,3.0,False,True
+2026,9,11,9,DEF,NE,New England Patriots,DEF,0.0,False,True
+2026,9,12,0,QB,9228,Bryce Young,QB,20.34,False,True
+2026,9,12,1,RB,9224,Chase Brown,RB,9.0,False,True
+2026,9,12,2,RB,9509,Bijan Robinson,RB,23.7,False,True
+2026,9,12,3,WR,5947,Jakobi Meyers,WR,8.5,False,False
+2026,9,12,4,WR,6794,Justin Jefferson,WR,7.3,False,True
+2026,9,12,5,FLEX,11584,Bucky Irving,RB,26.5,False,True
+2026,9,12,6,REC_FLEX,12506,Harold Fannin Jr.,TE,12.2,False,True
+2026,9,12,7,SUPER_FLEX,6804,Jordan Love,QB,36.18,False,True
+2026,9,12,8,K,2747,Jason Myers,K,6.0,False,True
+2026,9,12,9,DEF,CHI,Chicago Bears,DEF,15.0,False,True
