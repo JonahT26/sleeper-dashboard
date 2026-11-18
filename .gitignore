@@ -28,3 +28,6 @@ site/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Impeccable per-developer settings (local hook consent); the shared .impeccable/config.json is committed
+.impeccable/config.local.json
