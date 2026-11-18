@@ -25,6 +25,7 @@ h1, h2, h3, p { margin: 0; }
 .num { font-variant-numeric: tabular-nums; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 :focus-visible { outline: 2px solid var(--pylon); outline-offset: 2px; }
+::selection { background: var(--masthead); color: var(--on-mast); }
 .wrap { max-width: 1200px; padding: 0 16px; margin: 0 auto; }
 
 /* Masthead */
@@ -114,7 +115,7 @@ details[open]::details-content { block-size: auto; }
 .caption { font-size: 13px; color: var(--muted); }
 
 /* Playoff odds: one row per team, most likely playoff team first; seed odds folded away below */
-.table-scroll { overflow-x: auto; }  /* the only sideways scroll allowed: a wide table inside its own box */
+.table-scroll { overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--bar) transparent; }  /* the only sideways scroll allowed: a wide table inside its own box */
 .odds, .seed-table { width: 100%; border-collapse: collapse; }
 .odds th, .odds td, .seed-table th, .seed-table td { padding: 8px 0 8px 12px; text-align: right; vertical-align: top;
   border-bottom: 1px solid var(--hash); font-weight: 400; }
@@ -179,9 +180,12 @@ details[open]::details-content { block-size: auto; }
 .pk-tab:hover { border-color: var(--muted); }
 /* FAAB: tap a team for its waiver claims (a chevron marks the rows that open) */
 .faab-toggle { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; text-align: left; cursor: pointer; }
-.js .faab-toggle::before { content: "▸"; display: inline-block; width: 1em; color: var(--muted); font-weight: 400; }
+/* The chevron hangs in the left padding, so a wrapped name lines up under its first word. (A negative
+   text-indent hid it: buttons don't paint content pulled into their padding.) The 8px block padding,
+   cancelled by the margin, stretches the tap area over the row's own padding without moving anything. */
+.js .faab-toggle { position: relative; padding: 8px 0 8px 1em; margin: -8px 0; }
+.js .faab-toggle::before { content: "▸"; position: absolute; left: 0; top: 8px; width: 1em; color: var(--muted); font-weight: 400; }
 .js .faab-toggle[aria-expanded="true"]::before { content: "▾"; }
-.js .faab-toggle { padding-left: 1em; text-indent: -1em; }  /* a wrapped name lines up under its first word */
 .js .faab-none { display: inline-block; padding-left: 1em; }  /* lines up with the names that have a chevron */
 .faab .faab-claims > td { padding: 0 0 8px; text-align: left; white-space: normal; }
 .claims { width: 100%; border-collapse: collapse; font-size: 13px; }
